@@ -11,6 +11,12 @@
       --borda: #d9e2ec;
       --texto: #102a43;
       --muted: #52606d;
+      --campo-fundo: #ffffff;
+      --superficie-suave: #f8fafc;
+      --fundo-neutro: rgba(15, 23, 42, 0.03);
+      --fundo-toggle: rgba(15, 23, 42, 0.06);
+      --fundo-kicker: rgba(37, 99, 235, 0.1);
+      --linha-tabs: #e2e8f0;
       --azul: #2563eb;
       --azul-escuro: #1d4ed8;
       --verde: #059669;
@@ -18,6 +24,21 @@
       --vermelho: #dc2626;
       --sombra: 0 18px 40px rgba(15, 23, 42, 0.08);
       --raio: 18px;
+    }
+
+    body.tema-escuro {
+      --fundo: #08111f;
+      --card: #0f1b2d;
+      --borda: #24354d;
+      --texto: #e5eefb;
+      --muted: #93a9c5;
+      --campo-fundo: #0b1627;
+      --superficie-suave: #132238;
+      --fundo-neutro: rgba(148, 163, 184, 0.08);
+      --fundo-toggle: rgba(148, 163, 184, 0.12);
+      --fundo-kicker: rgba(37, 99, 235, 0.18);
+      --linha-tabs: #24354d;
+      --sombra: 0 18px 40px rgba(2, 6, 23, 0.45);
     }
 
     * {
@@ -58,13 +79,20 @@
       padding: 28px;
     }
 
+    .hero-topo {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+    }
+
     .kicker {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(37, 99, 235, 0.1);
+      background: var(--fundo-kicker);
       color: var(--azul-escuro);
       font-size: 0.84rem;
       font-weight: 700;
@@ -82,6 +110,10 @@
       margin: 0;
       color: var(--muted);
       line-height: 1.6;
+    }
+
+    body.tema-escuro .kicker {
+      color: #bfdbfe;
     }
 
     .cdi-box {
@@ -107,7 +139,7 @@
       padding: 12px 14px;
       border: 1px solid var(--borda);
       border-radius: 12px;
-      background: #fff;
+      background: var(--campo-fundo);
       color: var(--texto);
       font: inherit;
       transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -148,6 +180,11 @@
       background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
     }
 
+    body.tema-escuro .investimento-card {
+      background: linear-gradient(180deg, #132238 0%, #0f1b2d 100%);
+      border-color: rgba(148, 163, 184, 0.18);
+    }
+
     .investimento-topo {
       display: flex;
       justify-content: space-between;
@@ -176,6 +213,11 @@
       font-weight: 700;
     }
 
+    body.tema-escuro .badge-tipo {
+      background: rgba(16, 185, 129, 0.14);
+      color: #86efac;
+    }
+
     .btn-remover,
     .btn-toggle,
     .btn-adicionar {
@@ -195,11 +237,16 @@
       font-weight: 700;
     }
 
+    body.tema-escuro .btn-remover {
+      background: rgba(220, 38, 38, 0.16);
+      color: #fca5a5;
+    }
+
     .btn-toggle {
       width: 36px;
       height: 36px;
       border-radius: 12px;
-      background: rgba(15, 23, 42, 0.06);
+      background: var(--fundo-toggle);
       color: var(--texto);
       display: inline-flex;
       align-items: center;
@@ -254,7 +301,7 @@
     .resultado-box {
       padding: 14px;
       border-radius: 14px;
-      background: #f8fafc;
+      background: var(--superficie-suave);
       border: 1px solid rgba(148, 163, 184, 0.2);
     }
 
@@ -277,6 +324,10 @@
       color: var(--muted);
       font-size: 0.85rem;
       line-height: 1.45;
+    }
+
+    body.tema-escuro .nota-card {
+      background: rgba(37, 99, 235, 0.12);
     }
 
     .acoes-lateral {
@@ -304,7 +355,7 @@
     .metric {
       padding: 16px;
       border-radius: 16px;
-      background: #f8fafc;
+      background: var(--superficie-suave);
       border: 1px solid rgba(148, 163, 184, 0.16);
     }
 
@@ -325,6 +376,11 @@
       border-color: rgba(37, 99, 235, 0.2);
     }
 
+    body.tema-escuro .metric.destaque {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.22) 0%, rgba(5, 150, 105, 0.18) 100%);
+      border-color: rgba(96, 165, 250, 0.22);
+    }
+
     .lista-notas {
       margin: 16px 0 0;
       padding: 0;
@@ -339,7 +395,7 @@
       color: var(--muted);
       padding: 12px 14px;
       border-radius: 12px;
-      background: rgba(15, 23, 42, 0.03);
+      background: var(--fundo-neutro);
     }
 
     .chart-wrap {
@@ -350,7 +406,7 @@
       display: flex;
       gap: 4px;
       overflow-x: auto;
-      border-bottom: 2px solid #e2e8f0;
+      border-bottom: 2px solid var(--linha-tabs);
       margin-bottom: 1.5rem;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: thin;
@@ -374,6 +430,39 @@
       font-weight: 600;
     }
 
+    body.tema-escuro .tab.ativa {
+      color: #bfdbfe;
+    }
+
+    .btn-tema {
+      border: 1px solid var(--borda);
+      background: var(--superficie-suave);
+      color: var(--texto);
+      border-radius: 999px;
+      width: 46px;
+      height: 46px;
+      padding: 0;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-tema:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-tema svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     .painel-pessoal {
       display: grid;
       gap: 14px;
@@ -390,6 +479,11 @@
       border-radius: 16px;
       background: linear-gradient(135deg, #eff6ff 0%, #ecfdf5 100%);
       border: 1px solid rgba(37, 99, 235, 0.16);
+    }
+
+    body.tema-escuro .radar-copy {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.22) 0%, rgba(5, 150, 105, 0.16) 100%);
+      border-color: rgba(96, 165, 250, 0.22);
     }
 
     .radar-copy strong {
@@ -446,6 +540,11 @@
       top: 0;
     }
 
+    body.tema-escuro th {
+      background: rgba(19, 34, 56, 0.94);
+      color: #bfdbfe;
+    }
+
     .rodape {
       margin-top: 20px;
       color: var(--muted);
@@ -497,7 +596,10 @@
   <div class="container">
     <section class="hero">
       <article class="card hero-card">
-        <div class="kicker">Patrimônio + renda mensal</div>
+        <div class="hero-topo">
+          <div class="kicker">Patrimônio + renda mensal</div>
+          <button id="btnTema" class="btn-tema" type="button" aria-label="Alternar tema" title="Alternar tema"></button>
+        </div>
         <h1>Calculadora de Renda Passiva</h1>
         <p>
           Cadastre múltiplos investimentos, estime a renda passiva mensal líquida
@@ -604,6 +706,7 @@
     const corpoTabelaEl = document.getElementById("corpoTabela");
     const taxaCdiReferenciaEl = document.getElementById("taxaCdiReferencia");
     const btnAdicionarEl = document.getElementById("btnAdicionar");
+    const btnTemaEl = document.getElementById("btnTema");
     const tabsProjecaoEl = document.getElementById("tabsProjecao");
     const rendaMensalEl = document.getElementById("rendaMensal");
     const custosMensaisEl = document.getElementById("custosMensais");
@@ -612,6 +715,7 @@
     taxaCdiReferenciaEl.value = ESTADO.taxaCdiReferencia;
     rendaMensalEl.value = ESTADO.rendaMensal;
     custosMensaisEl.value = ESTADO.custosMensais;
+    aplicarTema();
 
     taxaCdiReferenciaEl.addEventListener("input", () => {
       ESTADO.taxaCdiReferencia = normalizarNumero(taxaCdiReferenciaEl.value);
@@ -640,6 +744,19 @@
       renderizarTudo();
     });
 
+    btnTemaEl.addEventListener("click", () => {
+      ESTADO.temaPreferenciaManual = true;
+      ESTADO.temaEscuro = !obterTemaEscuroAtivo();
+      aplicarTema();
+      salvarEstado();
+    });
+
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      if (!ESTADO.temaPreferenciaManual) {
+        aplicarTema();
+      }
+    });
+
     renderizarTudo();
 
     function carregarEstadoInicial() {
@@ -649,6 +766,8 @@
           taxaCdiReferencia: 13.25,
           rendaMensal: 0,
           custosMensais: 0,
+          temaEscuro: false,
+          temaPreferenciaManual: false,
           investimentos: [criarInvestimentoPadrao()]
         };
       }
@@ -659,6 +778,8 @@
           taxaCdiReferencia: normalizarNumero(estado.taxaCdiReferencia, 13.25),
           rendaMensal: normalizarNumero(estado.rendaMensal, 0),
           custosMensais: normalizarNumero(estado.custosMensais, 0),
+          temaEscuro: estado.temaEscuro === true,
+          temaPreferenciaManual: estado.temaPreferenciaManual === true,
           investimentos: Array.isArray(estado.investimentos) && estado.investimentos.length
             ? estado.investimentos.map(normalizarInvestimento)
             : [criarInvestimentoPadrao()]
@@ -668,9 +789,50 @@
           taxaCdiReferencia: 13.25,
           rendaMensal: 0,
           custosMensais: 0,
+          temaEscuro: false,
+          temaPreferenciaManual: false,
           investimentos: [criarInvestimentoPadrao()]
         };
       }
+    }
+
+    function obterTemaEscuroAtivo() {
+      if (ESTADO.temaPreferenciaManual) {
+        return ESTADO.temaEscuro === true;
+      }
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+
+    function aplicarTema() {
+      const temaEscuroAtivo = obterTemaEscuroAtivo();
+      document.body.classList.toggle("tema-escuro", temaEscuroAtivo);
+      btnTemaEl.setAttribute("aria-label", temaEscuroAtivo ? "Ativar modo claro" : "Ativar modo escuro");
+      btnTemaEl.setAttribute("title", ESTADO.temaPreferenciaManual ? "Alternar tema manualmente" : "Tema seguindo o sistema operacional");
+      btnTemaEl.innerHTML = temaEscuroAtivo ? obterIconeSol() : obterIconeLua();
+    }
+
+    function obterIconeSol() {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2.5"></path>
+          <path d="M12 19.5V22"></path>
+          <path d="M2 12h2.5"></path>
+          <path d="M19.5 12H22"></path>
+          <path d="m4.9 4.9 1.8 1.8"></path>
+          <path d="m17.3 17.3 1.8 1.8"></path>
+          <path d="m17.3 6.7 1.8-1.8"></path>
+          <path d="m4.9 19.1 1.8-1.8"></path>
+        </svg>
+      `;
+    }
+
+    function obterIconeLua() {
+      return `
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 14.2A8 8 0 1 1 9.8 4 6.5 6.5 0 0 0 20 14.2z"></path>
+        </svg>
+      `;
     }
 
     function criarInvestimentoPadrao() {
