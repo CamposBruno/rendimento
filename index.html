@@ -346,6 +346,34 @@
       height: 360px;
     }
 
+    .tabs-container {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 1.5rem;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+
+    .tab {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      white-space: nowrap;
+      border: 0;
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      transition: border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .tab.ativa {
+      border-bottom-color: #2563eb;
+      color: var(--azul-escuro);
+      font-weight: 600;
+    }
+
     .tabela-wrap {
       overflow-x: auto;
     }
@@ -462,6 +490,7 @@
 
     <section class="card secao" style="margin-top: 24px;">
       <h2>Projeção de 30 anos</h2>
+      <div id="tabsProjecao" class="tabs-container"></div>
       <div class="chart-wrap">
         <canvas id="graficoProjecao"></canvas>
       </div>
@@ -503,6 +532,7 @@
 
     let graficoProjecao = null;
     let debounceAtualizacao = null;
+    let abaAtiva = "visao-geral";
 
     const listaInvestimentosEl = document.getElementById("listaInvestimentos");
     const resumoGridEl = document.getElementById("resumoGrid");
@@ -510,6 +540,7 @@
     const corpoTabelaEl = document.getElementById("corpoTabela");
     const taxaCdiReferenciaEl = document.getElementById("taxaCdiReferencia");
     const btnAdicionarEl = document.getElementById("btnAdicionar");
+    const tabsProjecaoEl = document.getElementById("tabsProjecao");
 
     taxaCdiReferenciaEl.value = ESTADO.taxaCdiReferencia;
     taxaCdiReferenciaEl.addEventListener("input", () => {
@@ -599,8 +630,8 @@
       }
       const resumo = calcularResumoGeral(ESTADO.investimentos, ESTADO.taxaCdiReferencia);
       renderizarResumo(resumo);
-      renderizarGrafico(resumo.projecaoMensal);
-      renderizarTabela(resumo.projecaoAnual);
+      renderizarAbas();
+      renderizarProjecaoAtiva();
     }
 
     function renderizarInvestimentos() {
@@ -681,6 +712,9 @@
           }
           if (evento.target.dataset.acao === "remover") {
             ESTADO.investimentos = ESTADO.investimentos.filter((item) => item.id !== investimento.id);
+            if (abaAtiva === investimento.id) {
+              abaAtiva = "visao-geral";
+            }
             if (!ESTADO.investimentos.length) {
               ESTADO.investimentos.push(criarInvestimentoPadrao());
             }
@@ -716,6 +750,9 @@
       if (campo === "tipo") {
         renderizarTudo();
       } else {
+        if (campo === "descricao") {
+          renderizarAbas();
+        }
         agendarAtualizacao();
         atualizarMetricasDoCard(id);
       }
@@ -785,7 +822,7 @@
     function calcularResumoGeral(investimentos, taxaCdiReferencia) {
       const resumoAtual = investimentos.map((investimento) => calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia));
       const projecaoMensal = calcularProjecaoMensal(investimentos, taxaCdiReferencia);
-      const projecaoAnual = agruparProjecaoAnual(projecaoMensal);
+      const projecaoAnual = agruparProjecaoAnual(investimentos, taxaCdiReferencia);
 
       return {
         totalInvestido: investimentos.reduce((acc, item) => acc + normalizarNumero(item.valorInvestido), 0),
@@ -821,8 +858,57 @@
       listaNotasEl.innerHTML = resumo.notas.map((nota) => `<li>${escapeHtml(nota)}</li>`).join("");
     }
 
-    function renderizarGrafico(projecaoMensal) {
+    function renderizarAbas() {
+      const abas = [
+        { id: "visao-geral", label: "Visão Geral" },
+        ...ESTADO.investimentos.map((investimento) => ({
+          id: investimento.id,
+          label: investimento.descricao || "Novo investimento"
+        }))
+      ];
+
+      if (abaAtiva !== "visao-geral" && !ESTADO.investimentos.some((investimento) => investimento.id === abaAtiva)) {
+        abaAtiva = "visao-geral";
+      }
+
+      tabsProjecaoEl.innerHTML = abas.map((aba) => `
+        <button
+          class="tab ${aba.id === abaAtiva ? "ativa" : ""}"
+          type="button"
+          data-aba-id="${aba.id}"
+        >
+          ${escapeHtml(aba.label)}
+        </button>
+      `).join("");
+
+      tabsProjecaoEl.querySelectorAll("[data-aba-id]").forEach((botao) => {
+        botao.addEventListener("click", () => {
+          const proximaAba = botao.dataset.abaId;
+          if (proximaAba === abaAtiva) {
+            return;
+          }
+          abaAtiva = proximaAba;
+          atualizarEstadoVisualAbas();
+          renderizarProjecaoAtiva();
+        });
+      });
+    }
+
+    function atualizarEstadoVisualAbas() {
+      tabsProjecaoEl.querySelectorAll(".tab").forEach((aba) => {
+        aba.classList.toggle("ativa", aba.dataset.abaId === abaAtiva);
+      });
+    }
+
+    function renderizarProjecaoAtiva() {
+      const filtroInvestimentoId = abaAtiva === "visao-geral" ? null : abaAtiva;
+      renderizarGrafico(ESTADO.investimentos, ESTADO.taxaCdiReferencia, filtroInvestimentoId);
+      renderizarTabela(agruparProjecaoAnual(ESTADO.investimentos, ESTADO.taxaCdiReferencia, filtroInvestimentoId));
+    }
+
+    function renderizarGrafico(investimentos, taxaCdiReferencia, investimentoId = null) {
       const ctx = document.getElementById("graficoProjecao");
+      const projecaoMensal = calcularProjecaoMensal(investimentos, taxaCdiReferencia, investimentoId);
       const labels = projecaoMensal.map((item) => item.mes % 60 === 0 ? `Ano ${item.mes / 12}` : "");
       const patrimonio = projecaoMensal.map((item) => item.patrimonioTotal);
       const rendaLiquida = projecaoMensal.map((item) => item.rendimentoLiquidoTotal);
@@ -1005,8 +1091,12 @@
       return 0.15;
     }
 
-    function calcularProjecaoMensal(investimentos, taxaCdiReferencia) {
-      const estadoProjecao = investimentos.map((investimento) => ({
+    function calcularProjecaoMensal(investimentos, taxaCdiReferencia, investimentoId = null) {
+      const baseInvestimentos = investimentoId
+        ? investimentos.filter((investimento) => investimento.id === investimentoId)
+        : investimentos;
+
+      const estadoProjecao = baseInvestimentos.map((investimento) => ({
         ...investimento,
         patrimonio: normalizarNumero(investimento.valorInvestido),
         dataInicioDate: criarDataLocal(investimento.dataInicio),
@@ -1072,7 +1162,8 @@
       return linhas;
     }
 
-    function agruparProjecaoAnual(projecaoMensal) {
+    function agruparProjecaoAnual(investimentos, taxaCdiReferencia, investimentoId = null) {
+      const projecaoMensal = calcularProjecaoMensal(investimentos, taxaCdiReferencia, investimentoId);
       const linhas = [];
       for (let ano = 1; ano <= 30; ano += 1) {
         const fatia = projecaoMensal.slice((ano - 1) * 12, ano * 12);
