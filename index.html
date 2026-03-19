@@ -374,6 +374,52 @@
       font-weight: 600;
     }
 
+    .painel-pessoal {
+      display: grid;
+      gap: 14px;
+    }
+
+    .radar-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .radar-copy {
+      padding: 16px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #eff6ff 0%, #ecfdf5 100%);
+      border: 1px solid rgba(37, 99, 235, 0.16);
+    }
+
+    .radar-copy strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+    }
+
+    .radar-copy p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .barra-liberdade {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, 0.2);
+      overflow: hidden;
+    }
+
+    .barra-liberdade span {
+      display: block;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #2563eb 0%, #059669 100%);
+    }
+
     .tabela-wrap {
       overflow-x: auto;
     }
@@ -440,6 +486,7 @@
 
       .grid-campos,
       .resumo-grid,
+      .radar-grid,
       .resultado-inline {
         grid-template-columns: 1fr;
       }
@@ -484,6 +531,23 @@
           <h2>Resumo</h2>
           <div id="resumoGrid" class="resumo-grid"></div>
           <ul id="listaNotas" class="lista-notas"></ul>
+        </div>
+
+        <div class="card secao">
+          <h2>Mapa da Liberdade</h2>
+          <div class="painel-pessoal">
+            <div class="radar-grid">
+              <div class="campo-topo">
+                <label for="rendaMensal">Renda mensal (salário)</label>
+                <input id="rendaMensal" type="number" step="0.01" min="0" />
+              </div>
+              <div class="campo-topo">
+                <label for="custosMensais">Custos mensais estimados</label>
+                <input id="custosMensais" type="number" step="0.01" min="0" />
+              </div>
+            </div>
+            <div id="radarFinanceiro"></div>
+          </div>
         </div>
       </aside>
     </section>
@@ -541,8 +605,14 @@
     const taxaCdiReferenciaEl = document.getElementById("taxaCdiReferencia");
     const btnAdicionarEl = document.getElementById("btnAdicionar");
     const tabsProjecaoEl = document.getElementById("tabsProjecao");
+    const rendaMensalEl = document.getElementById("rendaMensal");
+    const custosMensaisEl = document.getElementById("custosMensais");
+    const radarFinanceiroEl = document.getElementById("radarFinanceiro");
 
     taxaCdiReferenciaEl.value = ESTADO.taxaCdiReferencia;
+    rendaMensalEl.value = ESTADO.rendaMensal;
+    custosMensaisEl.value = ESTADO.custosMensais;
+
     taxaCdiReferenciaEl.addEventListener("input", () => {
       ESTADO.taxaCdiReferencia = normalizarNumero(taxaCdiReferenciaEl.value);
       salvarEstado();
@@ -550,6 +620,18 @@
       debounceAtualizacao = setTimeout(() => {
         renderizarTudo();
       }, 300);
+    });
+
+    rendaMensalEl.addEventListener("input", () => {
+      ESTADO.rendaMensal = normalizarNumero(rendaMensalEl.value);
+      salvarEstado();
+      agendarAtualizacao();
+    });
+
+    custosMensaisEl.addEventListener("input", () => {
+      ESTADO.custosMensais = normalizarNumero(custosMensaisEl.value);
+      salvarEstado();
+      agendarAtualizacao();
     });
 
     btnAdicionarEl.addEventListener("click", () => {
@@ -565,6 +647,8 @@
       if (!salvo) {
         return {
           taxaCdiReferencia: 13.25,
+          rendaMensal: 0,
+          custosMensais: 0,
           investimentos: [criarInvestimentoPadrao()]
         };
       }
@@ -573,6 +657,8 @@
         const estado = JSON.parse(salvo);
         return {
           taxaCdiReferencia: normalizarNumero(estado.taxaCdiReferencia, 13.25),
+          rendaMensal: normalizarNumero(estado.rendaMensal, 0),
+          custosMensais: normalizarNumero(estado.custosMensais, 0),
           investimentos: Array.isArray(estado.investimentos) && estado.investimentos.length
             ? estado.investimentos.map(normalizarInvestimento)
             : [criarInvestimentoPadrao()]
@@ -580,6 +666,8 @@
       } catch (erro) {
         return {
           taxaCdiReferencia: 13.25,
+          rendaMensal: 0,
+          custosMensais: 0,
           investimentos: [criarInvestimentoPadrao()]
         };
       }
@@ -630,6 +718,7 @@
       }
       const resumo = calcularResumoGeral(ESTADO.investimentos, ESTADO.taxaCdiReferencia);
       renderizarResumo(resumo);
+      renderizarRadarFinanceiro(resumo);
       renderizarAbas();
       renderizarProjecaoAtiva();
     }
@@ -823,6 +912,7 @@
       const resumoAtual = investimentos.map((investimento) => calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia));
       const projecaoMensal = calcularProjecaoMensal(investimentos, taxaCdiReferencia);
       const projecaoAnual = agruparProjecaoAnual(investimentos, taxaCdiReferencia);
+      const radarFinanceiro = calcularRadarFinanceiro(projecaoMensal);
 
       return {
         totalInvestido: investimentos.reduce((acc, item) => acc + normalizarNumero(item.valorInvestido), 0),
@@ -831,7 +921,8 @@
         rendimentoLiquidoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoLiquido, 0),
         projecaoMensal,
         projecaoAnual,
-        notas: gerarNotasResumo(investimentos)
+        notas: gerarNotasResumo(investimentos),
+        radarFinanceiro
       };
     }
 
@@ -856,6 +947,37 @@
       `;
 
       listaNotasEl.innerHTML = resumo.notas.map((nota) => `<li>${escapeHtml(nota)}</li>`).join("");
+    }
+
+    function renderizarRadarFinanceiro(resumo) {
+      const radar = resumo.radarFinanceiro;
+      radarFinanceiroEl.innerHTML = `
+        <div class="radar-grid">
+          <div class="metric destaque">
+            <span>Cobertura dos custos</span>
+            <strong>${formatterPercentual.format(radar.coberturaCustos)}%</strong>
+          </div>
+          <div class="metric">
+            <span>Saldo mensal total</span>
+            <strong>${formatterMoeda.format(radar.saldoMensalComSalario)}</strong>
+          </div>
+          <div class="metric">
+            <span>Custos cobertos pela renda passiva</span>
+            <strong>${radar.marcoCustos}</strong>
+          </div>
+          <div class="metric">
+            <span>Salário replicado pela renda passiva</span>
+            <strong>${radar.marcoSalario}</strong>
+          </div>
+        </div>
+        <div class="radar-copy" style="margin-top: 14px;">
+          <strong>Termômetro da independência</strong>
+          <div class="barra-liberdade" style="margin: 10px 0 12px;">
+            <span style="width: ${radar.coberturaCustosBarra}%;"></span>
+          </div>
+          <p>${escapeHtml(radar.mensagem)}</p>
+        </div>
+      `;
     }
 
     function renderizarAbas() {
@@ -1005,6 +1127,64 @@
           <td>${formatterMoeda.format(linha.rendimentoLiquido)}</td>
         </tr>
       `).join("");
+    }
+
+    function calcularRadarFinanceiro(projecaoMensal) {
+      const rendaMensal = normalizarNumero(ESTADO.rendaMensal);
+      const custosMensais = normalizarNumero(ESTADO.custosMensais);
+      const rendaPassivaAtual = projecaoMensal[0]?.rendimentoLiquidoTotal || 0;
+      const coberturaCustos = custosMensais > 0 ? (rendaPassivaAtual / custosMensais) * 100 : 0;
+      const saldoMensalComSalario = rendaMensal + rendaPassivaAtual - custosMensais;
+      const mesCobreCustos = custosMensais > 0
+        ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= custosMensais)?.mes || null
+        : null;
+      const mesReplicaSalario = rendaMensal > 0
+        ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= rendaMensal)?.mes || null
+        : null;
+
+      return {
+        coberturaCustos: custosMensais > 0 ? coberturaCustos : 0,
+        coberturaCustosBarra: Math.min(custosMensais > 0 ? coberturaCustos : 0, 100),
+        saldoMensalComSalario,
+        marcoCustos: custosMensais > 0 ? formatarMarcoTemporal(mesCobreCustos) : "Informe seus custos",
+        marcoSalario: rendaMensal > 0 ? formatarMarcoTemporal(mesReplicaSalario) : "Informe sua renda",
+        mensagem: gerarMensagemRadar({
+          rendaMensal,
+          custosMensais,
+          rendaPassivaAtual,
+          saldoMensalComSalario,
+          mesCobreCustos,
+          mesReplicaSalario
+        })
+      };
+    }
+
+    function gerarMensagemRadar({ rendaMensal, custosMensais, rendaPassivaAtual, saldoMensalComSalario, mesCobreCustos, mesReplicaSalario }) {
+      if (!rendaMensal && !custosMensais) {
+        return "Preencha salário e custos para transformar a projeção em um mapa de independência financeira.";
+      }
+
+      if (custosMensais > 0 && rendaPassivaAtual >= custosMensais) {
+        return `Sua renda passiva já cobre seus custos estimados. Com ${formatterMoeda.format(saldoMensalComSalario)} de folga mensal total, o patrimônio projetado passa a trabalhar como sua principal rede de segurança.`;
+      }
+
+      if (custosMensais > 0 && mesCobreCustos) {
+        return `Hoje sua renda passiva cobre ${formatterPercentual.format((rendaPassivaAtual / custosMensais) * 100)}% dos custos. Mantido o plano atual, ela deve pagar sua vida mensal por volta de ${formatarMarcoTemporal(mesCobreCustos).toLowerCase()}.`;
+      }
+
+      if (rendaMensal > 0 && mesReplicaSalario) {
+        return `Sua renda passiva ainda não sustenta o custo mensal completo, mas a projeção indica substituição do salário em ${formatarMarcoTemporal(mesReplicaSalario).toLowerCase()}.`;
+      }
+
+      return `Com ${formatterMoeda.format(rendaPassivaAtual)} de renda passiva líquida mensal hoje, ainda existe dependência relevante da renda ativa. O saldo combinado atual é de ${formatterMoeda.format(saldoMensalComSalario)} por mês.`;
+    }
+
+    function formatarMarcoTemporal(mes) {
+      if (!mes) {
+        return "Não atinge em 30 anos";
+      }
+      const ano = Math.ceil(mes / 12);
+      return `Ano ${ano}`;
     }
 
     function calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia) {
