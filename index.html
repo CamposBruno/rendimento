@@ -1378,6 +1378,16 @@
       };
     }
 
+    function sincronizarExpansaoInvestimentos(perfil) {
+      if (!perfil || !Array.isArray(perfil.investimentos)) {
+        return;
+      }
+
+      if (perfil.investimentos.length === 1) {
+        perfil.investimentos[0].expandido = true;
+      }
+    }
+
     function obterPerfilAtivo() {
       let perfil = ESTADO.perfis.find((item) => item.id === ESTADO.perfilAtivo);
       if (!perfil) {
@@ -1623,6 +1633,7 @@
 
     function renderizarInvestimentos() {
       const perfil = obterPerfilAtivo();
+      sincronizarExpansaoInvestimentos(perfil);
       if (!perfil.investimentos.length) {
         listaInvestimentosEl.innerHTML = '<div class="vazio">Nenhum investimento cadastrado.</div>';
         return;
@@ -1748,12 +1759,18 @@
     }
 
     function alternarCardInvestimento(id, card) {
-      const investimento = obterPerfilAtivo().investimentos.find((item) => item.id === id);
+      const perfil = obterPerfilAtivo();
+      sincronizarExpansaoInvestimentos(perfil);
+      const investimento = perfil.investimentos.find((item) => item.id === id);
       if (!investimento || !card) {
         return;
       }
 
-      investimento.expandido = !investimento.expandido;
+      if (perfil.investimentos.length === 1) {
+        investimento.expandido = true;
+      } else {
+        investimento.expandido = !investimento.expandido;
+      }
       salvarEstado();
 
       const corpo = card.querySelector(".investimento-corpo");
