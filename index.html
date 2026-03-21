@@ -541,55 +541,10 @@
       grid-column: 1 / -1;
     }
 
-    .grupo-rendimento {
-      grid-column: 1 / -1;
-      padding: 14px;
-      border-radius: 14px;
-      background: var(--superficie-suave);
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      display: grid;
-      gap: 14px;
-    }
-
-    .grupo-rendimento h3 {
-      margin: 0;
-      font-size: 0.92rem;
-    }
-
-    .grupo-rendimento-linha {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .campo-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--borda);
-      background: var(--campo-fundo);
-    }
-
-    .campo-toggle span {
-      font-size: 0.92rem;
-      font-weight: 600;
-    }
-
-    .campo-toggle input[type="checkbox"] {
-      width: 48px;
-      height: 24px;
-      margin: 0;
-      accent-color: var(--azul);
-      cursor: pointer;
-    }
-
     .resultado-inline {
       margin-top: 16px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 12px;
     }
 
@@ -981,7 +936,6 @@
       }
 
       .grid-campos,
-      .grupo-rendimento-linha,
       .perfil-form,
       .resumo-grid,
       .radar-grid,
@@ -1057,7 +1011,7 @@
         </div>
         <h1>Calculadora de Renda Passiva</h1>
         <p>
-          Cadastre múltiplos investimentos, projete patrimônio e acompanhe a renda passiva mensal distribuída
+          Cadastre múltiplos investimentos, estime a renda passiva mensal líquida
           e acompanhe a evolução do patrimônio acumulado ao longo de 30 anos.
         </p>
       </article>
@@ -1109,7 +1063,7 @@
             <canvas id="graficoProjecao"></canvas>
           </div>
           <div id="rodapeProjecao" class="rodape">
-            O gráfico mostra patrimônio acumulado total e renda passiva mensal distribuída ao longo de 30 anos.
+            O gráfico mostra patrimônio acumulado total e renda mensal líquida estimada ao longo de 30 anos.
             Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.
           </div>
         </section>
@@ -1155,11 +1109,6 @@
     const formatterNumero = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formatterPercentual = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const TIPOS = ["Renda Fixa", "Fundo de Investimento", "Ações", "Crypto", "CDB", "CDI (%)"];
-    const TIPOS_RENDIMENTO = [
-      { value: "reinvestido", label: "Reinvestido" },
-      { value: "distribuido_yield", label: "Distribuído por yield" },
-      { value: "distribuido_provento", label: "Distribuído por provento" }
-    ];
     const ESTADO = carregarEstadoInicial();
     window.addEventListener("beforeunload", salvarEstado);
 
@@ -1412,13 +1361,7 @@
         valorInvestido: 10000,
         aporteMensal: 500,
         dataInicio: formatarDataInput(dataPadrao),
-        expandido: false,
-        tipoRendimento: "reinvestido",
-        pagaProventos: false,
-        yieldMensal: 0,
-        proventoMensal: 0,
-        tributacaoProvento: 0,
-        reinvestirProventos: false
+        expandido: false
       };
     }
 
@@ -1431,78 +1374,8 @@
         valorInvestido: normalizarNumero(investimento.valorInvestido, 0),
         aporteMensal: normalizarNumero(investimento.aporteMensal, 0),
         dataInicio: investimento.dataInicio || formatarDataInput(new Date()),
-        expandido: investimento.expandido === true,
-        tipoRendimento: ["reinvestido", "distribuido_yield", "distribuido_provento"].includes(investimento.tipoRendimento) ? investimento.tipoRendimento : "reinvestido",
-        pagaProventos: investimento.pagaProventos ?? false,
-        yieldMensal: normalizarNumero(investimento.yieldMensal || 0, 0),
-        proventoMensal: normalizarNumero(investimento.proventoMensal || 0, 0),
-        tributacaoProvento: normalizarNumero(investimento.tributacaoProvento ?? 0, 0),
-        reinvestirProventos: investimento.reinvestirProventos ?? false
+        expandido: investimento.expandido === true
       };
-    }
-
-    function usaYieldMensal(investimento) {
-      return investimento.tipoRendimento === "distribuido_yield"
-        || (investimento.tipoRendimento === "reinvestido" && investimento.pagaProventos);
-    }
-
-    function usaProventoMensal(investimento) {
-      return investimento.tipoRendimento === "distribuido_provento"
-        || (investimento.tipoRendimento === "reinvestido" && investimento.pagaProventos);
-    }
-
-    function temProventosAtivos(investimento) {
-      return investimento.tipoRendimento === "distribuido_yield"
-        || investimento.tipoRendimento === "distribuido_provento"
-        || investimento.pagaProventos === true;
-    }
-
-    function calcularFluxoProventos(investimento, patrimonioBase) {
-      if (!temProventosAtivos(investimento)) {
-        return {
-          bruto: 0,
-          imposto: 0,
-          liquido: 0,
-          distribuido: 0,
-          reinvestido: 0
-        };
-      }
-
-      let bruto = 0;
-      if (investimento.tipoRendimento === "distribuido_provento") {
-        bruto = normalizarNumero(investimento.proventoMensal, 0);
-      } else if (investimento.tipoRendimento === "distribuido_yield") {
-        bruto = patrimonioBase * (normalizarNumero(investimento.yieldMensal, 0) / 100);
-      } else {
-        bruto = normalizarNumero(investimento.proventoMensal, 0) > 0
-          ? normalizarNumero(investimento.proventoMensal, 0)
-          : patrimonioBase * (normalizarNumero(investimento.yieldMensal, 0) / 100);
-      }
-
-      const imposto = bruto * (normalizarNumero(investimento.tributacaoProvento, 0) / 100);
-      const liquido = bruto - imposto;
-      const reinvestido = investimento.reinvestirProventos ? liquido : 0;
-
-      return {
-        bruto,
-        imposto,
-        liquido,
-        distribuido: investimento.reinvestirProventos ? 0 : liquido,
-        reinvestido
-      };
-    }
-
-    function comporNotaInvestimento(notaPatrimonio, investimento) {
-      const notas = [];
-      if (notaPatrimonio) {
-        notas.push(notaPatrimonio);
-      }
-      if (temProventosAtivos(investimento)) {
-        notas.push(investimento.reinvestirProventos
-          ? "Proventos líquidos estão sendo reinvestidos no patrimônio."
-          : "Proventos líquidos entram como renda passiva e não somam ao patrimônio.");
-      }
-      return notas.join(" ");
     }
 
     function sincronizarExpansaoInvestimentos(perfil) {
@@ -1580,17 +1453,15 @@
       }));
 
       const totalInvestido = projeçõesPorPerfil.reduce((acc, item) => acc + item.resumo.totalInvestido, 0);
-      const rendaPassivaMensal = projeçõesPorPerfil.reduce((acc, item) => acc + item.resumo.rendaPassivaMensalProventos, 0);
+      const rendaPassivaMensal = projeçõesPorPerfil.reduce((acc, item) => acc + item.resumo.rendimentoLiquidoAtual, 0);
       const quantidadePerfisAtivos = projeçõesPorPerfil.length;
       const projecaoMensalTotal = Array.from({ length: 360 }, (_, indice) => ({
         mes: indice + 1,
-        patrimonioTotal: projeçõesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioTotal || 0), 0),
-        rendaPassivaMensalTotal: projeçõesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaMensalTotal || 0), 0)
+        patrimonioTotal: projeçõesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioTotal || 0), 0)
       }));
       const projecaoAnualTotal = Array.from({ length: 30 }, (_, indice) => ({
         ano: indice + 1,
-        total: projeçõesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0), 0),
-        rendaPassivaMensal: projeçõesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.rendaPassivaMensal || 0), 0)
+        total: projeçõesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0), 0)
       }));
 
       return {
@@ -1693,7 +1564,7 @@
       painelFamiliaEl.style.display = "none";
       cardRadarEl.classList.remove("oculto");
       tabsProjecaoEl.classList.remove("oculto");
-      rodapeProjecaoEl.textContent = "O gráfico mostra patrimônio acumulado total e renda passiva mensal distribuída ao longo de 30 anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.";
+      rodapeProjecaoEl.textContent = "O gráfico mostra patrimônio acumulado total e renda mensal líquida estimada ao longo de 30 anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.";
     }
 
     function renderizarVisaoFamilia() {
@@ -1740,7 +1611,7 @@
             A visão Família consolida automaticamente os patrimônios projetados de todos os perfis ativos, sem duplicar dados ou alterar os perfis individuais.
           </div>
           <ul class="familia-notas lista-notas">
-            ${familia.projeçõesPorPerfil.map((item) => `<li>${escapeHtml(item.perfil.nome)} contribui com ${formatterMoeda.format(item.resumo.rendaPassivaMensalProventos)} de renda passiva mensal liquida.</li>`).join("")}
+            ${familia.projeçõesPorPerfil.map((item) => `<li>${escapeHtml(item.perfil.nome)} contribui com ${formatterMoeda.format(item.resumo.rendimentoLiquidoAtual)} de renda passiva mensal liquida.</li>`).join("")}
           </ul>
         </div>
       `;
@@ -1771,9 +1642,6 @@
       listaInvestimentosEl.innerHTML = "";
       perfil.investimentos.forEach((investimento) => {
         const calculoAtual = calcularRendimentoMensalInvestimento(investimento, perfil.taxaCdiReferencia);
-        const mostrarYield = usaYieldMensal(investimento);
-        const mostrarProvento = usaProventoMensal(investimento);
-        const mostrarControlesProvento = temProventosAtivos(investimento);
         const card = document.createElement("article");
         card.className = "investimento-card";
         card.innerHTML = `
@@ -1817,62 +1685,19 @@
                 <label>Data de início</label>
                 <input data-campo="dataInicio" type="date" value="${investimento.dataInicio}" />
               </div>
-              <div class="grupo-rendimento">
-                <h3>Modelo de Rendimento</h3>
-                <div class="grupo-rendimento-linha">
-                  <div>
-                    <label>Tipo de rendimento</label>
-                    <select data-campo="tipoRendimento">
-                      ${TIPOS_RENDIMENTO.map((tipo) => `<option value="${tipo.value}" ${investimento.tipoRendimento === tipo.value ? "selected" : ""}>${tipo.label}</option>`).join("")}
-                    </select>
-                  </div>
-                  <label class="campo-toggle">
-                    <span>Paga proventos?</span>
-                    <input data-campo="pagaProventos" type="checkbox" ${investimento.pagaProventos ? "checked" : ""} />
-                  </label>
-                </div>
-                <div class="grupo-rendimento-linha">
-                  <div data-rendimento-campo="yieldMensal" style="display: ${mostrarYield ? "block" : "none"};">
-                    <label>Yield mensal (%)</label>
-                    <input data-campo="yieldMensal" type="number" min="0" step="0.01" value="${investimento.yieldMensal}" />
-                  </div>
-                  <div data-rendimento-campo="proventoMensal" style="display: ${mostrarProvento ? "block" : "none"};">
-                    <label>Provento mensal (R$)</label>
-                    <input data-campo="proventoMensal" type="number" min="0" step="0.01" value="${investimento.proventoMensal}" />
-                  </div>
-                </div>
-                <div class="grupo-rendimento-linha" data-rendimento-campo="controlesProvento" style="display: ${mostrarControlesProvento ? "grid" : "none"};">
-                  <div>
-                    <label>Tributação do provento (%)</label>
-                    <input data-campo="tributacaoProvento" type="number" min="0" step="0.01" value="${investimento.tributacaoProvento}" />
-                  </div>
-                  <label class="campo-toggle">
-                    <span>Reinvestir proventos?</span>
-                    <input data-campo="reinvestirProventos" type="checkbox" ${investimento.reinvestirProventos ? "checked" : ""} />
-                  </label>
-                </div>
-              </div>
             </div>
             <div class="resultado-inline">
               <div class="resultado-box">
-                <span>Rendimento do patrimônio / mês</span>
+                <span>Rendimento bruto / mês</span>
                 <strong>${formatterMoeda.format(calculoAtual.rendimentoBruto)}</strong>
               </div>
               <div class="resultado-box">
-                <span>IR do patrimônio / mês</span>
+                <span>IR estimado / mês</span>
                 <strong>${formatterMoeda.format(calculoAtual.imposto)}</strong>
               </div>
               <div class="resultado-box">
-                <span>Rendimento líquido do patrimônio</span>
+                <span>Rendimento líquido / mês</span>
                 <strong>${formatterMoeda.format(calculoAtual.rendimentoLiquido)}</strong>
-              </div>
-              <div class="resultado-box">
-                <span>Provento líquido / mês</span>
-                <strong>${formatterMoeda.format(calculoAtual.proventoLiquido)}</strong>
-              </div>
-              <div class="resultado-box">
-                <span>Renda passiva distribuída / mês</span>
-                <strong>${formatterMoeda.format(calculoAtual.rendaPassivaMensal)}</strong>
               </div>
             </div>
             ${calculoAtual.nota ? `<div class="nota-card">${escapeHtml(calculoAtual.nota)}</div>` : ""}
@@ -1898,11 +1723,9 @@
         });
 
         card.querySelectorAll("[data-campo]").forEach((campo) => {
-          const evento = campo.type === "checkbox" || campo.tagName === "SELECT" ? "change" : "input";
-          campo.addEventListener(evento, (eventoCampo) => {
-            const nomeCampo = eventoCampo.target.dataset.campo;
-            const valorCampo = eventoCampo.target.type === "checkbox" ? eventoCampo.target.checked : eventoCampo.target.value;
-            atualizarCampoInvestimento(investimento.id, nomeCampo, valorCampo);
+          campo.addEventListener("input", (evento) => {
+            const nomeCampo = evento.target.dataset.campo;
+            atualizarCampoInvestimento(investimento.id, nomeCampo, evento.target.value);
           });
         });
 
@@ -1917,16 +1740,14 @@
         return;
       }
 
-      if (["taxaAnual", "valorInvestido", "aporteMensal", "yieldMensal", "proventoMensal", "tributacaoProvento"].includes(campo)) {
+      if (["taxaAnual", "valorInvestido", "aporteMensal"].includes(campo)) {
         investimento[campo] = normalizarNumero(valor);
-      } else if (["pagaProventos", "reinvestirProventos"].includes(campo)) {
-        investimento[campo] = Boolean(valor);
       } else {
         investimento[campo] = valor;
       }
 
       salvarEstado();
-      if (["tipo", "tipoRendimento", "pagaProventos", "reinvestirProventos"].includes(campo)) {
+      if (campo === "tipo") {
         renderizarTudo();
       } else {
         if (campo === "descricao") {
@@ -1979,8 +1800,6 @@
       if (metricas[0]) metricas[0].textContent = formatterMoeda.format(calculoAtual.rendimentoBruto);
       if (metricas[1]) metricas[1].textContent = formatterMoeda.format(calculoAtual.imposto);
       if (metricas[2]) metricas[2].textContent = formatterMoeda.format(calculoAtual.rendimentoLiquido);
-      if (metricas[3]) metricas[3].textContent = formatterMoeda.format(calculoAtual.proventoLiquido);
-      if (metricas[4]) metricas[4].textContent = formatterMoeda.format(calculoAtual.rendaPassivaMensal);
       const nota = card.querySelector(".nota-card");
       if (calculoAtual.nota && nota) {
         nota.textContent = calculoAtual.nota;
@@ -2005,18 +1824,6 @@
       if (titulo) {
         titulo.textContent = investimento.descricao || "Novo investimento";
       }
-      const campoYield = card.querySelector('[data-rendimento-campo="yieldMensal"]');
-      if (campoYield) {
-        campoYield.style.display = usaYieldMensal(investimento) ? "block" : "none";
-      }
-      const campoProvento = card.querySelector('[data-rendimento-campo="proventoMensal"]');
-      if (campoProvento) {
-        campoProvento.style.display = usaProventoMensal(investimento) ? "block" : "none";
-      }
-      const controlesProvento = card.querySelector('[data-rendimento-campo="controlesProvento"]');
-      if (controlesProvento) {
-        controlesProvento.style.display = temProventosAtivos(investimento) ? "grid" : "none";
-      }
     }
 
     function calcularResumoGeral(investimentos, taxaCdiReferencia, dataNascimento = "") {
@@ -2030,9 +1837,6 @@
         rendimentoBrutoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoBruto, 0),
         impostoAtual: resumoAtual.reduce((acc, item) => acc + item.imposto, 0),
         rendimentoLiquidoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoLiquido, 0),
-        proventoLiquidoAtual: resumoAtual.reduce((acc, item) => acc + item.proventoLiquido, 0),
-        rendaPassivaMensalProventos: resumoAtual.reduce((acc, item) => acc + item.rendaPassivaMensal, 0),
-        rendaPassivaAnualProventos: resumoAtual.reduce((acc, item) => acc + item.rendaPassivaMensal, 0) * 12,
         projecaoMensal,
         projecaoAnual,
         notas: gerarNotasResumo(investimentos, taxaCdiReferencia),
@@ -2056,16 +1860,8 @@
           <strong>${formatterMoeda.format(resumo.impostoAtual)}</strong>
         </div>
         <div class="metric destaque">
-          <span>Rendimento líquido do patrimônio</span>
+          <span>Rendimento líquido / mês</span>
           <strong>${formatterMoeda.format(resumo.rendimentoLiquidoAtual)}</strong>
-        </div>
-        <div class="metric">
-          <span>Renda passiva mensal de proventos</span>
-          <strong>${formatterMoeda.format(resumo.rendaPassivaMensalProventos)}</strong>
-        </div>
-        <div class="metric">
-          <span>Renda passiva anual de proventos</span>
-          <strong>${formatterMoeda.format(resumo.rendaPassivaAnualProventos)}</strong>
         </div>
       `;
 
@@ -2083,17 +1879,13 @@
           <strong>${formatterMoeda.format(familia.rendaPassivaMensal)}</strong>
         </div>
         <div class="metric">
-          <span>Renda passiva anual de proventos</span>
-          <strong>${formatterMoeda.format(familia.rendaPassivaMensal * 12)}</strong>
-        </div>
-        <div class="metric">
           <span>Perfis ativos</span>
           <strong>${familia.quantidadePerfisAtivos}</strong>
         </div>
       `;
 
       listaNotasEl.innerHTML = familia.quantidadePerfisAtivos
-        ? familia.projeçõesPorPerfil.map((item) => `<li>${escapeHtml(item.perfil.nome)} contribui com ${formatterMoeda.format(item.resumo.rendaPassivaMensalProventos)} de renda passiva mensal liquida.</li>`).join("")
+        ? familia.projeçõesPorPerfil.map((item) => `<li>${escapeHtml(item.perfil.nome)} contribui com ${formatterMoeda.format(item.resumo.rendimentoLiquidoAtual)} de renda passiva mensal liquida.</li>`).join("")
         : "<li>Nenhum investimento encontrado nos perfis. Adicione investimentos em um perfil individual.</li>";
     }
 
@@ -2158,17 +1950,6 @@
         });
       }
 
-      datasets.push({
-        label: "Renda passiva mensal",
-        data: familia.projecaoMensalTotal.map((linha) => linha.rendaPassivaMensalTotal),
-        borderColor: "#059669",
-        backgroundColor: "rgba(5, 150, 105, 0.12)",
-        yAxisID: "y1",
-        tension: 0.28,
-        pointRadius: 0,
-        borderWidth: 3
-      });
-
       if (graficoProjecao) {
         graficoProjecao.destroy();
       }
@@ -2214,17 +1995,6 @@
               grid: {
                 color: "rgba(148, 163, 184, 0.16)"
               }
-            },
-            y1: {
-              position: "right",
-              ticks: {
-                callback(valor) {
-                  return formatterMoeda.format(valor);
-                }
-              },
-              grid: {
-                drawOnChartArea: false
-              }
             }
           }
         }
@@ -2238,7 +2008,6 @@
           <th>Ano</th>
           ${familia.projeçõesPorPerfil.map((item) => `<th>${escapeHtml(item.perfil.nome)}</th>`).join("")}
           <th class="coluna-total">Total Família</th>
-          <th>Renda Passiva Mensal</th>
         `;
       }
 
@@ -2255,13 +2024,11 @@
         const ano = indice + 1;
         const colunasPerfis = familia.projeçõesPorPerfil.map((item) => `<td>${formatterMoeda.format(item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0)}</td>`).join("");
         const total = familia.projecaoAnualTotal[indice]?.total || 0;
-        const rendaPassivaMensal = familia.projecaoAnualTotal[indice]?.rendaPassivaMensal || 0;
         return `
           <tr>
             <td>${ano}</td>
             ${colunasPerfis}
             <td class="coluna-total">${formatterMoeda.format(total)}</td>
-            <td>${formatterMoeda.format(rendaPassivaMensal)}</td>
           </tr>
         `;
       }).join("");
@@ -2326,11 +2093,7 @@
       const perfil = obterPerfilAtivo();
       const filtroInvestimentoId = abaAtiva === "visao-geral" ? null : abaAtiva;
       renderizarGrafico(perfil.investimentos, perfil.taxaCdiReferencia, filtroInvestimentoId, perfil.dataNascimento);
-      renderizarTabela(
-        agruparProjecaoAnual(perfil.investimentos, perfil.taxaCdiReferencia, filtroInvestimentoId, perfil.dataNascimento),
-        perfil.dataNascimento,
-        filtroInvestimentoId
-      );
+      renderizarTabela(agruparProjecaoAnual(perfil.investimentos, perfil.taxaCdiReferencia, filtroInvestimentoId, perfil.dataNascimento), perfil.dataNascimento);
     }
 
     function renderizarGrafico(investimentos, taxaCdiReferencia, investimentoId = null, dataNascimento = "") {
@@ -2345,7 +2108,7 @@
         return idade !== null ? `Ano ${ano} (${idade} anos)` : `Ano ${ano}`;
       });
       const patrimonio = projecaoMensal.map((item) => item.patrimonioTotal);
-      const rendaPassivaMensal = projecaoMensal.map((item) => item.rendaPassivaMensalTotal);
+      const rendaLiquida = projecaoMensal.map((item) => item.rendimentoLiquidoTotal);
 
       if (graficoProjecao) {
         graficoProjecao.destroy();
@@ -2367,8 +2130,8 @@
               pointRadius: 0
             },
             {
-              label: "Renda passiva mensal",
-              data: rendaPassivaMensal,
+              label: "Rendimento mensal líquido",
+              data: rendaLiquida,
               borderColor: "#059669",
               backgroundColor: "rgba(5, 150, 105, 0.12)",
               yAxisID: "y1",
@@ -2434,15 +2197,9 @@
       });
     }
 
-    function renderizarTabela(projecaoAnual, dataNascimento = "", investimentoId = null) {
-      const perfil = obterPerfilAtivo();
-      const investimentoAtivo = investimentoId
-        ? perfil.investimentos.find((investimento) => investimento.id === investimentoId)
-        : null;
-      const mostrarProventoMensal = Boolean(investimentoAtivo && temProventosAtivos(investimentoAtivo));
+    function renderizarTabela(projecaoAnual, dataNascimento = "") {
       const mostrarIdade = Boolean(dataNascimento);
       const cabecalhoIdade = mostrarIdade ? "<th>Idade</th>" : "";
-      const cabecalhoProvento = mostrarProventoMensal ? "<th>Provento Mensal Líquido</th>" : "";
       const thead = document.querySelector("thead tr");
       if (thead) {
         thead.innerHTML = `
@@ -2453,8 +2210,6 @@
           <th>Rendimento Bruto</th>
           <th>IR / Come-Cotas</th>
           <th>Rendimento Líquido</th>
-          ${cabecalhoProvento}
-          <th>Renda Passiva Mensal</th>
         `;
       }
 
@@ -2467,8 +2222,6 @@
           <td>${formatterMoeda.format(linha.rendimentoBruto)}</td>
           <td>${formatterMoeda.format(linha.imposto)}</td>
           <td>${formatterMoeda.format(linha.rendimentoLiquido)}</td>
-          ${mostrarProventoMensal ? `<td>${formatterMoeda.format(linha.proventoLiquido)}</td>` : ""}
-          <td>${formatterMoeda.format(linha.rendaPassivaMensal)}</td>
         </tr>
       `).join("");
     }
@@ -2477,15 +2230,15 @@
       const perfil = obterPerfilAtivo();
       const rendaMensal = normalizarNumero(perfil.rendaMensal);
       const custosMensais = normalizarNumero(perfil.custosMensais);
-      const rendaPassivaAtual = projecaoMensal[0]?.rendaPassivaMensalTotal || 0;
+      const rendaPassivaAtual = projecaoMensal[0]?.rendimentoLiquidoTotal || 0;
       const idadeAtual = obterIdadeNaProjecao(dataNascimento, 0);
       const coberturaCustos = custosMensais > 0 ? (rendaPassivaAtual / custosMensais) * 100 : 0;
       const saldoMensalComSalario = rendaMensal + rendaPassivaAtual - custosMensais;
       const mesCobreCustos = custosMensais > 0
-        ? projecaoMensal.find((linha) => linha.rendaPassivaMensalTotal >= custosMensais)?.mes || null
+        ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= custosMensais)?.mes || null
         : null;
       const mesReplicaSalario = rendaMensal > 0
-        ? projecaoMensal.find((linha) => linha.rendaPassivaMensalTotal >= rendaMensal)?.mes || null
+        ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= rendaMensal)?.mes || null
         : null;
 
       const cobreCustosHoje = custosMensais > 0 && rendaPassivaAtual >= custosMensais;
@@ -2549,42 +2302,26 @@
     }
 
     function calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia) {
-      let taxaAnualEfetiva = 0;
-      let taxaMensal = 0;
-      let rendimentoBruto = 0;
-      let imposto = 0;
-      let notaPatrimonio = "";
-
-      if (investimento.tipoRendimento === "reinvestido") {
-        taxaAnualEfetiva = obterTaxaAnualEfetiva(investimento, taxaCdiReferencia);
-        taxaMensal = calcularTaxaMensal(taxaAnualEfetiva);
-        rendimentoBruto = investimento.valorInvestido * taxaMensal;
-        const dadosImposto = aplicarImpostoRenda({
-          tipo: investimento.tipo,
-          rendimentoBruto,
-          valorBase: investimento.valorInvestido,
-          dataInicio: investimento.dataInicio,
-          dataReferencia: new Date(),
-          rendimentoSemestreAcumulado: rendimentoBruto,
-          considerarComeCotas: false
-        });
-        imposto = dadosImposto.imposto;
-        notaPatrimonio = dadosImposto.nota;
-      }
-
-      const proventos = calcularFluxoProventos(investimento, normalizarNumero(investimento.valorInvestido, 0));
+      const taxaAnualEfetiva = obterTaxaAnualEfetiva(investimento, taxaCdiReferencia);
+      const taxaMensal = calcularTaxaMensal(taxaAnualEfetiva);
+      const rendimentoBruto = investimento.valorInvestido * taxaMensal;
+      const dadosImposto = aplicarImpostoRenda({
+        tipo: investimento.tipo,
+        rendimentoBruto,
+        valorBase: investimento.valorInvestido,
+        dataInicio: investimento.dataInicio,
+        dataReferencia: new Date(),
+        rendimentoSemestreAcumulado: rendimentoBruto,
+        considerarComeCotas: false
+      });
 
       return {
         taxaAnualEfetiva,
         taxaMensal,
         rendimentoBruto,
-        imposto,
-        rendimentoLiquido: rendimentoBruto - imposto,
-        proventoBruto: proventos.bruto,
-        impostoProvento: proventos.imposto,
-        proventoLiquido: proventos.liquido,
-        rendaPassivaMensal: proventos.distribuido,
-        nota: comporNotaInvestimento(notaPatrimonio, investimento)
+        imposto: dadosImposto.imposto,
+        rendimentoLiquido: rendimentoBruto - dadosImposto.imposto,
+        nota: dadosImposto.nota
       };
     }
 
@@ -2669,57 +2406,41 @@
         let rendimentoBrutoTotal = 0;
         let impostoTotal = 0;
         let rendimentoLiquidoTotal = 0;
-        let proventoBrutoTotal = 0;
-        let impostoProventoTotal = 0;
-        let proventoLiquidoTotal = 0;
-        let rendaPassivaMensalTotal = 0;
         let aportesTotal = 0;
 
         estadoProjecao.forEach((item) => {
-          const aporteMensal = normalizarNumero(item.aporteMensal);
-          const patrimonioBase = item.patrimonio + aporteMensal;
-          let rendimentoBruto = 0;
+          const taxaAnualEfetiva = obterTaxaAnualEfetiva(item, taxaCdiReferencia);
+          const taxaMensal = calcularTaxaMensal(taxaAnualEfetiva);
+          const patrimonioBase = item.patrimonio + normalizarNumero(item.aporteMensal);
+          const rendimentoBruto = patrimonioBase * taxaMensal;
+          aportesTotal += normalizarNumero(item.aporteMensal);
           let impostoMes = 0;
-          let rendimentoLiquido = 0;
 
-          aportesTotal += aporteMensal;
-
-          if (item.tipoRendimento === "reinvestido") {
-            const taxaAnualEfetiva = obterTaxaAnualEfetiva(item, taxaCdiReferencia);
-            const taxaMensal = calcularTaxaMensal(taxaAnualEfetiva);
-            rendimentoBruto = patrimonioBase * taxaMensal;
-
-            if (item.tipo === "Fundo de Investimento") {
-              item.rendimentoSemestreAcumulado += rendimentoBruto;
-              const mesCalendario = dataMes.getMonth();
-              const ehComeCotas = mesCalendario === 4 || mesCalendario === 10;
-              if (ehComeCotas) {
-                impostoMes = item.rendimentoSemestreAcumulado * 0.15;
-                item.rendimentoSemestreAcumulado = 0;
-              }
-            } else {
-              impostoMes = aplicarImpostoRenda({
-                tipo: item.tipo,
-                rendimentoBruto,
-                valorBase: patrimonioBase,
-                dataInicio: item.dataInicio,
-                dataReferencia: dataMes
-              }).imposto;
+          if (item.tipo === "Fundo de Investimento") {
+            item.rendimentoSemestreAcumulado += rendimentoBruto;
+            const mesCalendario = dataMes.getMonth();
+            const ehComeCotas = mesCalendario === 4 || mesCalendario === 10;
+            if (ehComeCotas) {
+              impostoMes = item.rendimentoSemestreAcumulado * 0.15;
+              item.rendimentoSemestreAcumulado = 0;
             }
-            rendimentoLiquido = rendimentoBruto - impostoMes;
+          } else {
+            impostoMes = aplicarImpostoRenda({
+              tipo: item.tipo,
+              rendimentoBruto,
+              valorBase: patrimonioBase,
+              dataInicio: item.dataInicio,
+              dataReferencia: dataMes
+            }).imposto;
           }
 
-          const proventos = calcularFluxoProventos(item, patrimonioBase);
-          item.patrimonio = patrimonioBase + rendimentoLiquido + proventos.reinvestido;
+          const rendimentoLiquido = rendimentoBruto - impostoMes;
+          item.patrimonio = patrimonioBase + rendimentoLiquido;
 
           patrimonioTotal += item.patrimonio;
           rendimentoBrutoTotal += rendimentoBruto;
           impostoTotal += impostoMes;
           rendimentoLiquidoTotal += rendimentoLiquido;
-          proventoBrutoTotal += proventos.bruto;
-          impostoProventoTotal += proventos.imposto;
-          proventoLiquidoTotal += proventos.liquido;
-          rendaPassivaMensalTotal += proventos.distribuido;
         });
 
         linhas.push({
@@ -2728,11 +2449,7 @@
           aportesTotal,
           rendimentoBrutoTotal,
           impostoTotal,
-          rendimentoLiquidoTotal,
-          proventoBrutoTotal,
-          impostoProventoTotal,
-          proventoLiquidoTotal,
-          rendaPassivaMensalTotal
+          rendimentoLiquidoTotal
         });
       }
 
@@ -2751,9 +2468,7 @@
           aportes: fatia.reduce((acc, item) => acc + item.aportesTotal, 0),
           rendimentoBruto: fatia.reduce((acc, item) => acc + item.rendimentoBrutoTotal, 0),
           imposto: fatia.reduce((acc, item) => acc + item.impostoTotal, 0),
-          rendimentoLiquido: fatia.reduce((acc, item) => acc + item.rendimentoLiquidoTotal, 0),
-          proventoLiquido: fatia[fatia.length - 1]?.proventoLiquidoTotal || 0,
-          rendaPassivaMensal: fatia[fatia.length - 1]?.rendaPassivaMensalTotal || 0
+          rendimentoLiquido: fatia.reduce((acc, item) => acc + item.rendimentoLiquidoTotal, 0)
         });
       }
       return linhas;
@@ -2792,9 +2507,6 @@
       }
       if (investimentos.some((item) => item.tipo === "Fundo de Investimento")) {
         notas.push("Fundos: come-cotas de 15% em maio e novembro reduz o patrimônio projetado semestralmente.");
-      }
-      if (investimentos.some((item) => temProventosAtivos(item))) {
-        notas.push("Proventos distribuídos entram como renda passiva apenas quando não são reinvestidos.");
       }
 
       return notas;
