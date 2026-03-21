@@ -580,6 +580,107 @@
       background: rgba(37, 99, 235, 0.12);
     }
 
+    .grupo-flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .flag-check {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: var(--superficie-suave);
+      font-size: 0.9rem;
+      color: var(--texto);
+    }
+
+    .flag-check input {
+      width: auto;
+      margin: 0;
+      padding: 0;
+    }
+
+    .sublista-bloco {
+      margin-top: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .secao-bens {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 0%, rgba(148, 163, 184, 0.04) 100%);
+    }
+
+    body.tema-escuro .secao-bens {
+      background: linear-gradient(180deg, rgba(19, 34, 56, 0.55) 0%, rgba(15, 27, 45, 0.82) 100%);
+    }
+
+    .secao-bens-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .secao-bens-header h3 {
+      margin: 0;
+      font-size: 1.02rem;
+    }
+
+    .secao-bens-header p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .sublista-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sublista-topo h3 {
+      margin: 0;
+      font-size: 0.96rem;
+    }
+
+    .sublista-itens {
+      display: grid;
+      gap: 12px;
+    }
+
+    .subitem-card {
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: var(--superficie-suave);
+    }
+
+    .subitem-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .subitem-titulo {
+      font-size: 0.86rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
     .acoes-lateral {
       display: grid;
       gap: 14px;
@@ -883,12 +984,21 @@
     }
 
     .vazio {
-      padding: 24px;
+      padding: 20px 24px;
       text-align: center;
       border: 1px dashed rgba(148, 163, 184, 0.5);
       border-radius: 16px;
       color: var(--muted);
       background: rgba(255, 255, 255, 0.7);
+      min-height: 92px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.tema-escuro .vazio {
+      background: rgba(148, 163, 184, 0.08);
+      border-color: rgba(148, 163, 184, 0.22);
     }
 
     @media (max-width: 980px) {
@@ -1020,6 +1130,7 @@
     <section id="abasConteudoPrincipal" class="abas-conteudo-principal">
       <button id="abaResumoProjecao" class="aba-conteudo ativa" type="button">Resumo e Projeção</button>
       <button id="abaInvestimentos" class="aba-conteudo" type="button">Investimentos</button>
+      <button id="abaBens" class="aba-conteudo" type="button">Bens</button>
     </section>
 
     <section id="conteudoResumoPrincipal" class="conteudo-aba-principal">
@@ -1100,13 +1211,42 @@
         <div id="listaInvestimentos" class="lista-investimentos"></div>
       </section>
     </section>
+
+    <section id="conteudoBensPrincipal" class="conteudo-aba-principal oculto">
+      <section class="card secao secao-principal">
+        <div class="cabecalho-secao">
+          <h2>Bens</h2>
+          <div class="toolbar-acoes">
+            <button id="btnAdicionarImovel" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Imóvel</button>
+            <button id="btnAdicionarEmpresa" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Empresa</button>
+          </div>
+        </div>
+        <div class="sublista-bloco secao-bens">
+          <div class="secao-bens-header">
+            <div>
+              <h3>Imóveis</h3>
+              <p>Patrimônio imobiliário com controle de financiamento e geração de aluguel.</p>
+            </div>
+          </div>
+          <div id="listaImoveis" class="lista-investimentos"></div>
+        </div>
+        <div class="sublista-bloco secao-bens">
+          <div class="secao-bens-header">
+            <div>
+              <h3>Empresas</h3>
+              <p>Negócios operacionais com lucro mensal e sub-listas de dívidas.</p>
+            </div>
+          </div>
+          <div id="listaEmpresas" class="lista-investimentos"></div>
+        </div>
+      </section>
+    </section>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const CHAVE_STORAGE = "calculadora-renda-passiva";
     const formatterMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-    const formatterNumero = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formatterPercentual = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const TIPOS = ["Renda Fixa", "Fundo de Investimento", "Ações", "Crypto", "CDB", "CDI (%)"];
     const ESTADO = carregarEstadoInicial();
@@ -1119,6 +1259,8 @@
     let abaConteudoPrincipalAtiva = "resumo";
 
     const listaInvestimentosEl = document.getElementById("listaInvestimentos");
+    const listaImoveisEl = document.getElementById("listaImoveis");
+    const listaEmpresasEl = document.getElementById("listaEmpresas");
     const painelFamiliaEl = document.getElementById("painelFamilia");
     const cardFamiliaResumoEl = document.getElementById("cardFamiliaResumo");
     const resumoGridEl = document.getElementById("resumoGrid");
@@ -1126,6 +1268,8 @@
     const corpoTabelaEl = document.getElementById("corpoTabela");
     const taxaCdiReferenciaEl = document.getElementById("taxaCdiReferencia");
     const btnAdicionarEl = document.getElementById("btnAdicionar");
+    const btnAdicionarImovelEl = document.getElementById("btnAdicionarImovel");
+    const btnAdicionarEmpresaEl = document.getElementById("btnAdicionarEmpresa");
     const btnTemaEl = document.getElementById("btnTema");
     const btnMenuConfiguracoesEl = document.getElementById("btnMenuConfiguracoes");
     const menuConfiguracoesEl = document.getElementById("menuConfiguracoes");
@@ -1146,39 +1290,57 @@
     const abasConteudoPrincipalEl = document.getElementById("abasConteudoPrincipal");
     const abaResumoProjecaoEl = document.getElementById("abaResumoProjecao");
     const abaInvestimentosEl = document.getElementById("abaInvestimentos");
+    const abaBensEl = document.getElementById("abaBens");
     const conteudoResumoPrincipalEl = document.getElementById("conteudoResumoPrincipal");
     const conteudoInvestimentosPrincipalEl = document.getElementById("conteudoInvestimentosPrincipal");
+    const conteudoBensPrincipalEl = document.getElementById("conteudoBensPrincipal");
 
     aplicarTema();
     sincronizarCamposPerfil();
 
     taxaCdiReferenciaEl.addEventListener("input", () => {
-      obterPerfilAtivo().taxaCdiReferencia = normalizarNumero(taxaCdiReferenciaEl.value);
+      obterPerfilAtivo().taxaCdiReferencia = normalizarNumero(taxaCdiReferenciaEl.value, 13.25);
       salvarEstado();
-      clearTimeout(debounceAtualizacao);
-      debounceAtualizacao = setTimeout(() => {
-        renderizarTudo();
-      }, 300);
+      agendarAtualizacao(true);
     });
 
     rendaMensalEl.addEventListener("input", () => {
       obterPerfilAtivo().rendaMensal = normalizarNumero(rendaMensalEl.value);
       salvarEstado();
-      agendarAtualizacao();
+      agendarAtualizacao(false);
     });
 
     custosMensaisEl.addEventListener("input", () => {
       obterPerfilAtivo().custosMensais = normalizarNumero(custosMensaisEl.value);
       salvarEstado();
-      agendarAtualizacao();
+      agendarAtualizacao(false);
     });
 
     btnAdicionarEl.addEventListener("click", () => {
+      const perfil = obterPerfilAtivo();
       const novoInvestimento = criarInvestimentoPadrao();
       novoInvestimento.expandido = true;
-      obterPerfilAtivo().investimentos.unshift(novoInvestimento);
+      perfil.investimentos.unshift(novoInvestimento);
       salvarEstado();
-      renderizarTudo();
+      renderizarTudo(true);
+    });
+
+    btnAdicionarImovelEl.addEventListener("click", () => {
+      const perfil = obterPerfilAtivo();
+      const novoImovel = criarImovelPadrao();
+      novoImovel.expandido = true;
+      perfil.imoveis.unshift(novoImovel);
+      salvarEstado();
+      renderizarTudo(true);
+    });
+
+    btnAdicionarEmpresaEl.addEventListener("click", () => {
+      const perfil = obterPerfilAtivo();
+      const novaEmpresa = criarEmpresaPadrao();
+      novaEmpresa.expandido = true;
+      perfil.empresas.unshift(novaEmpresa);
+      salvarEstado();
+      renderizarTudo(true);
     });
 
     btnTemaEl.addEventListener("click", () => {
@@ -1193,21 +1355,9 @@
       btnMenuConfiguracoesEl.textContent = estaOculto ? "Configurações" : "Fechar";
     });
 
-    abaResumoProjecaoEl.addEventListener("click", () => {
-      if (abaConteudoPrincipalAtiva === "resumo") {
-        return;
-      }
-      abaConteudoPrincipalAtiva = "resumo";
-      aplicarAbaConteudoPrincipal();
-    });
-
-    abaInvestimentosEl.addEventListener("click", () => {
-      if (abaConteudoPrincipalAtiva === "investimentos") {
-        return;
-      }
-      abaConteudoPrincipalAtiva = "investimentos";
-      aplicarAbaConteudoPrincipal();
-    });
+    abaResumoProjecaoEl.addEventListener("click", () => ativarAbaConteudoPrincipal("resumo"));
+    abaInvestimentosEl.addEventListener("click", () => ativarAbaConteudoPrincipal("investimentos"));
+    abaBensEl.addEventListener("click", () => ativarAbaConteudoPrincipal("bens"));
 
     nomePerfilEl.addEventListener("input", () => {
       obterPerfilAtivo().nome = nomePerfilEl.value;
@@ -1221,9 +1371,7 @@
       renderizarTudo(false);
     });
 
-    btnRemoverPerfilEl.addEventListener("click", () => {
-      removerPerfilAtivo();
-    });
+    btnRemoverPerfilEl.addEventListener("click", removerPerfilAtivo);
 
     window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
       if (!ESTADO.temaPreferenciaManual) {
@@ -1231,7 +1379,7 @@
       }
     });
 
-    renderizarTudo();
+    renderizarTudo(true);
 
     function carregarEstadoInicial() {
       const salvo = localStorage.getItem(CHAVE_STORAGE);
@@ -1248,9 +1396,7 @@
           temaEscuro: estado.temaEscuro === true,
           temaPreferenciaManual: estado.temaPreferenciaManual === true,
           perfilAtivo: estado.perfilAtivo,
-          perfis: estado.perfis.length
-            ? estado.perfis.map(normalizarPerfil)
-            : [criarPerfilPadrao("Meu Perfil")]
+          perfis: estado.perfis.length ? estado.perfis.map(normalizarPerfil) : [criarPerfilPadrao("Meu Perfil")]
         };
       } catch (erro) {
         return criarEstadoInicial();
@@ -1276,7 +1422,8 @@
       perfilMigrado.investimentos = Array.isArray(estadoAntigo.investimentos) && estadoAntigo.investimentos.length
         ? estadoAntigo.investimentos.map(normalizarInvestimento)
         : [criarInvestimentoPadrao()];
-
+      perfilMigrado.imoveis = [];
+      perfilMigrado.empresas = [];
       return {
         temaEscuro: estadoAntigo.temaEscuro === true,
         temaPreferenciaManual: estadoAntigo.temaPreferenciaManual === true,
@@ -1293,11 +1440,15 @@
         taxaCdiReferencia: 13.25,
         rendaMensal: 0,
         custosMensais: 0,
-        investimentos: [criarInvestimentoPadrao()]
+        investimentos: [criarInvestimentoPadrao()],
+        imoveis: [],
+        empresas: []
       };
     }
 
     function normalizarPerfil(perfil) {
+      perfil.imoveis = perfil.imoveis || [];
+      perfil.empresas = perfil.empresas || [];
       return {
         id: perfil.id || crypto.randomUUID(),
         nome: perfil.nome || "Novo Perfil",
@@ -1307,15 +1458,14 @@
         custosMensais: normalizarNumero(perfil.custosMensais, 0),
         investimentos: Array.isArray(perfil.investimentos) && perfil.investimentos.length
           ? perfil.investimentos.map(normalizarInvestimento)
-          : [criarInvestimentoPadrao()]
+          : [criarInvestimentoPadrao()],
+        imoveis: Array.isArray(perfil.imoveis) ? perfil.imoveis.map(normalizarImovel) : [],
+        empresas: Array.isArray(perfil.empresas) ? perfil.empresas.map(normalizarEmpresa) : []
       };
     }
 
     function obterTemaEscuroAtivo() {
-      if (ESTADO.temaPreferenciaManual) {
-        return ESTADO.temaEscuro === true;
-      }
-      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+      return ESTADO.temaPreferenciaManual ? ESTADO.temaEscuro === true : window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
 
     function aplicarTema() {
@@ -1365,6 +1515,50 @@
       };
     }
 
+    function criarImovelPadrao() {
+      return {
+        id: crypto.randomUUID(),
+        descricao: "",
+        valorEstimado: 0,
+        status: { financiado: false, quitado: true, geraReceita: false },
+        saldoDevedor: 0,
+        parcelaMensal: 0,
+        taxaJurosAnual: 0,
+        mesesRestantes: 0,
+        aluguelMensalBruto: 0,
+        taxaVacancia: 0,
+        iptuAnual: 0,
+        condominioMensal: 0,
+        custosManutencaoMensal: 0,
+        expandido: false
+      };
+    }
+
+    function criarDividaPadrao() {
+      return {
+        id: crypto.randomUUID(),
+        descricao: "",
+        saldoDevedor: 0,
+        parcelaMensal: 0,
+        taxaJurosAnual: 0,
+        mesesRestantes: 0
+      };
+    }
+
+    function criarEmpresaPadrao() {
+      return {
+        id: crypto.randomUUID(),
+        descricao: "",
+        valorEstimado: 0,
+        receitaMensal: 0,
+        receitaPassiva: false,
+        custosFixos: 0,
+        emprestimos: [],
+        financiamentos: [],
+        expandido: false
+      };
+    }
+
     function normalizarInvestimento(investimento) {
       return {
         id: investimento.id || crypto.randomUUID(),
@@ -1378,14 +1572,55 @@
       };
     }
 
-    function sincronizarExpansaoInvestimentos(perfil) {
-      if (!perfil || !Array.isArray(perfil.investimentos)) {
-        return;
-      }
+    function normalizarImovel(imovel) {
+      const status = imovel.status || {};
+      const financiado = status.financiado === true;
+      const quitado = financiado ? false : status.quitado !== false;
+      return {
+        id: imovel.id || crypto.randomUUID(),
+        descricao: imovel.descricao || "",
+        valorEstimado: normalizarNumero(imovel.valorEstimado, 0),
+        status: {
+          financiado,
+          quitado,
+          geraReceita: status.geraReceita === true
+        },
+        saldoDevedor: normalizarNumero(imovel.saldoDevedor, 0),
+        parcelaMensal: normalizarNumero(imovel.parcelaMensal, 0),
+        taxaJurosAnual: normalizarNumero(imovel.taxaJurosAnual, 0),
+        mesesRestantes: normalizarNumero(imovel.mesesRestantes, 0),
+        aluguelMensalBruto: normalizarNumero(imovel.aluguelMensalBruto, 0),
+        taxaVacancia: normalizarNumero(imovel.taxaVacancia, 0),
+        iptuAnual: normalizarNumero(imovel.iptuAnual, 0),
+        condominioMensal: normalizarNumero(imovel.condominioMensal, 0),
+        custosManutencaoMensal: normalizarNumero(imovel.custosManutencaoMensal, 0),
+        expandido: imovel.expandido === true
+      };
+    }
 
-      if (perfil.investimentos.length === 1) {
-        perfil.investimentos[0].expandido = true;
-      }
+    function normalizarDivida(divida) {
+      return {
+        id: divida.id || crypto.randomUUID(),
+        descricao: divida.descricao || "",
+        saldoDevedor: normalizarNumero(divida.saldoDevedor, 0),
+        parcelaMensal: normalizarNumero(divida.parcelaMensal, 0),
+        taxaJurosAnual: normalizarNumero(divida.taxaJurosAnual, 0),
+        mesesRestantes: normalizarNumero(divida.mesesRestantes, 0)
+      };
+    }
+
+    function normalizarEmpresa(empresa) {
+      return {
+        id: empresa.id || crypto.randomUUID(),
+        descricao: empresa.descricao || "",
+        valorEstimado: normalizarNumero(empresa.valorEstimado, 0),
+        receitaMensal: normalizarNumero(empresa.receitaMensal, 0),
+        receitaPassiva: empresa.receitaPassiva === true,
+        custosFixos: normalizarNumero(empresa.custosFixos, 0),
+        emprestimos: Array.isArray(empresa.emprestimos) ? empresa.emprestimos.map(normalizarDivida) : [],
+        financiamentos: Array.isArray(empresa.financiamentos) ? empresa.financiamentos.map(normalizarDivida) : [],
+        expandido: empresa.expandido === true
+      };
     }
 
     function obterPerfilAtivo() {
@@ -1417,88 +1652,67 @@
       abaConteudoPrincipalAtiva = "resumo";
       salvarEstado();
       sincronizarCamposPerfil();
-      renderizarTudo();
+      renderizarTudo(true);
     }
 
     function removerPerfilAtivo() {
-      if (ESTADO.perfis.length === 1) {
-        return;
-      }
+      if (ESTADO.perfis.length === 1) return;
       const perfil = obterPerfilAtivo();
-      if (!window.confirm(`Remover o perfil "${perfil.nome || "Novo Perfil"}"?`)) {
-        return;
-      }
+      if (!window.confirm(`Remover o perfil "${perfil.nome || "Novo Perfil"}"?`)) return;
       ESTADO.perfis = ESTADO.perfis.filter((item) => item.id !== perfil.id);
       ESTADO.perfilAtivo = ESTADO.perfis[0].id;
       abaAtiva = "visao-geral";
       abaConteudoPrincipalAtiva = "resumo";
       salvarEstado();
       sincronizarCamposPerfil();
-      renderizarTudo();
+      renderizarTudo(true);
     }
 
     function estaNaVisaoFamilia() {
       return modoVisao === "familia";
     }
 
-    function obterPerfisComInvestimentos() {
-      return ESTADO.perfis.filter((perfil) => Array.isArray(perfil.investimentos) && perfil.investimentos.length > 0);
-    }
-
-    function calcularVisaoFamilia() {
-      const perfisComInvestimentos = obterPerfisComInvestimentos();
-      const projeçõesPorPerfil = perfisComInvestimentos.map((perfil) => ({
-        perfil,
-        resumo: calcularResumoGeral(perfil.investimentos, perfil.taxaCdiReferencia, perfil.dataNascimento)
-      }));
-
-      const totalInvestido = projeçõesPorPerfil.reduce((acc, item) => acc + item.resumo.totalInvestido, 0);
-      const rendaPassivaMensal = projeçõesPorPerfil.reduce((acc, item) => acc + item.resumo.rendimentoLiquidoAtual, 0);
-      const quantidadePerfisAtivos = projeçõesPorPerfil.length;
-      const projecaoMensalTotal = Array.from({ length: 360 }, (_, indice) => ({
-        mes: indice + 1,
-        patrimonioTotal: projeçõesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioTotal || 0), 0)
-      }));
-      const projecaoAnualTotal = Array.from({ length: 30 }, (_, indice) => ({
-        ano: indice + 1,
-        total: projeçõesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0), 0)
-      }));
-
-      return {
-        perfisComInvestimentos,
-        projeçõesPorPerfil,
-        totalInvestido,
-        rendaPassivaMensal,
-        quantidadePerfisAtivos,
-        projecaoMensalTotal,
-        projecaoAnualTotal
-      };
+    function obterPerfisComPatrimonio() {
+      return ESTADO.perfis.filter((perfil) => (
+        (Array.isArray(perfil.investimentos) && perfil.investimentos.length > 0) ||
+        (Array.isArray(perfil.imoveis) && perfil.imoveis.length > 0) ||
+        (Array.isArray(perfil.empresas) && perfil.empresas.length > 0)
+      ));
     }
 
     function salvarEstado() {
       localStorage.setItem(CHAVE_STORAGE, JSON.stringify(ESTADO));
     }
 
-    function agendarAtualizacao() {
+    function agendarAtualizacao(recriarCards = false) {
       clearTimeout(debounceAtualizacao);
       debounceAtualizacao = setTimeout(() => {
-        renderizarTudo(false);
-      }, 300);
+        renderizarTudo(recriarCards);
+      }, 250);
+    }
+
+    function ativarAbaConteudoPrincipal(aba) {
+      if (abaConteudoPrincipalAtiva === aba) return;
+      abaConteudoPrincipalAtiva = aba;
+      aplicarAbaConteudoPrincipal();
     }
 
     function renderizarTudo(recriarCards = true) {
       sincronizarCamposPerfil();
-      if (recriarCards && !estaNaVisaoFamilia()) {
-        renderizarInvestimentos();
-      }
       renderizarBarraPerfis();
+
       if (estaNaVisaoFamilia()) {
         renderizarVisaoFamilia();
         return;
       }
 
+      if (recriarCards) {
+        renderizarInvestimentos();
+        renderizarBens();
+      }
+
       const perfil = obterPerfilAtivo();
-      const resumo = calcularResumoGeral(perfil.investimentos, perfil.taxaCdiReferencia, perfil.dataNascimento);
+      const resumo = calcularResumoGeral(perfil);
       renderizarVisaoPerfil();
       renderizarResumo(resumo);
       renderizarRadarFinanceiro(resumo);
@@ -1509,19 +1723,9 @@
 
     function renderizarBarraPerfis() {
       barraPerfisEl.innerHTML = `
-        <button
-          class="perfil-tab familia ${estaNaVisaoFamilia() ? "ativo" : ""}"
-          type="button"
-          data-acao="visao-familia"
-        >
-          Família
-        </button>
+        <button class="perfil-tab familia ${estaNaVisaoFamilia() ? "ativo" : ""}" type="button" data-acao="visao-familia">Família</button>
       ` + ESTADO.perfis.map((perfil) => `
-        <button
-          class="perfil-tab ${perfil.id === ESTADO.perfilAtivo && !estaNaVisaoFamilia() ? "ativo" : ""}"
-          type="button"
-          data-perfil-id="${perfil.id}"
-        >
+        <button class="perfil-tab ${perfil.id === ESTADO.perfilAtivo && !estaNaVisaoFamilia() ? "ativo" : ""}" type="button" data-perfil-id="${perfil.id}">
           ${escapeHtml(perfil.nome || "Novo Perfil")}
         </button>
       `).join("") + '<button class="perfil-add" type="button" data-acao="adicionar-perfil">+</button>';
@@ -1536,22 +1740,18 @@
       barraPerfisEl.querySelectorAll("[data-perfil-id]").forEach((botao) => {
         botao.addEventListener("click", () => {
           const proximoPerfilId = botao.dataset.perfilId;
-          if (proximoPerfilId === ESTADO.perfilAtivo && !estaNaVisaoFamilia()) {
-            return;
-          }
+          if (proximoPerfilId === ESTADO.perfilAtivo && !estaNaVisaoFamilia()) return;
           modoVisao = "perfil";
           ESTADO.perfilAtivo = proximoPerfilId;
           abaAtiva = "visao-geral";
           abaConteudoPrincipalAtiva = "resumo";
           salvarEstado();
           sincronizarCamposPerfil();
-          renderizarTudo();
+          renderizarTudo(true);
         });
       });
 
-      barraPerfisEl.querySelector('[data-acao="adicionar-perfil"]')?.addEventListener("click", () => {
-        adicionarPerfil();
-      });
+      barraPerfisEl.querySelector('[data-acao="adicionar-perfil"]')?.addEventListener("click", adicionarPerfil);
     }
 
     function renderizarVisaoPerfil() {
@@ -1564,7 +1764,7 @@
       painelFamiliaEl.style.display = "none";
       cardRadarEl.classList.remove("oculto");
       tabsProjecaoEl.classList.remove("oculto");
-      rodapeProjecaoEl.textContent = "O gráfico mostra patrimônio acumulado total e renda mensal líquida estimada ao longo de 30 anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.";
+      rodapeProjecaoEl.textContent = "O gráfico mostra patrimônio total, patrimônio em bens e renda passiva mensal líquida ao longo de 30 anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.";
     }
 
     function renderizarVisaoFamilia() {
@@ -1574,20 +1774,17 @@
       abasConteudoPrincipalEl.classList.add("oculto");
       conteudoResumoPrincipalEl.classList.remove("oculto");
       conteudoInvestimentosPrincipalEl.classList.add("oculto");
+      conteudoBensPrincipalEl.classList.add("oculto");
       cardFamiliaResumoEl.classList.remove("oculto");
       acoesLateralEl.classList.add("oculto");
       perfilFormEl.classList.add("oculto");
       cardRadarEl.classList.add("oculto");
       tabsProjecaoEl.classList.add("oculto");
-      rodapeProjecaoEl.textContent = "A projeção da Família agrega dinamicamente todos os perfis com investimentos cadastrados.";
+      rodapeProjecaoEl.textContent = "A projeção da Família agrega dinamicamente investimentos e bens de todos os perfis.";
 
       if (!familia.quantidadePerfisAtivos) {
         painelFamiliaEl.style.display = "grid";
-        painelFamiliaEl.innerHTML = `
-          <div class="familia-vazio">
-            Nenhum investimento encontrado nos perfis. Adicione investimentos em um perfil individual.
-          </div>
-        `;
+        painelFamiliaEl.innerHTML = `<div class="familia-vazio">Nenhum patrimônio encontrado nos perfis. Adicione investimentos ou bens em um perfil individual.</div>`;
         renderizarGraficoFamilia(familia);
         renderizarTabelaFamilia(familia);
         return;
@@ -1598,20 +1795,23 @@
         <div class="familia-resumo-bloco">
           <div class="resumo-grid">
             <div class="metric destaque">
-              <span>Total investido pela família</span>
-              <strong>${formatterMoeda.format(familia.totalInvestido)}</strong>
+              <span>Patrimônio total da família</span>
+              <strong>${formatterMoeda.format(familia.patrimonioTotalAtual)}</strong>
             </div>
             <div class="metric">
-              <span>Renda passiva mensal liquida</span>
+              <span>Renda passiva mensal total</span>
               <strong>${formatterMoeda.format(familia.rendaPassivaMensal)}</strong>
             </div>
-
+            <div class="metric">
+              <span>Dívida total em bens</span>
+              <strong>${formatterMoeda.format(familia.dividaTotalBens)}</strong>
+            </div>
           </div>
           <div class="familia-copy">
-            A visão Família consolida automaticamente os patrimônios projetados de todos os perfis ativos, sem duplicar dados ou alterar os perfis individuais.
+            A visão Família soma automaticamente investimentos, imóveis e empresas de todos os perfis, mantendo a lógica de merge e filtragem do painel individual.
           </div>
           <ul class="familia-notas lista-notas">
-            ${familia.projeçõesPorPerfil.map((item) => `<li>${escapeHtml(item.perfil.nome)} contribui com ${formatterMoeda.format(item.resumo.rendimentoLiquidoAtual)} de renda passiva mensal liquida.</li>`).join("")}
+            ${familia.projecoesPorPerfil.map((item) => `<li>${escapeHtml(item.perfil.nome)} contribui com ${formatterMoeda.format(item.resumo.rendaPassivaTotalAtual)} de renda passiva mensal e ${formatterMoeda.format(item.resumo.patrimonioTotalAtual)} de patrimônio total.</li>`).join("")}
           </ul>
         </div>
       `;
@@ -1622,18 +1822,24 @@
 
     function aplicarAbaConteudoPrincipal() {
       const resumoAtivo = abaConteudoPrincipalAtiva === "resumo";
+      const investimentosAtivo = abaConteudoPrincipalAtiva === "investimentos";
+      const bensAtivo = abaConteudoPrincipalAtiva === "bens";
       conteudoResumoPrincipalEl.classList.toggle("oculto", !resumoAtivo);
-      conteudoInvestimentosPrincipalEl.classList.toggle("oculto", resumoAtivo);
+      conteudoInvestimentosPrincipalEl.classList.toggle("oculto", !investimentosAtivo);
+      conteudoBensPrincipalEl.classList.toggle("oculto", !bensAtivo);
       abaResumoProjecaoEl.classList.toggle("ativa", resumoAtivo);
-      abaInvestimentosEl.classList.toggle("ativa", !resumoAtivo);
-      if (resumoAtivo && graficoProjecao) {
-        requestAnimationFrame(() => graficoProjecao.resize());
-      }
+      abaInvestimentosEl.classList.toggle("ativa", investimentosAtivo);
+      abaBensEl.classList.toggle("ativa", bensAtivo);
+      if (resumoAtivo && graficoProjecao) requestAnimationFrame(() => graficoProjecao.resize());
+    }
+
+    function sincronizarExpansaoLista(lista) {
+      if (Array.isArray(lista) && lista.length === 1) lista[0].expandido = true;
     }
 
     function renderizarInvestimentos() {
       const perfil = obterPerfilAtivo();
-      sincronizarExpansaoInvestimentos(perfil);
+      sincronizarExpansaoLista(perfil.investimentos);
       if (!perfil.investimentos.length) {
         listaInvestimentosEl.innerHTML = '<div class="vazio">Nenhum investimento cadastrado.</div>';
         return;
@@ -1651,81 +1857,42 @@
               <span class="badge-tipo">${escapeHtml(investimento.tipo)}</span>
             </div>
             <div class="acoes-card">
-              <button class="btn-toggle" type="button" data-acao="toggle" aria-label="${investimento.expandido ? "Colapsar investimento" : "Expandir investimento"}" aria-expanded="${investimento.expandido ? "true" : "false"}">
-                <span class="chevron">▶</span>
-              </button>
+              <button class="btn-toggle" type="button" data-acao="toggle" aria-expanded="${investimento.expandido ? "true" : "false"}"><span class="chevron">▶</span></button>
               <button class="btn-remover" type="button" data-acao="remover" aria-label="Remover investimento">X</button>
             </div>
           </div>
           <div class="investimento-corpo" style="display: ${investimento.expandido ? "block" : "none"};">
             <div class="grid-campos">
-              <div class="campo-completo">
-                <label>Descrição</label>
-                <input data-campo="descricao" type="text" value="${escapeHtml(investimento.descricao)}" placeholder="Ex: Tesouro Selic" />
-              </div>
-              <div>
-                <label>Tipo</label>
-                <select data-campo="tipo">
-                  ${TIPOS.map((tipo) => `<option value="${tipo}" ${investimento.tipo === tipo ? "selected" : ""}>${tipo}</option>`).join("")}
-                </select>
-              </div>
-              <div>
-                <label>${investimento.tipo === "CDI (%)" ? "Percentual do CDI (%)" : "Rentabilidade anual (% a.a.)"}</label>
-                <input data-campo="taxaAnual" type="number" min="0" step="0.01" value="${investimento.taxaAnual}" />
-              </div>
-              <div>
-                <label>Valor já investido (R$)</label>
-                <input data-campo="valorInvestido" type="number" min="0" step="0.01" value="${investimento.valorInvestido}" />
-              </div>
-              <div>
-                <label>Aporte mensal (R$)</label>
-                <input data-campo="aporteMensal" type="number" min="0" step="0.01" value="${investimento.aporteMensal}" />
-              </div>
-              <div>
-                <label>Data de início</label>
-                <input data-campo="dataInicio" type="date" value="${investimento.dataInicio}" />
-              </div>
+              <div class="campo-completo"><label>Descrição</label><input data-campo="descricao" type="text" value="${escapeHtml(investimento.descricao)}" placeholder="Ex: Tesouro Selic" /></div>
+              <div><label>Tipo</label><select data-campo="tipo">${TIPOS.map((tipo) => `<option value="${tipo}" ${investimento.tipo === tipo ? "selected" : ""}>${tipo}</option>`).join("")}</select></div>
+              <div><label>${investimento.tipo === "CDI (%)" ? "Percentual do CDI (%)" : "Rentabilidade anual (% a.a.)"}</label><input data-campo="taxaAnual" type="number" min="0" step="0.01" value="${investimento.taxaAnual}" /></div>
+              <div><label>Valor já investido (R$)</label><input data-campo="valorInvestido" type="number" min="0" step="0.01" value="${investimento.valorInvestido}" /></div>
+              <div><label>Aporte mensal (R$)</label><input data-campo="aporteMensal" type="number" min="0" step="0.01" value="${investimento.aporteMensal}" /></div>
+              <div><label>Data de início</label><input data-campo="dataInicio" type="date" value="${investimento.dataInicio}" /></div>
             </div>
             <div class="resultado-inline">
-              <div class="resultado-box">
-                <span>Rendimento bruto / mês</span>
-                <strong>${formatterMoeda.format(calculoAtual.rendimentoBruto)}</strong>
-              </div>
-              <div class="resultado-box">
-                <span>IR estimado / mês</span>
-                <strong>${formatterMoeda.format(calculoAtual.imposto)}</strong>
-              </div>
-              <div class="resultado-box">
-                <span>Rendimento líquido / mês</span>
-                <strong>${formatterMoeda.format(calculoAtual.rendimentoLiquido)}</strong>
-              </div>
+              <div class="resultado-box"><span>Rendimento bruto / mês</span><strong>${formatterMoeda.format(calculoAtual.rendimentoBruto)}</strong></div>
+              <div class="resultado-box"><span>IR estimado / mês</span><strong>${formatterMoeda.format(calculoAtual.imposto)}</strong></div>
+              <div class="resultado-box"><span>Rendimento líquido / mês</span><strong>${formatterMoeda.format(calculoAtual.rendimentoLiquido)}</strong></div>
             </div>
             ${calculoAtual.nota ? `<div class="nota-card">${escapeHtml(calculoAtual.nota)}</div>` : ""}
           </div>
         `;
 
         card.addEventListener("click", (evento) => {
-          if (evento.target.closest('[data-acao="toggle"]')) {
-            alternarCardInvestimento(investimento.id, card);
-            return;
-          }
+          if (evento.target.closest('[data-acao="toggle"]')) return alternarExpandido(perfil.investimentos, investimento.id, card);
           if (evento.target.dataset.acao === "remover") {
             perfil.investimentos = perfil.investimentos.filter((item) => item.id !== investimento.id);
-            if (abaAtiva === investimento.id) {
-              abaAtiva = "visao-geral";
-            }
-            if (!perfil.investimentos.length) {
-              perfil.investimentos.push(criarInvestimentoPadrao());
-            }
+            if (!perfil.investimentos.length) perfil.investimentos.push(criarInvestimentoPadrao());
+            if (abaAtiva === investimento.id) abaAtiva = "visao-geral";
             salvarEstado();
-            renderizarTudo();
+            renderizarTudo(true);
           }
         });
 
         card.querySelectorAll("[data-campo]").forEach((campo) => {
           campo.addEventListener("input", (evento) => {
-            const nomeCampo = evento.target.dataset.campo;
-            atualizarCampoInvestimento(investimento.id, nomeCampo, evento.target.value);
+            atualizarCampoInvestimento(investimento.id, evento.target.dataset.campo, evento.target.value);
           });
         });
 
@@ -1733,197 +1900,385 @@
       });
     }
 
-    function atualizarCampoInvestimento(id, campo, valor) {
-      const perfil = obterPerfilAtivo();
-      const investimento = perfil.investimentos.find((item) => item.id === id);
-      if (!investimento) {
-        return;
-      }
-
-      if (["taxaAnual", "valorInvestido", "aporteMensal"].includes(campo)) {
-        investimento[campo] = normalizarNumero(valor);
-      } else {
-        investimento[campo] = valor;
-      }
-
-      salvarEstado();
-      if (campo === "tipo") {
-        renderizarTudo();
-      } else {
-        if (campo === "descricao") {
-          renderizarAbas();
-        }
-        agendarAtualizacao();
-        atualizarMetricasDoCard(id);
-      }
+    function renderizarBens() {
+      renderizarImoveis();
+      renderizarEmpresas();
     }
 
-    function alternarCardInvestimento(id, card) {
+    function renderizarImoveis() {
       const perfil = obterPerfilAtivo();
-      sincronizarExpansaoInvestimentos(perfil);
-      const investimento = perfil.investimentos.find((item) => item.id === id);
-      if (!investimento || !card) {
+      sincronizarExpansaoLista(perfil.imoveis);
+      if (!perfil.imoveis.length) {
+        listaImoveisEl.innerHTML = '<div class="vazio">Nenhum imóvel cadastrado.</div>';
         return;
       }
+      listaImoveisEl.innerHTML = "";
+      perfil.imoveis.forEach((imovel) => {
+        const resumo = obterResumoImovel(imovel);
+        const card = document.createElement("article");
+        card.className = "investimento-card";
+        card.innerHTML = `
+          <div class="investimento-topo">
+            <div class="investimento-titulo">
+              <strong>${escapeHtml(imovel.descricao || "Novo imóvel")}</strong>
+              <span class="badge-tipo">${formatterMoeda.format(imovel.valorEstimado)}</span>
+              <span>${escapeHtml(resumo)}</span>
+            </div>
+            <div class="acoes-card">
+              <button class="btn-toggle" type="button" data-acao="toggle" aria-expanded="${imovel.expandido ? "true" : "false"}"><span class="chevron">▶</span></button>
+              <button class="btn-remover" type="button" data-acao="remover" aria-label="Remover imóvel">X</button>
+            </div>
+          </div>
+          <div class="investimento-corpo" style="display: ${imovel.expandido ? "block" : "none"};">
+            <div class="grid-campos">
+              <div class="campo-completo"><label>Descrição</label><input data-campo="descricao" type="text" value="${escapeHtml(imovel.descricao)}" placeholder="Ex: Apartamento alugado" /></div>
+              <div><label>Valor estimado (R$)</label><input data-campo="valorEstimado" type="number" min="0" step="0.01" value="${imovel.valorEstimado}" /></div>
+              <div class="campo-completo">
+                <label>Status</label>
+                <div class="grupo-flags">
+                  ${renderizarFlagCheckbox("financiado", "Financiado", imovel.status.financiado)}
+                  ${renderizarFlagCheckbox("quitado", "Quitado", imovel.status.quitado)}
+                  ${renderizarFlagCheckbox("geraReceita", "Gera receita", imovel.status.geraReceita)}
+                </div>
+              </div>
+              ${imovel.status.financiado ? `
+                <div><label>Saldo devedor (R$)</label><input data-campo="saldoDevedor" type="number" min="0" step="0.01" value="${imovel.saldoDevedor}" /></div>
+                <div><label>Parcela mensal (R$)</label><input data-campo="parcelaMensal" type="number" min="0" step="0.01" value="${imovel.parcelaMensal}" /></div>
+                <div><label>Taxa de juros anual (%)</label><input data-campo="taxaJurosAnual" type="number" min="0" step="0.01" value="${imovel.taxaJurosAnual}" /></div>
+                <div><label>Meses restantes</label><input data-campo="mesesRestantes" type="number" min="0" step="1" value="${imovel.mesesRestantes}" /></div>
+              ` : ""}
+              ${imovel.status.geraReceita ? `
+                <div><label>Aluguel mensal bruto (R$)</label><input data-campo="aluguelMensalBruto" type="number" min="0" step="0.01" value="${imovel.aluguelMensalBruto}" /></div>
+                <div><label>Taxa de vacância (%)</label><input data-campo="taxaVacancia" type="number" min="0" step="0.01" value="${imovel.taxaVacancia}" /></div>
+                <div><label>IPTU anual (R$)</label><input data-campo="iptuAnual" type="number" min="0" step="0.01" value="${imovel.iptuAnual}" /></div>
+                <div><label>Condomínio mensal (R$)</label><input data-campo="condominioMensal" type="number" min="0" step="0.01" value="${imovel.condominioMensal}" /></div>
+                <div><label>Custos de manutenção mensal (R$)</label><input data-campo="custosManutencaoMensal" type="number" min="0" step="0.01" value="${imovel.custosManutencaoMensal}" /></div>
+              ` : ""}
+            </div>
+            <div class="resultado-inline">
+              <div class="resultado-box"><span>Patrimônio líquido</span><strong>${formatterMoeda.format(imovel.valorEstimado - obterDividaImovel(imovel))}</strong></div>
+              <div class="resultado-box"><span>Renda passiva / mês</span><strong>${formatterMoeda.format(calcularRendaPassivaImovelAtual(imovel))}</strong></div>
+              <div class="resultado-box"><span>Dívida atual</span><strong>${formatterMoeda.format(obterDividaImovel(imovel))}</strong></div>
+            </div>
+          </div>
+        `;
 
-      if (perfil.investimentos.length === 1) {
-        investimento.expandido = true;
+        card.addEventListener("click", (evento) => {
+          if (evento.target.closest('[data-acao="toggle"]')) return alternarExpandido(perfil.imoveis, imovel.id, card);
+          if (evento.target.dataset.acao === "remover") {
+            perfil.imoveis = perfil.imoveis.filter((item) => item.id !== imovel.id);
+            salvarEstado();
+            renderizarTudo(true);
+          }
+        });
+
+        card.querySelectorAll("[data-campo]").forEach((campo) => {
+          campo.addEventListener("input", (evento) => atualizarCampoImovel(imovel.id, evento.target.dataset.campo, evento.target.value));
+          campo.addEventListener("blur", () => renderizarTudo(true));
+        });
+        card.querySelectorAll("[data-status]").forEach((checkbox) => {
+          checkbox.addEventListener("change", (evento) => atualizarStatusImovel(imovel.id, evento.target.dataset.status, evento.target.checked));
+        });
+
+        listaImoveisEl.appendChild(card);
+      });
+    }
+
+    function renderizarEmpresas() {
+      const perfil = obterPerfilAtivo();
+      sincronizarExpansaoLista(perfil.empresas);
+      if (!perfil.empresas.length) {
+        listaEmpresasEl.innerHTML = '<div class="vazio">Nenhuma empresa cadastrada.</div>';
+        return;
+      }
+      listaEmpresasEl.innerHTML = "";
+      perfil.empresas.forEach((empresa) => {
+        const resumo = obterResumoEmpresa(empresa);
+        const card = document.createElement("article");
+        card.className = "investimento-card";
+        card.innerHTML = `
+          <div class="investimento-topo">
+            <div class="investimento-titulo">
+              <strong>${escapeHtml(empresa.descricao || "Nova empresa")}</strong>
+              <span class="badge-tipo">${formatterMoeda.format(empresa.valorEstimado)}</span>
+              <span>${escapeHtml(resumo)}</span>
+            </div>
+            <div class="acoes-card">
+              <button class="btn-toggle" type="button" data-acao="toggle" aria-expanded="${empresa.expandido ? "true" : "false"}"><span class="chevron">▶</span></button>
+              <button class="btn-remover" type="button" data-acao="remover" aria-label="Remover empresa">X</button>
+            </div>
+          </div>
+          <div class="investimento-corpo" style="display: ${empresa.expandido ? "block" : "none"};">
+            <div class="grid-campos">
+              <div class="campo-completo"><label>Descrição</label><input data-campo="descricao" type="text" value="${escapeHtml(empresa.descricao)}" placeholder="Ex: Loja operacional" /></div>
+              <div><label>Valor estimado (R$)</label><input data-campo="valorEstimado" type="number" min="0" step="0.01" value="${empresa.valorEstimado}" /></div>
+              <div><label>Receita mensal (R$)</label><input data-campo="receitaMensal" type="number" min="0" step="0.01" value="${empresa.receitaMensal}" /></div>
+              <div><label>Custos fixos (R$)</label><input data-campo="custosFixos" type="number" min="0" step="0.01" value="${empresa.custosFixos}" /></div>
+              <div class="campo-completo">
+                <label>Natureza da receita</label>
+                <div class="grupo-flags">
+                  <label class="flag-check">
+                    <input data-campo-bool="receitaPassiva" type="checkbox" ${empresa.receitaPassiva ? "checked" : ""} />
+                    Receita passiva
+                  </label>
+                </div>
+              </div>
+            </div>
+            ${renderizarSublistaDividas("emprestimos", "Empréstimos", empresa.emprestimos)}
+            ${renderizarSublistaDividas("financiamentos", "Financiamentos", empresa.financiamentos)}
+            <div class="resultado-inline">
+              <div class="resultado-box"><span>${empresa.receitaPassiva ? "Lucro passivo / mês" : "Lucro operacional / mês"}</span><strong>${formatterMoeda.format(calcularLucroLiquidoEmpresaAtual(empresa))}</strong></div>
+              <div class="resultado-box"><span>Dívida total</span><strong>${formatterMoeda.format(obterDividaEmpresa(empresa))}</strong></div>
+              <div class="resultado-box"><span>Parcelas mensais</span><strong>${formatterMoeda.format(obterParcelasEmpresa(empresa))}</strong></div>
+            </div>
+          </div>
+        `;
+
+        card.addEventListener("click", (evento) => {
+          if (evento.target.closest('[data-acao="toggle"]')) return alternarExpandido(perfil.empresas, empresa.id, card);
+          if (evento.target.dataset.acao === "remover") {
+            perfil.empresas = perfil.empresas.filter((item) => item.id !== empresa.id);
+            salvarEstado();
+            renderizarTudo(true);
+            return;
+          }
+          if (evento.target.dataset.acao === "add-divida") {
+            adicionarDividaEmpresa(empresa.id, evento.target.dataset.lista);
+            return;
+          }
+          if (evento.target.dataset.acao === "remover-divida") {
+            removerDividaEmpresa(empresa.id, evento.target.dataset.lista, evento.target.dataset.dividaId);
+          }
+        });
+
+        card.querySelectorAll("[data-campo]").forEach((campo) => {
+          campo.addEventListener("input", (evento) => atualizarCampoEmpresa(empresa.id, evento.target.dataset.campo, evento.target.value));
+          campo.addEventListener("blur", () => renderizarTudo(true));
+        });
+        card.querySelectorAll("[data-campo-bool]").forEach((campo) => {
+          campo.addEventListener("change", (evento) => atualizarCampoBooleanoEmpresa(empresa.id, evento.target.dataset.campoBool, evento.target.checked));
+        });
+        card.querySelectorAll("[data-divida-campo]").forEach((campo) => {
+          campo.addEventListener("input", (evento) => {
+            atualizarCampoDividaEmpresa(
+              empresa.id,
+              evento.target.dataset.lista,
+              evento.target.dataset.dividaId,
+              evento.target.dataset.dividaCampo,
+              evento.target.value
+            );
+          });
+          campo.addEventListener("blur", () => renderizarTudo(true));
+        });
+
+        listaEmpresasEl.appendChild(card);
+      });
+    }
+
+    function atualizarCampoInvestimento(id, campo, valor) {
+      const investimento = obterPerfilAtivo().investimentos.find((item) => item.id === id);
+      if (!investimento) return;
+      investimento[campo] = ["taxaAnual", "valorInvestido", "aporteMensal"].includes(campo) ? normalizarNumero(valor) : valor;
+      salvarEstado();
+      if (campo === "tipo") return renderizarTudo(true);
+      if (campo === "descricao") renderizarAbas();
+      agendarAtualizacao(false);
+    }
+
+    function atualizarCampoImovel(id, campo, valor) {
+      const imovel = obterPerfilAtivo().imoveis.find((item) => item.id === id);
+      if (!imovel) return;
+      imovel[campo] = campo === "descricao" ? valor : normalizarNumero(valor);
+      salvarEstado();
+      agendarAtualizacao(false);
+    }
+
+    function atualizarStatusImovel(id, statusCampo, checked) {
+      const imovel = obterPerfilAtivo().imoveis.find((item) => item.id === id);
+      if (!imovel) return;
+      if (statusCampo === "financiado") {
+        imovel.status.financiado = checked;
+        imovel.status.quitado = !checked;
+      } else if (statusCampo === "quitado") {
+        imovel.status.quitado = checked;
+        if (checked) imovel.status.financiado = false;
+        if (!checked && !imovel.status.financiado) imovel.status.financiado = true;
       } else {
-        investimento.expandido = !investimento.expandido;
+        imovel.status.geraReceita = checked;
       }
       salvarEstado();
+      renderizarTudo(true);
+    }
 
+    function atualizarCampoEmpresa(id, campo, valor) {
+      const empresa = obterPerfilAtivo().empresas.find((item) => item.id === id);
+      if (!empresa) return;
+      empresa[campo] = campo === "descricao" ? valor : normalizarNumero(valor);
+      salvarEstado();
+      agendarAtualizacao(false);
+    }
+
+    function atualizarCampoBooleanoEmpresa(id, campo, valor) {
+      const empresa = obterPerfilAtivo().empresas.find((item) => item.id === id);
+      if (!empresa) return;
+      empresa[campo] = valor === true;
+      salvarEstado();
+      renderizarTudo(true);
+    }
+
+    function adicionarDividaEmpresa(empresaId, lista) {
+      const empresa = obterPerfilAtivo().empresas.find((item) => item.id === empresaId);
+      if (!empresa || !Array.isArray(empresa[lista])) return;
+      empresa[lista].push(criarDividaPadrao());
+      salvarEstado();
+      renderizarTudo(true);
+    }
+
+    function removerDividaEmpresa(empresaId, lista, dividaId) {
+      const empresa = obterPerfilAtivo().empresas.find((item) => item.id === empresaId);
+      if (!empresa || !Array.isArray(empresa[lista])) return;
+      empresa[lista] = empresa[lista].filter((item) => item.id !== dividaId);
+      salvarEstado();
+      renderizarTudo(true);
+    }
+
+    function atualizarCampoDividaEmpresa(empresaId, lista, dividaId, campo, valor) {
+      const empresa = obterPerfilAtivo().empresas.find((item) => item.id === empresaId);
+      const divida = empresa?.[lista]?.find((item) => item.id === dividaId);
+      if (!divida) return;
+      divida[campo] = campo === "descricao" ? valor : normalizarNumero(valor);
+      salvarEstado();
+      agendarAtualizacao(false);
+    }
+
+    function alternarExpandido(lista, id, card) {
+      const item = lista.find((registro) => registro.id === id);
+      if (!item || !card) return;
+      item.expandido = lista.length === 1 ? true : !item.expandido;
+      salvarEstado();
       const corpo = card.querySelector(".investimento-corpo");
       const botao = card.querySelector(".btn-toggle");
-      if (corpo) {
-        corpo.style.display = investimento.expandido ? "block" : "none";
-      }
-      if (botao) {
-        botao.setAttribute("aria-expanded", investimento.expandido ? "true" : "false");
-        botao.setAttribute("aria-label", investimento.expandido ? "Colapsar investimento" : "Expandir investimento");
-      }
+      if (corpo) corpo.style.display = item.expandido ? "block" : "none";
+      if (botao) botao.setAttribute("aria-expanded", item.expandido ? "true" : "false");
     }
 
-    function atualizarMetricasDoCard(id) {
-      const perfil = obterPerfilAtivo();
-      const investimento = perfil.investimentos.find((item) => item.id === id);
-      const cards = [...listaInvestimentosEl.querySelectorAll(".investimento-card")];
-      const indice = perfil.investimentos.findIndex((item) => item.id === id);
-      const card = cards[indice];
-      if (!investimento || !card) {
-        return;
-      }
-
-      const calculoAtual = calcularRendimentoMensalInvestimento(investimento, perfil.taxaCdiReferencia);
-      const metricas = card.querySelectorAll(".resultado-box strong");
-      const corpo = card.querySelector(".investimento-corpo");
-      if (metricas[0]) metricas[0].textContent = formatterMoeda.format(calculoAtual.rendimentoBruto);
-      if (metricas[1]) metricas[1].textContent = formatterMoeda.format(calculoAtual.imposto);
-      if (metricas[2]) metricas[2].textContent = formatterMoeda.format(calculoAtual.rendimentoLiquido);
-      const nota = card.querySelector(".nota-card");
-      if (calculoAtual.nota && nota) {
-        nota.textContent = calculoAtual.nota;
-      } else if (calculoAtual.nota && !nota) {
-        const notaNova = document.createElement("div");
-        notaNova.className = "nota-card";
-        notaNova.textContent = calculoAtual.nota;
-        corpo?.appendChild(notaNova);
-      } else if (!calculoAtual.nota && nota) {
-        nota.remove();
-      }
-
-      const labelTaxa = card.querySelector('label + input[data-campo="taxaAnual"]')?.previousElementSibling;
-      if (labelTaxa) {
-        labelTaxa.textContent = investimento.tipo === "CDI (%)" ? "Percentual do CDI (%)" : "Rentabilidade anual (% a.a.)";
-      }
-      const badge = card.querySelector(".badge-tipo");
-      if (badge) {
-        badge.textContent = investimento.tipo;
-      }
-      const titulo = card.querySelector(".investimento-titulo strong");
-      if (titulo) {
-        titulo.textContent = investimento.descricao || "Novo investimento";
-      }
+    function calcularResumoGeral(perfil) {
+      const resumoInvestimentos = calcularResumoInvestimentos(perfil.investimentos, perfil.taxaCdiReferencia);
+      const resumoBens = calcularResumoBens(perfil.imoveis, perfil.empresas);
+      const projecaoMensal = calcularProjecaoMensalPerfil(perfil);
+      const projecaoAnual = agruparProjecaoAnualPerfil(projecaoMensal, perfil.dataNascimento);
+      return {
+        ...resumoInvestimentos,
+        ...resumoBens,
+        patrimonioTotalAtual: resumoInvestimentos.totalInvestido + resumoBens.patrimonioBensAtual,
+        rendaPassivaTotalAtual: resumoInvestimentos.rendimentoLiquidoAtual + resumoBens.rendaPassivaBensAtual,
+        projecaoMensal,
+        projecaoAnual,
+        notas: gerarNotasResumo(perfil, resumoBens),
+        radarFinanceiro: calcularRadarFinanceiro(projecaoMensal, perfil)
+      };
     }
 
-    function calcularResumoGeral(investimentos, taxaCdiReferencia, dataNascimento = "") {
+    function calcularResumoInvestimentos(investimentos, taxaCdiReferencia) {
       const resumoAtual = investimentos.map((investimento) => calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia));
-      const projecaoMensal = calcularProjecaoMensal(investimentos, taxaCdiReferencia);
-      const projecaoAnual = agruparProjecaoAnual(investimentos, taxaCdiReferencia, null, dataNascimento);
-      const radarFinanceiro = calcularRadarFinanceiro(projecaoMensal, dataNascimento);
-
       return {
         totalInvestido: investimentos.reduce((acc, item) => acc + normalizarNumero(item.valorInvestido), 0),
         rendimentoBrutoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoBruto, 0),
         impostoAtual: resumoAtual.reduce((acc, item) => acc + item.imposto, 0),
-        rendimentoLiquidoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoLiquido, 0),
-        projecaoMensal,
-        projecaoAnual,
-        notas: gerarNotasResumo(investimentos, taxaCdiReferencia),
-        radarFinanceiro,
-        dataNascimento
+        rendimentoLiquidoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoLiquido, 0)
+      };
+    }
+
+    function calcularResumoBens(imoveis, empresas) {
+      return {
+        patrimonioBensAtual: somarPatrimonioBensAtual(imoveis, empresas),
+        rendaPassivaBensAtual: somarRendaPassivaBensAtual(imoveis, empresas),
+        dividaTotalBens: somarDividaBensAtual(imoveis, empresas)
       };
     }
 
     function renderizarResumo(resumo) {
       resumoGridEl.innerHTML = `
         <div class="metric">
-          <span>Total investido</span>
-          <strong>${formatterMoeda.format(resumo.totalInvestido)}</strong>
+          <span>Patrimônio total</span>
+          <strong>${formatterMoeda.format(resumo.patrimonioTotalAtual)}</strong>
         </div>
         <div class="metric">
-          <span>Rendimento bruto / mês</span>
-          <strong>${formatterMoeda.format(resumo.rendimentoBrutoAtual)}</strong>
+          <span>Patrimônio em bens</span>
+          <strong>${formatterMoeda.format(resumo.patrimonioBensAtual)}</strong>
         </div>
         <div class="metric">
-          <span>IR estimado / mês</span>
-          <strong>${formatterMoeda.format(resumo.impostoAtual)}</strong>
+          <span>Renda passiva de bens</span>
+          <strong>${formatterMoeda.format(resumo.rendaPassivaBensAtual)}</strong>
         </div>
-        <div class="metric destaque">
-          <span>Rendimento líquido / mês</span>
+        <div class="metric">
+          <span>Dívida total de bens</span>
+          <strong>${formatterMoeda.format(resumo.dividaTotalBens)}</strong>
+        </div>
+        <div class="metric">
+          <span>Rendimento líquido dos investimentos</span>
           <strong>${formatterMoeda.format(resumo.rendimentoLiquidoAtual)}</strong>
         </div>
-      `;
-
-      listaNotasEl.innerHTML = resumo.notas.map((nota) => `<li>${escapeHtml(nota)}</li>`).join("");
-    }
-
-    function renderizarResumoFamilia(familia) {
-      resumoGridEl.innerHTML = `
-        <div class="metric">
-          <span>Total investido</span>
-          <strong>${formatterMoeda.format(familia.totalInvestido)}</strong>
-        </div>
         <div class="metric destaque">
-          <span>Renda passiva liquida total</span>
-          <strong>${formatterMoeda.format(familia.rendaPassivaMensal)}</strong>
-        </div>
-        <div class="metric">
-          <span>Perfis ativos</span>
-          <strong>${familia.quantidadePerfisAtivos}</strong>
+          <span>Renda passiva total / mês</span>
+          <strong>${formatterMoeda.format(resumo.rendaPassivaTotalAtual)}</strong>
         </div>
       `;
-
-      listaNotasEl.innerHTML = familia.quantidadePerfisAtivos
-        ? familia.projeçõesPorPerfil.map((item) => `<li>${escapeHtml(item.perfil.nome)} contribui com ${formatterMoeda.format(item.resumo.rendimentoLiquidoAtual)} de renda passiva mensal liquida.</li>`).join("")
-        : "<li>Nenhum investimento encontrado nos perfis. Adicione investimentos em um perfil individual.</li>";
+      listaNotasEl.innerHTML = resumo.notas.map((nota) => `<li>${escapeHtml(nota)}</li>`).join("");
     }
 
     function renderizarRadarFinanceiro(resumo) {
       const radar = resumo.radarFinanceiro;
       radarFinanceiroEl.innerHTML = `
         <div class="radar-grid">
-          <div class="metric destaque">
-            <span>Cobertura dos custos</span>
-            <strong>${formatterPercentual.format(radar.coberturaCustos)}%</strong>
-          </div>
-          <div class="metric">
-            <span>Saldo mensal total</span>
-            <strong>${formatterMoeda.format(radar.saldoMensalComSalario)}</strong>
-          </div>
-          <div class="metric ${radar.independenciaAntes65 ? "destaque" : ""}">
-            <span>Custos cobertos pela renda passiva</span>
-            <strong>${radar.marcoCustos}</strong>
-          </div>
-          <div class="metric">
-            <span>Salário replicado pela renda passiva</span>
-            <strong>${radar.marcoSalario}</strong>
-          </div>
+          <div class="metric destaque"><span>Cobertura dos custos</span><strong>${formatterPercentual.format(radar.coberturaCustos)}%</strong></div>
+          <div class="metric"><span>Saldo mensal total</span><strong>${formatterMoeda.format(radar.saldoMensalComSalario)}</strong></div>
+          <div class="metric ${radar.independenciaAntes65 ? "destaque" : ""}"><span>Custos cobertos pela renda passiva</span><strong>${radar.marcoCustos}</strong></div>
+          <div class="metric"><span>Salário replicado pela renda passiva</span><strong>${radar.marcoSalario}</strong></div>
         </div>
         <div class="radar-copy" style="margin-top: 14px;">
           <strong>Termômetro da independência</strong>
-          <div class="barra-liberdade" style="margin: 10px 0 12px;">
-            <span style="width: ${radar.coberturaCustosBarra}%;"></span>
-          </div>
+          <div class="barra-liberdade" style="margin: 10px 0 12px;"><span style="width: ${radar.coberturaCustosBarra}%;"></span></div>
           <p>${escapeHtml(radar.mensagem)}</p>
         </div>
       `;
     }
 
+    function calcularVisaoFamilia() {
+      const perfis = obterPerfisComPatrimonio();
+      const projecoesPorPerfil = perfis.map((perfil) => ({
+        perfil,
+        resumo: calcularResumoGeral(perfil)
+      }));
+      const quantidadePerfisAtivos = projecoesPorPerfil.length;
+      const projecaoMensalTotal = Array.from({ length: 360 }, (_, indice) => ({
+        mes: indice + 1,
+        patrimonioTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioTotal || 0), 0),
+        patrimonioBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioBens || 0), 0),
+        rendaPassivaTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoTotal || 0), 0),
+        rendaPassivaBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaBens || 0), 0)
+      }));
+      const projecaoAnualTotal = Array.from({ length: 30 }, (_, indice) => ({
+        ano: indice + 1,
+        patrimonioTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0), 0),
+        patrimonioBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioBens || 0), 0),
+        rendaPassivaBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.rendaPassivaBens || 0), 0)
+      }));
+      return {
+        projecoesPorPerfil,
+        quantidadePerfisAtivos,
+        patrimonioTotalAtual: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.patrimonioTotalAtual, 0),
+        rendaPassivaMensal: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.rendaPassivaTotalAtual, 0),
+        dividaTotalBens: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.dividaTotalBens, 0),
+        projecaoMensalTotal,
+        projecaoAnualTotal
+      };
+    }
+
     function renderizarGraficoFamilia(familia) {
       const ctx = document.getElementById("graficoProjecao");
-      const labels = Array.from({ length: 360 }, (_, indice) => ((indice + 1) % 60 === 0 ? `Ano ${(indice + 1) / 12}` : ""));
-      const datasets = familia.projeçõesPorPerfil.map((item, indice) => {
+      const labels = familia.projecaoMensalTotal.map((item) => item.mes % 60 === 0 ? `Ano ${item.mes / 12}` : "");
+      const datasets = familia.projecoesPorPerfil.map((item, indice) => {
         const cor = obterCorPerfil(indice);
         return {
           label: item.perfil.nome,
@@ -1936,7 +2291,16 @@
           borderWidth: 2
         };
       });
-
+      datasets.push({
+        label: "Patrimônio em Bens",
+        data: familia.projecaoMensalTotal.map((linha) => linha.patrimonioBens),
+        borderColor: "#ea580c",
+        backgroundColor: "rgba(234, 88, 12, 0.15)",
+        yAxisID: "y",
+        tension: 0.28,
+        pointRadius: 0,
+        borderWidth: 2
+      });
       if (familia.quantidadePerfisAtivos > 1) {
         datasets.push({
           label: "Total Família",
@@ -1949,56 +2313,7 @@
           borderWidth: 4
         });
       }
-
-      if (graficoProjecao) {
-        graficoProjecao.destroy();
-      }
-
-      graficoProjecao = new Chart(ctx, {
-        type: "line",
-        data: { labels, datasets },
-        options: {
-          maintainAspectRatio: false,
-          interaction: {
-            mode: "index",
-            intersect: false
-          },
-          plugins: {
-            legend: {
-              position: "top"
-            },
-            tooltip: {
-              callbacks: {
-                title(contextos) {
-                  const item = familia.projecaoMensalTotal[contextos[0].dataIndex];
-                  return `Ano ${Math.ceil(item.mes / 12)}`;
-                },
-                label(contexto) {
-                  return `${contexto.dataset.label}: ${formatterMoeda.format(contexto.parsed.y)}`;
-                }
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: {
-                color: "rgba(148, 163, 184, 0.12)"
-              }
-            },
-            y: {
-              position: "left",
-              ticks: {
-                callback(valor) {
-                  return formatterMoeda.format(valor);
-                }
-              },
-              grid: {
-                color: "rgba(148, 163, 184, 0.16)"
-              }
-            }
-          }
-        }
-      });
+      desenharGrafico(labels, datasets, familia.projecaoMensalTotal, null);
     }
 
     function renderizarTabelaFamilia(familia) {
@@ -2006,32 +2321,25 @@
       if (thead) {
         thead.innerHTML = `
           <th>Ano</th>
-          ${familia.projeçõesPorPerfil.map((item) => `<th>${escapeHtml(item.perfil.nome)}</th>`).join("")}
+          ${familia.projecoesPorPerfil.map((item) => `<th>${escapeHtml(item.perfil.nome)}</th>`).join("")}
+          <th>Patrimônio em Bens</th>
+          <th>Renda Passiva de Bens</th>
           <th class="coluna-total">Total Família</th>
         `;
       }
-
       if (!familia.quantidadePerfisAtivos) {
-        corpoTabelaEl.innerHTML = `
-          <tr>
-            <td colspan="2">Nenhum investimento encontrado nos perfis. Adicione investimentos em um perfil individual.</td>
-          </tr>
-        `;
+        corpoTabelaEl.innerHTML = `<tr><td colspan="4">Nenhum patrimônio encontrado nos perfis. Adicione investimentos ou bens em um perfil individual.</td></tr>`;
         return;
       }
-
-      corpoTabelaEl.innerHTML = Array.from({ length: 30 }, (_, indice) => {
-        const ano = indice + 1;
-        const colunasPerfis = familia.projeçõesPorPerfil.map((item) => `<td>${formatterMoeda.format(item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0)}</td>`).join("");
-        const total = familia.projecaoAnualTotal[indice]?.total || 0;
-        return `
-          <tr>
-            <td>${ano}</td>
-            ${colunasPerfis}
-            <td class="coluna-total">${formatterMoeda.format(total)}</td>
-          </tr>
-        `;
-      }).join("");
+      corpoTabelaEl.innerHTML = Array.from({ length: 30 }, (_, indice) => `
+        <tr>
+          <td>${indice + 1}</td>
+          ${familia.projecoesPorPerfil.map((item) => `<td>${formatterMoeda.format(item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0)}</td>`).join("")}
+          <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioBens || 0)}</td>
+          <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.rendaPassivaBens || 0)}</td>
+          <td class="coluna-total">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioTotal || 0)}</td>
+        </tr>
+      `).join("");
     }
 
     function obterCorPerfil(indice) {
@@ -2048,114 +2356,96 @@
 
     function renderizarAbas() {
       const perfil = obterPerfilAtivo();
-      const abas = [
-        { id: "visao-geral", label: "Visão Geral" },
-        ...perfil.investimentos.map((investimento) => ({
-          id: investimento.id,
-          label: investimento.descricao || "Novo investimento"
-        }))
-      ];
-
+      const abas = [{ id: "visao-geral", label: "Visão Geral" }].concat(
+        perfil.investimentos.map((investimento) => ({ id: investimento.id, label: investimento.descricao || "Novo investimento" }))
+      );
       if (abaAtiva !== "visao-geral" && !perfil.investimentos.some((investimento) => investimento.id === abaAtiva)) {
         abaAtiva = "visao-geral";
       }
-
       tabsProjecaoEl.innerHTML = abas.map((aba) => `
-        <button
-          class="tab ${aba.id === abaAtiva ? "ativa" : ""}"
-          type="button"
-          data-aba-id="${aba.id}"
-        >
-          ${escapeHtml(aba.label)}
-        </button>
+        <button class="tab ${aba.id === abaAtiva ? "ativa" : ""}" type="button" data-aba-id="${aba.id}">${escapeHtml(aba.label)}</button>
       `).join("");
-
       tabsProjecaoEl.querySelectorAll("[data-aba-id]").forEach((botao) => {
         botao.addEventListener("click", () => {
           const proximaAba = botao.dataset.abaId;
-          if (proximaAba === abaAtiva) {
-            return;
-          }
+          if (proximaAba === abaAtiva) return;
           abaAtiva = proximaAba;
-          atualizarEstadoVisualAbas();
           renderizarProjecaoAtiva();
+          atualizarEstadoVisualAbas();
         });
       });
     }
 
     function atualizarEstadoVisualAbas() {
-      tabsProjecaoEl.querySelectorAll(".tab").forEach((aba) => {
-        aba.classList.toggle("ativa", aba.dataset.abaId === abaAtiva);
-      });
+      tabsProjecaoEl.querySelectorAll(".tab").forEach((aba) => aba.classList.toggle("ativa", aba.dataset.abaId === abaAtiva));
     }
 
     function renderizarProjecaoAtiva() {
       const perfil = obterPerfilAtivo();
       const filtroInvestimentoId = abaAtiva === "visao-geral" ? null : abaAtiva;
-      renderizarGrafico(perfil.investimentos, perfil.taxaCdiReferencia, filtroInvestimentoId, perfil.dataNascimento);
-      renderizarTabela(agruparProjecaoAnual(perfil.investimentos, perfil.taxaCdiReferencia, filtroInvestimentoId, perfil.dataNascimento), perfil.dataNascimento);
+      const projecaoMensal = calcularProjecaoMensalPerfil(perfil, filtroInvestimentoId);
+      const projecaoAnual = agruparProjecaoAnualPerfil(projecaoMensal, perfil.dataNascimento);
+      renderizarGrafico(projecaoMensal, perfil.dataNascimento);
+      renderizarTabela(projecaoAnual, perfil.dataNascimento);
     }
 
-    function renderizarGrafico(investimentos, taxaCdiReferencia, investimentoId = null, dataNascimento = "") {
-      const ctx = document.getElementById("graficoProjecao");
-      const projecaoMensal = calcularProjecaoMensal(investimentos, taxaCdiReferencia, investimentoId);
+    function renderizarGrafico(projecaoMensal, dataNascimento = "") {
       const labels = projecaoMensal.map((item) => {
-        if (item.mes % 60 !== 0) {
-          return "";
-        }
+        if (item.mes % 60 !== 0) return "";
         const ano = item.mes / 12;
         const idade = obterIdadeNaProjecao(dataNascimento, ano);
         return idade !== null ? `Ano ${ano} (${idade} anos)` : `Ano ${ano}`;
       });
-      const patrimonio = projecaoMensal.map((item) => item.patrimonioTotal);
-      const rendaLiquida = projecaoMensal.map((item) => item.rendimentoLiquidoTotal);
+      const datasets = [
+        {
+          label: "Patrimônio total",
+          data: projecaoMensal.map((item) => item.patrimonioTotal),
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, 0.16)",
+          yAxisID: "y",
+          tension: 0.28,
+          fill: true,
+          pointRadius: 0
+        },
+        {
+          label: "Patrimônio em Bens",
+          data: projecaoMensal.map((item) => item.patrimonioBens),
+          borderColor: "#ea580c",
+          backgroundColor: "rgba(234, 88, 12, 0.12)",
+          yAxisID: "y",
+          tension: 0.28,
+          pointRadius: 0
+        },
+        {
+          label: "Renda passiva total / mês",
+          data: projecaoMensal.map((item) => item.rendimentoLiquidoTotal),
+          borderColor: "#059669",
+          backgroundColor: "rgba(5, 150, 105, 0.12)",
+          yAxisID: "y1",
+          tension: 0.28,
+          pointRadius: 0
+        }
+      ];
+      desenharGrafico(labels, datasets, projecaoMensal, dataNascimento);
+    }
 
-      if (graficoProjecao) {
-        graficoProjecao.destroy();
-      }
-
+    function desenharGrafico(labels, datasets, linhas, dataNascimento = null) {
+      const ctx = document.getElementById("graficoProjecao");
+      if (graficoProjecao) graficoProjecao.destroy();
       graficoProjecao = new Chart(ctx, {
         type: "line",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: "Patrimônio acumulado",
-              data: patrimonio,
-              borderColor: "#2563eb",
-              backgroundColor: "rgba(37, 99, 235, 0.16)",
-              yAxisID: "y",
-              tension: 0.28,
-              fill: true,
-              pointRadius: 0
-            },
-            {
-              label: "Rendimento mensal líquido",
-              data: rendaLiquida,
-              borderColor: "#059669",
-              backgroundColor: "rgba(5, 150, 105, 0.12)",
-              yAxisID: "y1",
-              tension: 0.28,
-              pointRadius: 0
-            }
-          ]
-        },
+        data: { labels, datasets },
         options: {
           maintainAspectRatio: false,
-          interaction: {
-            mode: "index",
-            intersect: false
-          },
+          interaction: { mode: "index", intersect: false },
           plugins: {
-            legend: {
-              position: "top"
-            },
+            legend: { position: "top" },
             tooltip: {
               callbacks: {
                 title(contextos) {
-                  const item = projecaoMensal[contextos[0].dataIndex];
+                  const item = linhas[contextos[0].dataIndex];
                   const ano = Math.ceil(item.mes / 12);
-                  const idade = obterIdadeNaProjecao(dataNascimento, ano);
+                  const idade = dataNascimento ? obterIdadeNaProjecao(dataNascimento, ano) : null;
                   return idade !== null ? `Ano ${ano} (${idade} anos)` : `Ano ${ano}`;
                 },
                 label(contexto) {
@@ -2165,32 +2455,16 @@
             }
           },
           scales: {
-            x: {
-              grid: {
-                color: "rgba(148, 163, 184, 0.12)"
-              }
-            },
+            x: { grid: { color: "rgba(148, 163, 184, 0.12)" } },
             y: {
               position: "left",
-              ticks: {
-                callback(valor) {
-                  return formatterMoeda.format(valor);
-                }
-              },
-              grid: {
-                color: "rgba(148, 163, 184, 0.16)"
-              }
+              ticks: { callback(valor) { return formatterMoeda.format(valor); } },
+              grid: { color: "rgba(148, 163, 184, 0.16)" }
             },
             y1: {
               position: "right",
-              ticks: {
-                callback(valor) {
-                  return formatterMoeda.format(valor);
-                }
-              },
-              grid: {
-                drawOnChartArea: false
-              }
+              ticks: { callback(valor) { return formatterMoeda.format(valor); } },
+              grid: { drawOnChartArea: false }
             }
           }
         }
@@ -2199,25 +2473,27 @@
 
     function renderizarTabela(projecaoAnual, dataNascimento = "") {
       const mostrarIdade = Boolean(dataNascimento);
-      const cabecalhoIdade = mostrarIdade ? "<th>Idade</th>" : "";
       const thead = document.querySelector("thead tr");
       if (thead) {
         thead.innerHTML = `
           <th>Ano</th>
-          ${cabecalhoIdade}
+          ${mostrarIdade ? "<th>Idade</th>" : ""}
           <th>Patrimônio Final</th>
+          <th>Patrimônio em Bens</th>
+          <th>Renda Passiva de Bens</th>
           <th>Aportes</th>
           <th>Rendimento Bruto</th>
           <th>IR / Come-Cotas</th>
           <th>Rendimento Líquido</th>
         `;
       }
-
       corpoTabelaEl.innerHTML = projecaoAnual.map((linha) => `
         <tr>
           <td>${linha.ano}</td>
           ${mostrarIdade ? `<td>${linha.idade ?? "-"}</td>` : ""}
           <td>${formatterMoeda.format(linha.patrimonioFinal)}</td>
+          <td>${formatterMoeda.format(linha.patrimonioBens)}</td>
+          <td>${formatterMoeda.format(linha.rendaPassivaBens)}</td>
           <td>${formatterMoeda.format(linha.aportes)}</td>
           <td>${formatterMoeda.format(linha.rendimentoBruto)}</td>
           <td>${formatterMoeda.format(linha.imposto)}</td>
@@ -2226,30 +2502,19 @@
       `).join("");
     }
 
-    function calcularRadarFinanceiro(projecaoMensal, dataNascimento = "") {
-      const perfil = obterPerfilAtivo();
+    function calcularRadarFinanceiro(projecaoMensal, perfil) {
       const rendaMensal = normalizarNumero(perfil.rendaMensal);
       const custosMensais = normalizarNumero(perfil.custosMensais);
       const rendaPassivaAtual = projecaoMensal[0]?.rendimentoLiquidoTotal || 0;
-      const idadeAtual = obterIdadeNaProjecao(dataNascimento, 0);
+      const idadeAtual = obterIdadeNaProjecao(perfil.dataNascimento, 0);
       const coberturaCustos = custosMensais > 0 ? (rendaPassivaAtual / custosMensais) * 100 : 0;
       const saldoMensalComSalario = rendaMensal + rendaPassivaAtual - custosMensais;
-      const mesCobreCustos = custosMensais > 0
-        ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= custosMensais)?.mes || null
-        : null;
-      const mesReplicaSalario = rendaMensal > 0
-        ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= rendaMensal)?.mes || null
-        : null;
-
+      const mesCobreCustos = custosMensais > 0 ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= custosMensais)?.mes || null : null;
+      const mesReplicaSalario = rendaMensal > 0 ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= rendaMensal)?.mes || null : null;
       const cobreCustosHoje = custosMensais > 0 && rendaPassivaAtual >= custosMensais;
       const replicaSalarioHoje = rendaMensal > 0 && rendaPassivaAtual >= rendaMensal;
-      const idadeNosCustos = cobreCustosHoje
-        ? idadeAtual
-        : (mesCobreCustos ? obterIdadeNaProjecao(dataNascimento, Math.ceil(mesCobreCustos / 12)) : null);
-      const idadeNoSalario = replicaSalarioHoje
-        ? idadeAtual
-        : (mesReplicaSalario ? obterIdadeNaProjecao(dataNascimento, Math.ceil(mesReplicaSalario / 12)) : null);
-
+      const idadeNosCustos = cobreCustosHoje ? idadeAtual : (mesCobreCustos ? obterIdadeNaProjecao(perfil.dataNascimento, Math.ceil(mesCobreCustos / 12)) : null);
+      const idadeNoSalario = replicaSalarioHoje ? idadeAtual : (mesReplicaSalario ? obterIdadeNaProjecao(perfil.dataNascimento, Math.ceil(mesReplicaSalario / 12)) : null);
       return {
         coberturaCustos: custosMensais > 0 ? coberturaCustos : 0,
         coberturaCustosBarra: Math.min(custosMensais > 0 ? coberturaCustos : 0, 100),
@@ -2257,42 +2522,26 @@
         marcoCustos: custosMensais > 0 ? (cobreCustosHoje ? formatarMarcoAtual(idadeNosCustos) : formatarMarcoTemporal(mesCobreCustos, idadeNosCustos)) : "Informe seus custos",
         marcoSalario: rendaMensal > 0 ? (replicaSalarioHoje ? formatarMarcoAtual(idadeNoSalario) : formatarMarcoTemporal(mesReplicaSalario, idadeNoSalario)) : "Informe sua renda",
         independenciaAntes65: idadeNosCustos !== null && idadeNosCustos < 65,
-        mensagem: gerarMensagemRadar({
-          rendaMensal,
-          custosMensais,
-          rendaPassivaAtual,
-          saldoMensalComSalario,
-          mesCobreCustos,
-          mesReplicaSalario,
-          idadeNosCustos
-        })
+        mensagem: gerarMensagemRadar({ rendaMensal, custosMensais, rendaPassivaAtual, saldoMensalComSalario, mesCobreCustos, mesReplicaSalario, idadeNosCustos })
       };
     }
 
     function gerarMensagemRadar({ rendaMensal, custosMensais, rendaPassivaAtual, saldoMensalComSalario, mesCobreCustos, mesReplicaSalario, idadeNosCustos }) {
-      if (!rendaMensal && !custosMensais) {
-        return "Preencha salário e custos para transformar a projeção em um mapa de independência financeira.";
-      }
-
+      if (!rendaMensal && !custosMensais) return "Preencha salário e custos para transformar a projeção em um mapa de independência financeira.";
       if (custosMensais > 0 && rendaPassivaAtual >= custosMensais) {
         return `Sua renda passiva já cobre seus custos estimados. Com ${formatterMoeda.format(saldoMensalComSalario)} de folga mensal total, o patrimônio projetado passa a trabalhar como sua principal rede de segurança.`;
       }
-
       if (custosMensais > 0 && mesCobreCustos) {
         return `Hoje sua renda passiva cobre ${formatterPercentual.format((rendaPassivaAtual / custosMensais) * 100)}% dos custos. Mantido o plano atual, ela deve pagar sua vida mensal por volta de ${formatarMarcoTemporal(mesCobreCustos, idadeNosCustos).toLowerCase()}.`;
       }
-
       if (rendaMensal > 0 && mesReplicaSalario) {
         return `Sua renda passiva ainda não sustenta o custo mensal completo, mas a projeção indica substituição do salário em ${formatarMarcoTemporal(mesReplicaSalario).toLowerCase()}.`;
       }
-
       return `Com ${formatterMoeda.format(rendaPassivaAtual)} de renda passiva líquida mensal hoje, ainda existe dependência relevante da renda ativa. O saldo combinado atual é de ${formatterMoeda.format(saldoMensalComSalario)} por mês.`;
     }
 
     function formatarMarcoTemporal(mes, idade = null) {
-      if (!mes) {
-        return "Não atinge em 30 anos";
-      }
+      if (!mes) return "Não atinge em 30 anos";
       const ano = Math.ceil(mes / 12);
       return idade !== null ? `Ano ${ano} (${idade} anos)` : `Ano ${ano}`;
     }
@@ -2314,7 +2563,6 @@
         rendimentoSemestreAcumulado: rendimentoBruto,
         considerarComeCotas: false
       });
-
       return {
         taxaAnualEfetiva,
         taxaMensal,
@@ -2326,54 +2574,35 @@
     }
 
     function obterTaxaAnualEfetiva(investimento, taxaCdiReferencia) {
-      if (investimento.tipo === "CDI (%)") {
-        return (normalizarNumero(investimento.taxaAnual) / 100) * normalizarNumero(taxaCdiReferencia);
-      }
-      return normalizarNumero(investimento.taxaAnual);
+      return investimento.tipo === "CDI (%)"
+        ? (normalizarNumero(investimento.taxaAnual) / 100) * normalizarNumero(taxaCdiReferencia)
+        : normalizarNumero(investimento.taxaAnual);
     }
 
     function calcularTaxaMensal(taxaAnual) {
       return Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
     }
 
-    function aplicarImpostoRenda({
-      tipo,
-      rendimentoBruto,
-      valorBase,
-      dataInicio,
-      dataReferencia,
-      rendimentoSemestreAcumulado = 0,
-      considerarComeCotas = true
-    }) {
+    function aplicarImpostoRenda({ tipo, rendimentoBruto, valorBase, dataInicio, dataReferencia, rendimentoSemestreAcumulado = 0, considerarComeCotas = true }) {
       let imposto = 0;
       let nota = "";
-
-      // Renda Fixa, CDB e CDI usam a tabela regressiva sobre o rendimento.
       if (["Renda Fixa", "CDB", "CDI (%)"].includes(tipo)) {
-        const aliquota = obterAliquotaRegressiva(dataInicio, dataReferencia);
-        imposto = rendimentoBruto * aliquota;
+        imposto = rendimentoBruto * obterAliquotaRegressiva(dataInicio, dataReferencia);
       }
-
-      // Fundos usam come-cotas de 15% semestral; no cálculo mensal atual mostramos uma estimativa.
       if (tipo === "Fundo de Investimento") {
         imposto = considerarComeCotas ? rendimentoSemestreAcumulado * 0.15 : rendimentoBruto * 0.15;
         nota = "Estimativa com come-cotas de 15% em maio e novembro sobre o rendimento do semestre.";
       }
-
-      // Ações: dividendos são considerados isentos pela legislação atual.
       if (tipo === "Ações") {
         imposto = 0;
         nota = "Dividendos considerados isentos de IR na legislação atual.";
       }
-
-      // Crypto: sem valor de venda informado, a estimativa assume liquidação integral do patrimônio no mês.
       if (tipo === "Crypto") {
         imposto = valorBase > 35000 ? rendimentoBruto * 0.15 : 0;
         nota = valorBase > 35000
           ? "Estimativa considera venda mensal total acima de R$ 35.000, com IR de 15% sobre o ganho."
           : "Estimativa considera isenção para vendas mensais de até R$ 35.000.";
       }
-
       return { imposto, nota };
     }
 
@@ -2385,42 +2614,43 @@
       return 0.15;
     }
 
-    function calcularProjecaoMensal(investimentos, taxaCdiReferencia, investimentoId = null) {
-      const baseInvestimentos = investimentoId
-        ? investimentos.filter((investimento) => investimento.id === investimentoId)
-        : investimentos;
+    function calcularProjecaoMensalPerfil(perfil, investimentoId = null) {
+      const investimentos = investimentoId
+        ? perfil.investimentos.filter((investimento) => investimento.id === investimentoId)
+        : perfil.investimentos;
 
-      const estadoProjecao = baseInvestimentos.map((investimento) => ({
+      const estadoInvestimentos = investimentos.map((investimento) => ({
         ...investimento,
         patrimonio: normalizarNumero(investimento.valorInvestido),
-        dataInicioDate: criarDataLocal(investimento.dataInicio),
         rendimentoSemestreAcumulado: 0
       }));
-
-      const hoje = new Date();
+      const estadoImoveis = investimentoId ? [] : perfil.imoveis.map(criarEstadoImovel);
+      const estadoEmpresas = investimentoId ? [] : perfil.empresas.map(criarEstadoEmpresa);
       const linhas = [];
+      const hoje = new Date();
+      const taxaValorizacaoImovelMensal = calcularTaxaMensal(3);
+      const taxaReajusteAluguelMensal = calcularTaxaMensal(4);
 
       for (let mes = 1; mes <= 360; mes += 1) {
         const dataMes = new Date(hoje.getFullYear(), hoje.getMonth() + mes, 1);
-        let patrimonioTotal = 0;
+        let patrimonioInvestimentos = 0;
+        let patrimonioBens = 0;
         let rendimentoBrutoTotal = 0;
         let impostoTotal = 0;
-        let rendimentoLiquidoTotal = 0;
+        let rendimentoLiquidoInvestimentos = 0;
+        let rendaPassivaBens = 0;
         let aportesTotal = 0;
 
-        estadoProjecao.forEach((item) => {
-          const taxaAnualEfetiva = obterTaxaAnualEfetiva(item, taxaCdiReferencia);
-          const taxaMensal = calcularTaxaMensal(taxaAnualEfetiva);
+        estadoInvestimentos.forEach((item) => {
+          const taxaMensal = calcularTaxaMensal(obterTaxaAnualEfetiva(item, perfil.taxaCdiReferencia));
           const patrimonioBase = item.patrimonio + normalizarNumero(item.aporteMensal);
           const rendimentoBruto = patrimonioBase * taxaMensal;
           aportesTotal += normalizarNumero(item.aporteMensal);
           let impostoMes = 0;
-
           if (item.tipo === "Fundo de Investimento") {
             item.rendimentoSemestreAcumulado += rendimentoBruto;
             const mesCalendario = dataMes.getMonth();
-            const ehComeCotas = mesCalendario === 4 || mesCalendario === 10;
-            if (ehComeCotas) {
+            if (mesCalendario === 4 || mesCalendario === 10) {
               impostoMes = item.rendimentoSemestreAcumulado * 0.15;
               item.rendimentoSemestreAcumulado = 0;
             }
@@ -2433,31 +2663,65 @@
               dataReferencia: dataMes
             }).imposto;
           }
-
           const rendimentoLiquido = rendimentoBruto - impostoMes;
           item.patrimonio = patrimonioBase + rendimentoLiquido;
-
-          patrimonioTotal += item.patrimonio;
+          patrimonioInvestimentos += item.patrimonio;
           rendimentoBrutoTotal += rendimentoBruto;
           impostoTotal += impostoMes;
-          rendimentoLiquidoTotal += rendimentoLiquido;
+          rendimentoLiquidoInvestimentos += rendimentoLiquido;
+        });
+
+        estadoImoveis.forEach((item) => {
+          item.valor *= 1 + taxaValorizacaoImovelMensal;
+          let rendaMes = 0;
+          if (item.geraReceita) {
+            item.aluguel *= 1 + taxaReajusteAluguelMensal;
+            rendaMes = item.aluguel * (1 - item.vacancia / 100) - (item.iptuAnual / 12) - item.condominio - item.manutencao;
+          }
+          if (item.financiado && item.mesesRestantes > 0) {
+            rendaMes -= item.parcela;
+            aplicarPagamentoDivida(item);
+          }
+          patrimonioBens += item.valor;
+          rendaPassivaBens += rendaMes;
+        });
+
+        estadoEmpresas.forEach((empresa) => {
+          let rendaMes = empresa.receita - empresa.custosFixos;
+          empresa.emprestimos.forEach((divida) => {
+            if (divida.mesesRestantes > 0 && divida.saldo > 0) {
+              rendaMes -= divida.parcela;
+              aplicarPagamentoDivida(divida);
+            }
+          });
+          empresa.financiamentos.forEach((divida) => {
+            if (divida.mesesRestantes > 0 && divida.saldo > 0) {
+              rendaMes -= divida.parcela;
+              aplicarPagamentoDivida(divida);
+            }
+          });
+          patrimonioBens += empresa.valorEstimado;
+          if (empresa.receitaPassiva) {
+            rendaPassivaBens += rendaMes;
+          }
         });
 
         linhas.push({
           mes,
-          patrimonioTotal,
+          patrimonioInvestimentos,
+          patrimonioBens,
+          patrimonioTotal: patrimonioInvestimentos + patrimonioBens,
           aportesTotal,
-          rendimentoBrutoTotal,
+          rendimentoBrutoTotal: rendimentoBrutoTotal + rendaPassivaBens,
           impostoTotal,
-          rendimentoLiquidoTotal
+          rendimentoLiquidoTotal: rendimentoLiquidoInvestimentos + rendaPassivaBens,
+          rendaPassivaBens
         });
       }
-
       return linhas;
     }
 
-    function agruparProjecaoAnual(investimentos, taxaCdiReferencia, investimentoId = null, dataNascimento = "") {
-      const projecaoMensal = calcularProjecaoMensal(investimentos, taxaCdiReferencia, investimentoId);
+    function agruparProjecaoAnualPerfil(projecaoMensal, dataNascimento = "") {
       const linhas = [];
       for (let ano = 1; ano <= 30; ano += 1) {
         const fatia = projecaoMensal.slice((ano - 1) * 12, ano * 12);
@@ -2465,6 +2729,8 @@
           ano,
           idade: obterIdadeNaProjecao(dataNascimento, ano),
           patrimonioFinal: fatia[fatia.length - 1]?.patrimonioTotal || 0,
+          patrimonioBens: fatia[fatia.length - 1]?.patrimonioBens || 0,
+          rendaPassivaBens: fatia.reduce((acc, item) => acc + item.rendaPassivaBens, 0),
           aportes: fatia.reduce((acc, item) => acc + item.aportesTotal, 0),
           rendimentoBruto: fatia.reduce((acc, item) => acc + item.rendimentoBrutoTotal, 0),
           imposto: fatia.reduce((acc, item) => acc + item.impostoTotal, 0),
@@ -2474,41 +2740,191 @@
       return linhas;
     }
 
+    function criarEstadoImovel(imovel) {
+      return {
+        valor: normalizarNumero(imovel.valorEstimado),
+        financiado: imovel.status.financiado,
+        geraReceita: imovel.status.geraReceita,
+        saldo: normalizarNumero(imovel.saldoDevedor),
+        parcela: normalizarNumero(imovel.parcelaMensal),
+        taxaMensal: calcularTaxaMensal(normalizarNumero(imovel.taxaJurosAnual)),
+        mesesRestantes: normalizarNumero(imovel.mesesRestantes),
+        aluguel: normalizarNumero(imovel.aluguelMensalBruto),
+        vacancia: normalizarNumero(imovel.taxaVacancia),
+        iptuAnual: normalizarNumero(imovel.iptuAnual),
+        condominio: normalizarNumero(imovel.condominioMensal),
+        manutencao: normalizarNumero(imovel.custosManutencaoMensal)
+      };
+    }
+
+    function criarEstadoEmpresa(empresa) {
+      return {
+        valorEstimado: normalizarNumero(empresa.valorEstimado),
+        receita: normalizarNumero(empresa.receitaMensal),
+        receitaPassiva: empresa.receitaPassiva === true,
+        custosFixos: normalizarNumero(empresa.custosFixos),
+        emprestimos: empresa.emprestimos.map(criarEstadoDivida),
+        financiamentos: empresa.financiamentos.map(criarEstadoDivida)
+      };
+    }
+
+    function criarEstadoDivida(divida) {
+      return {
+        saldo: normalizarNumero(divida.saldoDevedor),
+        parcela: normalizarNumero(divida.parcelaMensal),
+        taxaMensal: calcularTaxaMensal(normalizarNumero(divida.taxaJurosAnual)),
+        mesesRestantes: normalizarNumero(divida.mesesRestantes)
+      };
+    }
+
+    function aplicarPagamentoDivida(divida) {
+      if (divida.mesesRestantes <= 0 || divida.saldo <= 0) {
+        divida.saldo = 0;
+        divida.mesesRestantes = 0;
+        return;
+      }
+      const juros = divida.saldo * divida.taxaMensal;
+      let amortizacao = divida.parcela - juros;
+      if (amortizacao <= 0) amortizacao = divida.saldo / Math.max(divida.mesesRestantes, 1);
+      divida.saldo = Math.max(0, divida.saldo - amortizacao);
+      divida.mesesRestantes = Math.max(0, divida.mesesRestantes - 1);
+    }
+
+    function calcularRendaPassivaImovelAtual(imovel) {
+      let renda = 0;
+      if (imovel.status.geraReceita) {
+        renda += normalizarNumero(imovel.aluguelMensalBruto) * (1 - normalizarNumero(imovel.taxaVacancia) / 100);
+        renda -= normalizarNumero(imovel.iptuAnual) / 12;
+        renda -= normalizarNumero(imovel.condominioMensal);
+        renda -= normalizarNumero(imovel.custosManutencaoMensal);
+      }
+      if (imovel.status.financiado && normalizarNumero(imovel.mesesRestantes) > 0) {
+        renda -= normalizarNumero(imovel.parcelaMensal);
+      }
+      return renda;
+    }
+
+    function calcularLucroLiquidoEmpresaAtual(empresa) {
+      return normalizarNumero(empresa.receitaMensal) - normalizarNumero(empresa.custosFixos) - obterParcelasEmpresa(empresa);
+    }
+
+    function calcularRendaPassivaEmpresaAtual(empresa) {
+      return empresa.receitaPassiva ? calcularLucroLiquidoEmpresaAtual(empresa) : 0;
+    }
+
+    function obterDividaImovel(imovel) {
+      return imovel.status.financiado ? normalizarNumero(imovel.saldoDevedor) : 0;
+    }
+
+    function obterDividaEmpresa(empresa) {
+      return [...empresa.emprestimos, ...empresa.financiamentos].reduce((acc, item) => acc + normalizarNumero(item.saldoDevedor), 0);
+    }
+
+    function obterParcelasEmpresa(empresa) {
+      return [...empresa.emprestimos, ...empresa.financiamentos].reduce((acc, item) => {
+        return acc + (normalizarNumero(item.mesesRestantes) > 0 ? normalizarNumero(item.parcelaMensal) : 0);
+      }, 0);
+    }
+
+    function somarPatrimonioBensAtual(imoveis, empresas) {
+      return imoveis.reduce((acc, item) => acc + normalizarNumero(item.valorEstimado), 0) +
+        empresas.reduce((acc, item) => acc + normalizarNumero(item.valorEstimado), 0);
+    }
+
+    function somarRendaPassivaBensAtual(imoveis, empresas) {
+      return imoveis.reduce((acc, item) => acc + calcularRendaPassivaImovelAtual(item), 0) +
+        empresas.reduce((acc, item) => acc + calcularRendaPassivaEmpresaAtual(item), 0);
+    }
+
+    function somarDividaBensAtual(imoveis, empresas) {
+      return imoveis.reduce((acc, item) => acc + obterDividaImovel(item), 0) +
+        empresas.reduce((acc, item) => acc + obterDividaEmpresa(item), 0);
+    }
+
+    function obterResumoImovel(imovel) {
+      if (imovel.status.financiado && imovel.status.geraReceita) {
+        return `Financiado e alugado • ${formatterMoeda.format(obterDividaImovel(imovel))} restantes`;
+      }
+      if (imovel.status.financiado) {
+        return `Financiado • ${formatterMoeda.format(obterDividaImovel(imovel))} restantes`;
+      }
+      if (imovel.status.geraReceita) {
+        return `Aluguel líquido: ${formatterMoeda.format(calcularRendaPassivaImovelAtual(imovel))}/mês`;
+      }
+      return imovel.status.quitado ? "Quitado" : "Sem status definido";
+    }
+
+    function obterResumoEmpresa(empresa) {
+      return `${empresa.receitaPassiva ? "Lucro passivo" : "Lucro operacional"}: ${formatterMoeda.format(calcularLucroLiquidoEmpresaAtual(empresa))}/mês`;
+    }
+
+    function renderizarFlagCheckbox(chave, label, checked) {
+      return `<label class="flag-check"><input data-status="${chave}" type="checkbox" ${checked ? "checked" : ""} />${label}</label>`;
+    }
+
+    function renderizarSublistaDividas(lista, titulo, itens) {
+      return `
+        <div class="sublista-bloco">
+          <div class="sublista-topo">
+            <h3>${titulo}</h3>
+            <button class="btn-adicionar btn-adicionar-inline" type="button" data-acao="add-divida" data-lista="${lista}">+ Adicionar ${titulo.slice(0, -1).toLowerCase()}</button>
+          </div>
+          <div class="sublista-itens">
+            ${itens.length ? itens.map((item, indice) => `
+              <div class="subitem-card">
+                <div class="subitem-topo">
+                  <div class="subitem-titulo">${titulo.slice(0, -1)} ${indice + 1}</div>
+                  <button class="btn-remover" type="button" data-acao="remover-divida" data-lista="${lista}" data-divida-id="${item.id}">X</button>
+                </div>
+                <div class="grid-campos">
+                  <div class="campo-completo"><label>Descrição</label><input data-divida-campo="descricao" data-lista="${lista}" data-divida-id="${item.id}" type="text" value="${escapeHtml(item.descricao)}" /></div>
+                  <div><label>Saldo devedor (R$)</label><input data-divida-campo="saldoDevedor" data-lista="${lista}" data-divida-id="${item.id}" type="number" min="0" step="0.01" value="${item.saldoDevedor}" /></div>
+                  <div><label>Parcela mensal (R$)</label><input data-divida-campo="parcelaMensal" data-lista="${lista}" data-divida-id="${item.id}" type="number" min="0" step="0.01" value="${item.parcelaMensal}" /></div>
+                  <div><label>Taxa de juros anual (%)</label><input data-divida-campo="taxaJurosAnual" data-lista="${lista}" data-divida-id="${item.id}" type="number" min="0" step="0.01" value="${item.taxaJurosAnual}" /></div>
+                  <div><label>Meses restantes</label><input data-divida-campo="mesesRestantes" data-lista="${lista}" data-divida-id="${item.id}" type="number" min="0" step="1" value="${item.mesesRestantes}" /></div>
+                </div>
+              </div>
+            `).join("") : '<div class="vazio">Nenhum item cadastrado.</div>'}
+          </div>
+        </div>
+      `;
+    }
+
     function obterIdadeNaProjecao(dataNascimento, anosProjetados) {
-      if (!dataNascimento) {
-        return null;
-      }
+      if (!dataNascimento) return null;
       const nascimento = criarDataLocal(dataNascimento);
-      if (Number.isNaN(nascimento.getTime())) {
-        return null;
-      }
+      if (Number.isNaN(nascimento.getTime())) return null;
       const hoje = new Date();
       const dataFutura = new Date(hoje.getFullYear() + anosProjetados, hoje.getMonth(), hoje.getDate() || 1);
       let idade = dataFutura.getFullYear() - nascimento.getFullYear();
       const mesDiff = dataFutura.getMonth() - nascimento.getMonth();
       const diaDiff = dataFutura.getDate() - nascimento.getDate();
-      if (mesDiff < 0 || (mesDiff === 0 && diaDiff < 0)) {
-        idade -= 1;
-      }
+      if (mesDiff < 0 || (mesDiff === 0 && diaDiff < 0)) idade -= 1;
       return idade;
     }
 
-    function gerarNotasResumo(investimentos, taxaCdiReferencia) {
+    function gerarNotasResumo(perfil, resumoBens) {
       const notas = [
-        `CDI de referência atual: ${formatterPercentual.format(taxaCdiReferencia)}% a.a.`,
-        "IR em renda fixa, CDB e CDI incide apenas sobre o rendimento, com alíquota regressiva pelo prazo da aplicação."
+        `CDI de referência atual: ${formatterPercentual.format(perfil.taxaCdiReferencia)}% a.a.`,
+        `Patrimônio em bens atual: ${formatterMoeda.format(resumoBens.patrimonioBensAtual)}.`,
+        `Renda passiva de bens atual: ${formatterMoeda.format(resumoBens.rendaPassivaBensAtual)} por mês.`,
+        `Dívida total de bens atual: ${formatterMoeda.format(resumoBens.dividaTotalBens)}.`
       ];
-
-      if (investimentos.some((item) => item.tipo === "Ações")) {
-        notas.push("Ações: dividendos tratados como isentos de IR na estimativa mensal.");
+      if (perfil.imoveis.some((item) => item.status.geraReceita)) {
+        notas.push("Imóveis com renda usam vacância, IPTU, condomínio e manutenção para estimar aluguel líquido.");
       }
-      if (investimentos.some((item) => item.tipo === "Crypto")) {
-        notas.push("Crypto: sem informar volume de venda, a simulação usa o patrimônio como proxy de venda mensal.");
+      if (perfil.imoveis.some((item) => item.status.financiado)) {
+        notas.push("Imóveis financiados deixam de descontar parcela quando o saldo chega a zero ou os meses restantes terminam.");
       }
-      if (investimentos.some((item) => item.tipo === "Fundo de Investimento")) {
+      if (perfil.empresas.some((item) => item.emprestimos.length || item.financiamentos.length)) {
+        notas.push("Empresas descontam parcelas de empréstimos e financiamentos até o payoff das dívidas.");
+      }
+      if (perfil.empresas.some((item) => !item.receitaPassiva)) {
+        notas.push("Empresas com receita ativa não entram na renda passiva; apenas o valor estimado do negócio compõe o patrimônio.");
+      }
+      if (perfil.investimentos.some((item) => item.tipo === "Fundo de Investimento")) {
         notas.push("Fundos: come-cotas de 15% em maio e novembro reduz o patrimônio projetado semestralmente.");
       }
-
       return notas;
     }
 
@@ -2520,9 +2936,7 @@
     }
 
     function criarDataLocal(valor) {
-      if (valor instanceof Date) {
-        return new Date(valor.getFullYear(), valor.getMonth(), valor.getDate());
-      }
+      if (valor instanceof Date) return new Date(valor.getFullYear(), valor.getMonth(), valor.getDate());
       const [ano, mes, dia] = String(valor).split("-").map(Number);
       return new Date(ano, (mes || 1) - 1, dia || 1);
     }
