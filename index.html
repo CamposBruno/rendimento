@@ -596,17 +596,19 @@
     }
 
     .resultado-box {
+      position: relative;
       padding: 14px;
       border-radius: 14px;
       background: var(--superficie-suave);
       border: 1px solid rgba(148, 163, 184, 0.2);
     }
 
-    .resultado-box span {
+    .resultado-box > span {
       display: block;
       font-size: 0.78rem;
       color: var(--muted);
       margin-bottom: 6px;
+      padding-right: 28px;
     }
 
     .resultado-box strong {
@@ -786,17 +788,82 @@
     }
 
     .metric {
+      position: relative;
       padding: 16px;
       border-radius: 16px;
       background: var(--superficie-suave);
       border: 1px solid rgba(148, 163, 184, 0.16);
     }
 
-    .metric span {
+    .metric > span {
       display: block;
       color: var(--muted);
       font-size: 0.82rem;
       margin-bottom: 6px;
+      padding-right: 28px;
+    }
+
+    .tooltip-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .tooltip-wrap.tooltip-canto {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 4;
+    }
+
+    .tooltip-icone {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.06);
+      color: rgba(148, 163, 184, 0.92);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: help;
+      user-select: none;
+      flex-shrink: 0;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    }
+
+    .tooltip-wrap:hover .tooltip-icone,
+    .tooltip-wrap:focus-within .tooltip-icone {
+      background: rgba(37, 99, 235, 0.12);
+      border-color: rgba(96, 165, 250, 0.28);
+      color: #bfdbfe;
+      transform: translateY(-1px);
+    }
+
+    .tooltip-balao {
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 10px);
+      width: min(260px, 70vw);
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.96);
+      color: #f8fafc;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      box-shadow: var(--sombra);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s ease;
+      z-index: 30;
+    }
+
+    .tooltip-wrap:hover .tooltip-balao,
+    .tooltip-wrap:focus-within .tooltip-balao {
+      opacity: 1;
     }
 
     .metric strong {
@@ -1236,14 +1303,8 @@
               <h2>Mapa da Liberdade</h2>
               <div class="painel-pessoal">
                 <div class="radar-grid">
-                  <div class="campo-topo">
-                    <label for="rendaMensal">Renda mensal (salário)</label>
-                    <input id="rendaMensal" type="number" step="0.01" min="0" />
-                  </div>
-                  <div class="campo-topo">
-                    <label for="custosMensais">Custos fixos mensais</label>
-                    <input id="custosMensais" type="number" step="0.01" min="0" readonly />
-                  </div>
+                  <div id="rendaMensalInfo" class="metric"></div>
+                  <div id="custosMensaisInfo" class="metric"></div>
                 </div>
                 <div id="radarFinanceiro"></div>
               </div>
@@ -1415,8 +1476,8 @@
     const btnMenuConfiguracoesEl = document.getElementById("btnMenuConfiguracoes");
     const menuConfiguracoesEl = document.getElementById("menuConfiguracoes");
     const tabsProjecaoEl = document.getElementById("tabsProjecao");
-    const rendaMensalEl = document.getElementById("rendaMensal");
-    const custosMensaisEl = document.getElementById("custosMensais");
+    const rendaMensalInfoEl = document.getElementById("rendaMensalInfo");
+    const custosMensaisInfoEl = document.getElementById("custosMensaisInfo");
     const radarFinanceiroEl = document.getElementById("radarFinanceiro");
     const barraPerfisEl = document.getElementById("barraPerfis");
     const perfilFormEl = document.getElementById("perfilForm");
@@ -1456,12 +1517,6 @@
       obterPerfilAtivo().taxaCdiReferencia = normalizarNumero(taxaCdiReferenciaEl.value, 13.25);
       salvarEstado();
       agendarAtualizacao(true);
-    });
-
-    rendaMensalEl.addEventListener("input", () => {
-      obterPerfilAtivo().rendaMensal = normalizarNumero(rendaMensalEl.value);
-      salvarEstado();
-      agendarAtualizacao(false);
     });
 
     btnAdicionarEl.addEventListener("click", () => {
@@ -1888,8 +1943,14 @@
     function sincronizarCamposPerfil() {
       const perfil = obterPerfilAtivo();
       taxaCdiReferenciaEl.value = perfil.taxaCdiReferencia;
-      rendaMensalEl.value = perfil.rendaMensal;
-      custosMensaisEl.value = perfil.custosMensais;
+      rendaMensalInfoEl.innerHTML = `
+        <span>${renderizarLabelComTooltip("Renda mensal", "Soma do resultado mensal das empresas com receita ativa, descontando custos fixos e parcelas das dívidas dessas empresas.")}</span>
+        <strong>${formatterMoeda.format(calcularRendaMensalAtivaPerfil(perfil))}</strong>
+      `;
+      custosMensaisInfoEl.innerHTML = `
+        <span>${renderizarLabelComTooltip("Custos fixos mensais", "Soma dos custos fixos recorrentes do perfil, incluindo parcelas de financiamentos imobiliários ativos.")}</span>
+        <strong>${formatterMoeda.format(perfil.custosMensais)}</strong>
+      `;
       nomePerfilEl.value = perfil.nome;
       dataNascimentoPerfilEl.value = perfil.dataNascimento || "";
       btnRemoverPerfilEl.disabled = ESTADO.perfis.length === 1;
@@ -1931,7 +1992,7 @@
         (Array.isArray(perfil.imoveis) && perfil.imoveis.length > 0) ||
         (Array.isArray(perfil.empresas) && perfil.empresas.length > 0) ||
         (Array.isArray(perfil.custosFixos) && perfil.custosFixos.length > 0) ||
-        normalizarNumero(perfil.rendaMensal) > 0
+        calcularRendaMensalAtivaPerfil(perfil) > 0
       ));
     }
 
@@ -2077,6 +2138,10 @@
       return false;
     }
 
+    function renderizarLabelComTooltip(label, descricao) {
+      return `${escapeHtml(label)}<span class="tooltip-wrap tooltip-canto"><span class="tooltip-icone" tabindex="0">i</span><span class="tooltip-balao">${escapeHtml(descricao)}</span></span>`;
+    }
+
     function agendarAtualizacao(recriarCards = false) {
       clearTimeout(debounceAtualizacao);
       debounceAtualizacao = setTimeout(() => {
@@ -2191,19 +2256,19 @@
         <div class="familia-resumo-bloco">
           <div class="resumo-grid">
             <div class="metric destaque">
-              <span>Patrimônio total da família</span>
+              <span>${renderizarLabelComTooltip("Patrimônio total da família", "Soma do patrimônio investido com o valor estimado de todos os bens da família.")}</span>
               <strong>${formatterMoeda.format(familia.patrimonioTotalAtual)}</strong>
             </div>
             <div class="metric">
-              <span>Renda passiva mensal total</span>
+              <span>${renderizarLabelComTooltip("Renda passiva mensal total", "Soma da renda passiva dos investimentos com a renda passiva de bens de todos os perfis.")}</span>
               <strong>${formatterMoeda.format(familia.rendaPassivaMensal)}</strong>
             </div>
             <div class="metric">
-              <span>Dívida total em bens</span>
+              <span>${renderizarLabelComTooltip("Dívida total em bens", "Soma de todas as dívidas de bens, como financiamentos imobiliários, empréstimos e financiamentos de empresas.")}</span>
               <strong>${formatterMoeda.format(familia.dividaTotalBens)}</strong>
             </div>
             <div class="metric">
-              <span>Custos fixos da família</span>
+              <span>${renderizarLabelComTooltip("Custos fixos da família", "Soma dos custos fixos recorrentes de todos os perfis, incluindo parcelas de financiamentos imobiliários ativos.")}</span>
               <strong>${formatterMoeda.format(familia.custosFixosMensais)}</strong>
             </div>
           </div>
@@ -2274,9 +2339,9 @@
               <div><label>Data de início</label><input data-campo="dataInicio" type="date" value="${investimento.dataInicio}" /></div>
             </div>
             <div class="resultado-inline">
-              <div class="resultado-box"><span>Rendimento bruto / mês</span><strong>${formatterMoeda.format(calculoAtual.rendimentoBruto)}</strong></div>
-              <div class="resultado-box"><span>IR estimado / mês</span><strong>${formatterMoeda.format(calculoAtual.imposto)}</strong></div>
-              <div class="resultado-box"><span>Rendimento líquido / mês</span><strong>${formatterMoeda.format(calculoAtual.rendimentoLiquido)}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Rendimento bruto / mês", "Rentabilidade mensal estimada antes de impostos, calculada sobre o valor investido e a taxa do investimento.")}</span><strong>${formatterMoeda.format(calculoAtual.rendimentoBruto)}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("IR estimado / mês", "Estimativa de imposto incidente sobre o rendimento mensal, conforme o tipo de investimento.")}</span><strong>${formatterMoeda.format(calculoAtual.imposto)}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Rendimento líquido / mês", "Rendimento bruto menos o imposto estimado do período.")}</span><strong>${formatterMoeda.format(calculoAtual.rendimentoLiquido)}</strong></div>
             </div>
             ${calculoAtual.nota ? `<div class="nota-card">${escapeHtml(calculoAtual.nota)}</div>` : ""}
           </div>
@@ -2359,9 +2424,9 @@
               ` : ""}
             </div>
             <div class="resultado-inline">
-              <div class="resultado-box"><span>Patrimônio líquido</span><strong>${formatterMoeda.format(imovel.valorEstimado - obterDividaImovel(imovel))}</strong></div>
-              <div class="resultado-box"><span>Renda passiva / mês</span><strong>${formatterMoeda.format(calcularRendaPassivaImovelAtual(imovel))}</strong></div>
-              <div class="resultado-box"><span>Dívida atual</span><strong>${formatterMoeda.format(obterDividaImovel(imovel))}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Patrimônio líquido", "Valor estimado do imóvel menos o saldo devedor do financiamento, quando existir.")}</span><strong>${formatterMoeda.format(imovel.valorEstimado - obterDividaImovel(imovel))}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Renda passiva / mês", "Aluguel mensal líquido após vacância, IPTU, condomínio e manutenção. A parcela do financiamento entra em custos fixos, não aqui.")}</span><strong>${formatterMoeda.format(calcularRendaPassivaImovelAtual(imovel))}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Dívida atual", "Saldo devedor do financiamento imobiliário ainda em aberto.")}</span><strong>${formatterMoeda.format(obterDividaImovel(imovel))}</strong></div>
             </div>
           </div>
         `;
@@ -2430,9 +2495,9 @@
             ${renderizarSublistaDividas("emprestimos", "Empréstimos", empresa.emprestimos)}
             ${renderizarSublistaDividas("financiamentos", "Financiamentos", empresa.financiamentos)}
             <div class="resultado-inline">
-              <div class="resultado-box"><span>${empresa.receitaPassiva ? "Lucro passivo / mês" : "Lucro operacional / mês"}</span><strong>${formatterMoeda.format(calcularLucroLiquidoEmpresaAtual(empresa))}</strong></div>
-              <div class="resultado-box"><span>Dívida total</span><strong>${formatterMoeda.format(obterDividaEmpresa(empresa))}</strong></div>
-              <div class="resultado-box"><span>Parcelas mensais</span><strong>${formatterMoeda.format(obterParcelasEmpresa(empresa))}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip(empresa.receitaPassiva ? "Lucro passivo / mês" : "Lucro operacional / mês", "Receita mensal menos custos fixos e parcelas de empréstimos e financiamentos da empresa.")}</span><strong>${formatterMoeda.format(calcularLucroLiquidoEmpresaAtual(empresa))}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Dívida total", "Soma dos saldos devedores de empréstimos e financiamentos cadastrados para a empresa.")}</span><strong>${formatterMoeda.format(obterDividaEmpresa(empresa))}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Parcelas mensais", "Soma das parcelas mensais das dívidas da empresa que ainda estão em aberto.")}</span><strong>${formatterMoeda.format(obterParcelasEmpresa(empresa))}</strong></div>
             </div>
           </div>
         `;
@@ -2570,23 +2635,23 @@
 
     function renderizarRodapeCustosFixos() {
       const perfil = obterPerfilAtivo();
-      const totais = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis);
+      const totais = calcularResumoCustosFixos(perfil.custosFixos, calcularRendaMensalAtivaPerfil(perfil), perfil.imoveis);
       rodapeCustosFixosEl.innerHTML = `
         <div class="resumo-grid">
           <div class="metric destaque">
-            <span>Total mensal de custos fixos</span>
+            <span>${renderizarLabelComTooltip("Total mensal de custos fixos", "Soma de todos os custos fixos cadastrados mais parcelas ativas de financiamentos imobiliários.")}</span>
             <strong>${formatterMoeda.format(totais.total)}</strong>
           </div>
           <div class="metric">
-            <span>Total essencial</span>
+            <span>${renderizarLabelComTooltip("Total essencial", "Soma dos custos marcados como essenciais, incluindo parcelas de financiamentos imobiliários ativos.")}</span>
             <strong>${formatterMoeda.format(totais.essencial)}</strong>
           </div>
           <div class="metric">
-            <span>Total discricionário</span>
+            <span>${renderizarLabelComTooltip("Total discricionário", "Soma dos custos marcados como discricionários.")}</span>
             <strong>${formatterMoeda.format(totais.discricionario)}</strong>
           </div>
           <div class="metric">
-            <span>Peso sobre a renda mensal</span>
+            <span>${renderizarLabelComTooltip("Peso sobre a renda mensal", "Percentual da renda mensal comprometido com os custos fixos recorrentes do perfil.")}</span>
             <strong>${totais.percentualRenda !== null ? `${formatterPercentual.format(totais.percentualRenda)}%` : "Informe sua renda"}</strong>
           </div>
         </div>
@@ -2736,7 +2801,7 @@
     function calcularResumoGeral(perfil) {
       const resumoInvestimentos = calcularResumoInvestimentos(perfil.investimentos, perfil.taxaCdiReferencia);
       const resumoBens = calcularResumoBens(perfil.imoveis, perfil.empresas);
-      const resumoCustosFixos = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis);
+      const resumoCustosFixos = calcularResumoCustosFixos(perfil.custosFixos, calcularRendaMensalAtivaPerfil(perfil), perfil.imoveis);
       const projecaoMensal = calcularProjecaoMensalPerfil(perfil);
       const projecaoAnual = agruparProjecaoAnualPerfil(projecaoMensal, perfil.dataNascimento);
       return {
@@ -2773,27 +2838,27 @@
     function renderizarResumo(resumo) {
       resumoGridEl.innerHTML = `
         <div class="metric">
-          <span>Patrimônio total</span>
+          <span>${renderizarLabelComTooltip("Patrimônio total", "Soma do total investido com o valor estimado de imóveis e empresas cadastrados.")}</span>
           <strong>${formatterMoeda.format(resumo.patrimonioTotalAtual)}</strong>
         </div>
         <div class="metric">
-          <span>Patrimônio em bens</span>
+          <span>${renderizarLabelComTooltip("Patrimônio em bens", "Soma dos valores estimados de todos os imóveis e empresas do perfil.")}</span>
           <strong>${formatterMoeda.format(resumo.patrimonioBensAtual)}</strong>
         </div>
         <div class="metric">
-          <span>Renda passiva de bens</span>
+          <span>${renderizarLabelComTooltip("Renda passiva de bens", "Soma do aluguel líquido dos imóveis geradores de receita com o lucro das empresas marcadas como receita passiva.")}</span>
           <strong>${formatterMoeda.format(resumo.rendaPassivaBensAtual)}</strong>
         </div>
         <div class="metric">
-          <span>Dívida total de bens</span>
+          <span>${renderizarLabelComTooltip("Dívida total de bens", "Soma de todas as dívidas de bens, como financiamento de imóveis, empréstimos e financiamentos das empresas.")}</span>
           <strong>${formatterMoeda.format(resumo.dividaTotalBens)}</strong>
         </div>
         <div class="metric">
-          <span>Rendimento líquido dos investimentos</span>
+          <span>${renderizarLabelComTooltip("Rendimento líquido dos investimentos", "Soma do rendimento mensal dos investimentos após imposto estimado.")}</span>
           <strong>${formatterMoeda.format(resumo.rendimentoLiquidoAtual)}</strong>
         </div>
         <div class="metric destaque">
-          <span>Renda passiva total / mês</span>
+          <span>${renderizarLabelComTooltip("Renda passiva total / mês", "Soma da renda passiva líquida dos investimentos com a renda passiva gerada pelos bens.")}</span>
           <strong>${formatterMoeda.format(resumo.rendaPassivaTotalAtual)}</strong>
         </div>
       `;
@@ -2804,10 +2869,10 @@
       const radar = resumo.radarFinanceiro;
       radarFinanceiroEl.innerHTML = `
         <div class="radar-grid">
-          <div class="metric destaque"><span>Cobertura dos custos</span><strong>${formatterPercentual.format(radar.coberturaCustos)}%</strong></div>
-          <div class="metric"><span>Saldo mensal total</span><strong>${formatterMoeda.format(radar.saldoMensalComSalario)}</strong></div>
-          <div class="metric ${radar.independenciaAntes65 ? "destaque" : ""}"><span>Custos cobertos pela renda passiva</span><strong>${radar.marcoCustos}</strong></div>
-          <div class="metric"><span>Salário replicado pela renda passiva</span><strong>${radar.marcoSalario}</strong></div>
+          <div class="metric destaque"><span>${renderizarLabelComTooltip("Cobertura dos custos", "Percentual dos custos fixos mensais que já é coberto pela renda passiva atual.")}</span><strong>${formatterPercentual.format(radar.coberturaCustos)}%</strong></div>
+          <div class="metric"><span>${renderizarLabelComTooltip("Saldo mensal total", "Salário mais renda passiva atual menos os custos fixos mensais.")}</span><strong>${formatterMoeda.format(radar.saldoMensalComSalario)}</strong></div>
+          <div class="metric ${radar.independenciaAntes65 ? "destaque" : ""}"><span>${renderizarLabelComTooltip("Custos cobertos pela renda passiva", "Marco estimado em que a renda passiva mensal atinge ou supera os custos fixos do perfil.")}</span><strong>${radar.marcoCustos}</strong></div>
+          <div class="metric"><span>${renderizarLabelComTooltip("Renda ativa replicada pela renda passiva", "Marco estimado em que a renda passiva mensal atinge ou supera a renda ativa mensal gerada pelas empresas com receita ativa.")}</span><strong>${radar.marcoSalario}</strong></div>
         </div>
         <div class="radar-copy" style="margin-top: 14px;">
           <strong>Termômetro da independência</strong>
@@ -3102,7 +3167,7 @@
     }
 
     function calcularRadarFinanceiro(projecaoMensal, perfil) {
-      const rendaMensal = normalizarNumero(perfil.rendaMensal);
+      const rendaMensal = calcularRendaMensalAtivaPerfil(perfil);
       const custosMensais = normalizarNumero(perfil.custosMensais);
       const rendaPassivaAtual = projecaoMensal[0]?.rendimentoLiquidoTotal || 0;
       const idadeAtual = obterIdadeNaProjecao(perfil.dataNascimento, 0);
@@ -3134,7 +3199,7 @@
         return `Hoje sua renda passiva cobre ${formatterPercentual.format((rendaPassivaAtual / custosMensais) * 100)}% dos custos. Mantido o plano atual, ela deve pagar sua vida mensal por volta de ${formatarMarcoTemporal(mesCobreCustos, idadeNosCustos).toLowerCase()}.`;
       }
       if (rendaMensal > 0 && mesReplicaSalario) {
-        return `Sua renda passiva ainda não sustenta o custo mensal completo, mas a projeção indica substituição do salário em ${formatarMarcoTemporal(mesReplicaSalario).toLowerCase()}.`;
+        return `Sua renda passiva ainda não sustenta o custo mensal completo, mas a projeção indica substituição da renda ativa em ${formatarMarcoTemporal(mesReplicaSalario).toLowerCase()}.`;
       }
       return `Com ${formatterMoeda.format(rendaPassivaAtual)} de renda passiva líquida mensal hoje, ainda existe dependência relevante da renda ativa. O saldo combinado atual é de ${formatterMoeda.format(saldoMensalComSalario)} por mês.`;
     }
@@ -3402,6 +3467,15 @@
         renda -= normalizarNumero(imovel.custosManutencaoMensal);
       }
       return renda;
+    }
+
+    function calcularRendaMensalAtivaPerfil(perfil) {
+      return (perfil.empresas || []).reduce((acc, empresa) => {
+        if (empresa.receitaPassiva) {
+          return acc;
+        }
+        return acc + calcularLucroLiquidoEmpresaAtual(empresa);
+      }, 0);
     }
 
     function calcularLucroLiquidoEmpresaAtual(empresa) {
