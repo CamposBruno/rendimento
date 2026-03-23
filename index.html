@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calculadora de Renda Passiva</title>
+  <title>Calculadora de investimentos</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Crect x='17' y='12' width='30' height='40' rx='6' fill='none' stroke='%23e2e8f0' stroke-width='3'/%3E%3Crect x='22' y='17' width='20' height='8' rx='2' fill='%232563eb'/%3E%3Cg fill='%23e2e8f0'%3E%3Crect x='22' y='30' width='5' height='5' rx='1.2'/%3E%3Crect x='29.5' y='30' width='5' height='5' rx='1.2'/%3E%3Crect x='37' y='30' width='5' height='5' rx='1.2'/%3E%3Crect x='22' y='37.5' width='5' height='5' rx='1.2'/%3E%3Crect x='29.5' y='37.5' width='5' height='5' rx='1.2'/%3E%3Crect x='37' y='37.5' width='5' height='5' rx='1.2'/%3E%3C/g%3E%3C/svg%3E" />
   <style>
     :root {
@@ -187,8 +187,9 @@
 
     .menu-config-corpo {
       display: grid;
-      grid-template-columns: 1.35fr 0.95fr 1.1fr;
+      grid-template-columns: 1.45fr 1fr 1fr 1fr auto;
       gap: 14px;
+      align-items: end;
     }
 
     .menu-config-corpo.oculto {
@@ -267,6 +268,11 @@
       grid-template-columns: 1.4fr 1fr auto;
       gap: 12px;
       align-items: end;
+    }
+
+    .menu-config-corpo .perfil-form,
+    .menu-config-corpo .cdi-box {
+      display: contents;
     }
 
     .perfil-remove {
@@ -469,6 +475,143 @@
     .lista-investimentos {
       display: grid;
       gap: 18px;
+    }
+
+    .investimentos-layout {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .sidebar-investimentos {
+      position: sticky;
+      top: 20px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      display: grid;
+      gap: 14px;
+    }
+
+    .sidebar-investimentos .chart-wrap {
+      height: 420px;
+    }
+
+    .sidebar-investimentos .radar-canvas-wrap {
+      max-width: none;
+      width: 100%;
+      height: 100%;
+    }
+
+    .sidebar-investimentos canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    .poder-aporte-card {
+      display: grid;
+      gap: 14px;
+    }
+
+    .poder-aporte-valor {
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: var(--superficie-suave);
+    }
+
+    .poder-aporte-valor span {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .poder-aporte-valor strong {
+      display: block;
+      font-size: 2rem;
+      line-height: 1.05;
+    }
+
+    .poder-aporte-positivo strong {
+      color: #16a34a;
+    }
+
+    .metric.poder-aporte-positivo strong {
+      color: #16a34a;
+    }
+
+    .poder-aporte-alerta strong {
+      color: #ca8a04;
+    }
+
+    .metric.poder-aporte-alerta strong {
+      color: #ca8a04;
+    }
+
+    .poder-aporte-negativo strong {
+      color: #dc2626;
+    }
+
+    .metric.poder-aporte-negativo strong {
+      color: #dc2626;
+    }
+
+    .poder-aporte-breakdown {
+      display: grid;
+      gap: 10px;
+    }
+
+    .poder-aporte-linha {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--superficie-suave);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      font-size: 0.9rem;
+    }
+
+    .poder-aporte-linha span {
+      color: var(--muted);
+    }
+
+    .poder-aporte-linha strong {
+      font-size: 0.94rem;
+    }
+
+    .poder-aporte-alerta-box {
+      display: grid;
+      gap: 4px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(220, 38, 38, 0.28);
+      background: rgba(220, 38, 38, 0.08);
+      color: #b91c1c;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    body.tema-escuro .poder-aporte-alerta-box {
+      background: rgba(220, 38, 38, 0.12);
+      color: #fca5a5;
+    }
+
+    .poder-aporte-alerta-box strong {
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    .poder-aporte-resumo {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
     }
 
     .investimento-card {
@@ -1337,6 +1480,7 @@
       .card-grafico {
         position: static;
       }
+
     }
 
     @media (max-width: 720px) {
@@ -1384,6 +1528,19 @@
         min-width: 0;
       }
     }
+
+    @media (max-width: 768px) {
+      .investimentos-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar-investimentos {
+        position: static;
+        order: -1;
+        max-height: none;
+        overflow: visible;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1429,9 +1586,6 @@
             <input id="inflacaoIpca" type="number" step="0.01" min="0" />
           </div>
         </div>
-        <div class="familia-copy">
-          Centralize aqui tema, perfil e CDI para manter o painel principal limpo e focado nos investimentos e projeções.
-        </div>
       </div>
     </section>
   </div>
@@ -1443,10 +1597,10 @@
         <div class="hero-topo">
           <div class="kicker">Patrimônio + renda mensal</div>
         </div>
-        <h1>Calculadora de Renda Passiva</h1>
+        <h1>Calculadora de Investimentos</h1>
         <p>
           Cadastre múltiplos investimentos, estime a renda passiva mensal líquida
-          e acompanhe a evolução do patrimônio acumulado ao longo de 30 anos.
+          e acompanhe a evolução do patrimônio acumulado ao longo dos anos.
         </p>
       </article>
     </section>
@@ -1546,13 +1700,29 @@
     </section>
 
     <section id="conteudoInvestimentosPrincipal" class="conteudo-aba-principal oculto">
-      <section class="card secao secao-principal">
-        <div class="cabecalho-secao">
-          <h2>Investimentos</h2>
-          <button id="btnAdicionar" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Investimento</button>
-        </div>
-        <div id="listaInvestimentos" class="lista-investimentos"></div>
-      </section>
+      <div class="investimentos-layout">
+        <section class="card secao secao-principal">
+          <div class="cabecalho-secao">
+            <h2>Investimentos</h2>
+            <button id="btnAdicionar" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Investimento</button>
+          </div>
+          <div id="listaInvestimentos" class="lista-investimentos"></div>
+        </section>
+        <aside id="sidebarInvestimentos" class="sidebar-investimentos">
+          <section class="card secao">
+            <h2>Poder de Aporte</h2>
+            <div id="cardPoderAporteInvestimentos"></div>
+          </section>
+          <section class="card secao">
+            <h2>Radar de Aporte</h2>
+            <div class="chart-wrap">
+              <div class="radar-canvas-wrap">
+                <canvas id="graficoRadarInvestimentosSidebar"></canvas>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
     </section>
 
     <section id="conteudoRendaMensalPrincipal" class="conteudo-aba-principal oculto">
@@ -1729,6 +1899,7 @@
 
     let graficoProjecao = null;
     let graficoRadarInvestimentos = null;
+    let graficoRadarInvestimentosSidebar = null;
     let graficoRadarCustos = null;
     let debounceAtualizacao = null;
     let abaAtiva = "visao-geral";
@@ -1744,6 +1915,7 @@
     let ignorarSalvarBeforeUnload = false;
 
     const listaInvestimentosEl = document.getElementById("listaInvestimentos");
+    const cardPoderAporteInvestimentosEl = document.getElementById("cardPoderAporteInvestimentos");
     const listaImoveisEl = document.getElementById("listaImoveis");
     const listaEmpresasEl = document.getElementById("listaEmpresas");
     const painelFamiliaEl = document.getElementById("painelFamilia");
@@ -2601,6 +2773,7 @@
       const resumo = calcularResumoGeral(perfil);
       renderizarVisaoPerfil();
       renderizarResumo(resumo);
+      renderizarSidebarInvestimentos(perfil, resumo.poderAporte);
       renderizarRadarFinanceiro(resumo);
       renderizarAbas();
       renderizarProjecaoAtiva();
@@ -3567,6 +3740,7 @@
       const resumoBens = calcularResumoBens(perfil.imoveis, perfil.empresas);
       const resumoCustosFixos = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis);
       const resumoImpostos = calcularResumoImpostos(perfil, resumoInvestimentos);
+      const poderAporte = calcularPoderAportePerfil(perfil);
       const projecaoMensal = calcularProjecaoMensalPerfil(perfil);
       const projecaoAnual = agruparProjecaoAnualPerfil(projecaoMensal, perfil.dataNascimento);
       return {
@@ -3574,12 +3748,34 @@
         ...resumoBens,
         ...resumoCustosFixos,
         ...resumoImpostos,
+        poderAporte,
         patrimonioTotalAtual: resumoInvestimentos.totalInvestido + resumoBens.patrimonioBensAtual,
         rendaPassivaTotalAtual: resumoInvestimentos.rendimentoLiquidoAtual + resumoBens.rendaPassivaBensAtual,
         projecaoMensal,
         projecaoAnual,
         notas: gerarNotasResumo(perfil, resumoBens),
         radarFinanceiro: calcularRadarFinanceiro(projecaoMensal, perfil)
+      };
+    }
+
+    function calcularPoderAportePerfil(perfil) {
+      const rendaLiquidaMensal = normalizarNumero(perfil.rendaMensal);
+      const custosFixosTotais = normalizarNumero(perfil.custosMensais);
+      const aportesConfigurados = (perfil.investimentos || []).reduce((soma, investimento) => soma + normalizarNumero(investimento.aporteMensal), 0);
+      const poderAporte = rendaLiquidaMensal - custosFixosTotais - aportesConfigurados;
+      const percentualSobreRenda = rendaLiquidaMensal > 0 ? poderAporte / rendaLiquidaMensal : 0;
+      let status = "positivo";
+      if (poderAporte < 0) {
+        status = "negativo";
+      } else if (rendaLiquidaMensal <= 0 || percentualSobreRenda < 0.1) {
+        status = "alerta";
+      }
+      return {
+        rendaLiquidaMensal,
+        custosFixosTotais,
+        aportesConfigurados,
+        poderAporte,
+        status
       };
     }
 
@@ -3663,6 +3859,13 @@
         <div class="metric destaque">
           <span>${renderizarLabelComTooltip("Carga tributária total / mês", "Soma do IR estimado dos investimentos com INSS e IRRF das rendas salariais.")}</span>
           <strong>${formatterMoeda.format(resumo.impostosTotaisMensal)}</strong>
+        </div>
+        <div class="metric destaque poder-aporte-${resumo.poderAporte.status}">
+          <span>${renderizarLabelComTooltip("Poder de Aporte", "Renda líquida mensal menos custos fixos totais e menos a soma dos aportes mensais já configurados.")}</span>
+          <strong>${formatterMoeda.format(resumo.poderAporte.poderAporte)}</strong>
+          <div class="poder-aporte-resumo">
+            ${formatterMoeda.format(resumo.poderAporte.rendaLiquidaMensal)} → - ${formatterMoeda.format(resumo.poderAporte.custosFixosTotais)} → - ${formatterMoeda.format(resumo.poderAporte.aportesConfigurados)} → ${formatterMoeda.format(resumo.poderAporte.poderAporte)}
+          </div>
         </div>
         <div class="campo-completo">
           <article class="investimento-card">
@@ -4018,6 +4221,40 @@
       desenharRadarCustos(resumoCustos);
     }
 
+    function renderizarSidebarInvestimentos(perfil, poderAporte = calcularPoderAportePerfil(perfil)) {
+      if (!cardPoderAporteInvestimentosEl) return;
+      cardPoderAporteInvestimentosEl.innerHTML = renderizarConteudoPoderAporte(poderAporte);
+      renderizarRadarInvestimentosCanvas("graficoRadarInvestimentosSidebar", calcularResumoAportesPorCategoriaPerfil(perfil), {
+        label: "Aportes",
+        borderColor: "#16a34a",
+        backgroundColor: "rgba(22, 163, 74, 0.16)",
+        pointBorderColor: "#86efac"
+      });
+    }
+
+    function renderizarConteudoPoderAporte(poderAporte) {
+      return `
+        <div class="poder-aporte-card">
+          <div class="poder-aporte-valor poder-aporte-${poderAporte.status}">
+            <span>Poder de aporte</span>
+            <strong>${formatterMoeda.format(poderAporte.poderAporte)}</strong>
+          </div>
+          <div class="poder-aporte-breakdown">
+            <div class="poder-aporte-linha"><span>Renda líquida mensal</span><strong>${formatterMoeda.format(poderAporte.rendaLiquidaMensal)}</strong></div>
+            <div class="poder-aporte-linha"><span>Custos fixos</span><strong>- ${formatterMoeda.format(poderAporte.custosFixosTotais)}</strong></div>
+            <div class="poder-aporte-linha"><span>Aportes configurados</span><strong>- ${formatterMoeda.format(poderAporte.aportesConfigurados)}</strong></div>
+            <div class="poder-aporte-linha"><span>Poder de Aporte</span><strong>${formatterMoeda.format(poderAporte.poderAporte)}</strong></div>
+          </div>
+          ${poderAporte.poderAporte < 0 ? `
+            <div class="poder-aporte-alerta-box">
+              <strong>Atenção</strong>
+              <span>Seus aportes excedem sua capacidade mensal em ${formatterMoeda.format(Math.abs(poderAporte.poderAporte))}.</span>
+            </div>
+          ` : ""}
+        </div>
+      `;
+    }
+
     function calcularResumoInvestimentosPorCategoriaPerfil(perfil) {
       const totais = TIPOS.reduce((acc, tipo) => {
         acc[tipo] = 0;
@@ -4042,6 +4279,21 @@
         (perfil.investimentos || []).forEach((investimento) => {
           totais[investimento.tipo] += normalizarNumero(investimento.valorInvestido);
         });
+      });
+      return {
+        labels: TIPOS,
+        valores: TIPOS.map((tipo) => totais[tipo]),
+        total: TIPOS.reduce((acc, tipo) => acc + totais[tipo], 0)
+      };
+    }
+
+    function calcularResumoAportesPorCategoriaPerfil(perfil) {
+      const totais = TIPOS.reduce((acc, tipo) => {
+        acc[tipo] = 0;
+        return acc;
+      }, {});
+      (perfil?.investimentos || []).forEach((investimento) => {
+        totais[investimento.tipo] += normalizarNumero(investimento.aporteMensal);
       });
       return {
         labels: TIPOS,
@@ -4093,27 +4345,49 @@
       };
     }
 
-    function desenharRadarInvestimentos(resumo) {
-      const ctx = document.getElementById("graficoRadarInvestimentos");
+    function obterInstanciaRadarInvestimentos(canvasId) {
+      return canvasId === "graficoRadarInvestimentosSidebar" ? graficoRadarInvestimentosSidebar : graficoRadarInvestimentos;
+    }
+
+    function definirInstanciaRadarInvestimentos(canvasId, instancia) {
+      if (canvasId === "graficoRadarInvestimentosSidebar") {
+        graficoRadarInvestimentosSidebar = instancia;
+        return;
+      }
+      graficoRadarInvestimentos = instancia;
+    }
+
+    function renderizarRadarInvestimentosCanvas(canvasId, resumo, configuracao = {}) {
+      const ctx = document.getElementById(canvasId);
       if (!ctx) return;
-      if (graficoRadarInvestimentos) graficoRadarInvestimentos.destroy();
-      graficoRadarInvestimentos = new Chart(ctx, {
+      const instanciaAtual = obterInstanciaRadarInvestimentos(canvasId);
+      if (instanciaAtual) instanciaAtual.destroy();
+      const label = configuracao.label || "Investimentos";
+      const borderColor = configuracao.borderColor || "#2563eb";
+      const backgroundColor = configuracao.backgroundColor || "rgba(37, 99, 235, 0.18)";
+      const pointBorderColor = configuracao.pointBorderColor || "#93c5fd";
+      const novaInstancia = new Chart(ctx, {
         type: "radar",
         data: {
           labels: resumo.labels,
           datasets: [{
-            label: "Investimentos",
+            label,
             data: resumo.valores,
-            borderColor: "#2563eb",
-            backgroundColor: "rgba(37, 99, 235, 0.18)",
-            pointBackgroundColor: "#2563eb",
-            pointBorderColor: "#93c5fd",
+            borderColor,
+            backgroundColor,
+            pointBackgroundColor: borderColor,
+            pointBorderColor,
             pointRadius: 3,
             borderWidth: 2
           }]
         },
         options: obterOpcoesRadar()
       });
+      definirInstanciaRadarInvestimentos(canvasId, novaInstancia);
+    }
+
+    function desenharRadarInvestimentos(resumo) {
+      renderizarRadarInvestimentosCanvas("graficoRadarInvestimentos", resumo);
     }
 
     function desenharRadarCustos(resumo) {
