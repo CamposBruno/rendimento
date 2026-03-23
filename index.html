@@ -1501,6 +1501,7 @@
     let abaAtiva = "visao-geral";
     let modoVisao = "perfil";
     let abaConteudoPrincipalAtiva = "resumo";
+    let impostosResumoExpandido = false;
     let notasResumoExpandidas = false;
     let ignorarSalvarBeforeUnload = false;
 
@@ -2420,6 +2421,10 @@
               <span>${renderizarLabelComTooltip("Renda mensal da família", "Soma líquida das fontes de renda ativas de todos os perfis.")}</span>
               <strong>${formatterMoeda.format(familia.rendaMensalAtiva)}</strong>
             </div>
+            <div class="metric">
+              <span>${renderizarLabelComTooltip("Impostos mensais da família", "Soma do IR estimado de investimentos com INSS e IRRF das rendas salariais de todos os perfis.")}</span>
+              <strong>${formatterMoeda.format(familia.impostosTotaisMensais)}</strong>
+            </div>
           </div>
           <div class="familia-copy">
             A visão Família soma automaticamente investimentos, imóveis e empresas de todos os perfis, mantendo a lógica de merge e filtragem do painel individual.
@@ -3151,12 +3156,14 @@
       const resumoInvestimentos = calcularResumoInvestimentos(perfil.investimentos, perfil.taxaCdiReferencia);
       const resumoBens = calcularResumoBens(perfil.imoveis, perfil.empresas);
       const resumoCustosFixos = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis);
+      const resumoImpostos = calcularResumoImpostos(perfil, resumoInvestimentos);
       const projecaoMensal = calcularProjecaoMensalPerfil(perfil);
       const projecaoAnual = agruparProjecaoAnualPerfil(projecaoMensal, perfil.dataNascimento);
       return {
         ...resumoInvestimentos,
         ...resumoBens,
         ...resumoCustosFixos,
+        ...resumoImpostos,
         patrimonioTotalAtual: resumoInvestimentos.totalInvestido + resumoBens.patrimonioBensAtual,
         rendaPassivaTotalAtual: resumoInvestimentos.rendimentoLiquidoAtual + resumoBens.rendaPassivaBensAtual,
         projecaoMensal,
@@ -3173,6 +3180,38 @@
         rendimentoBrutoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoBruto, 0),
         impostoAtual: resumoAtual.reduce((acc, item) => acc + item.imposto, 0),
         rendimentoLiquidoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoLiquido, 0)
+      };
+    }
+
+    function calcularResumoImpostos(perfil, resumoInvestimentos = null) {
+      const inssMensal = (perfil.rendas || [])
+        .filter((renda) => renda.ativo && renda.categoria === "salario")
+        .reduce((acc, renda) => acc + normalizarNumero(renda.deducoes?.inss), 0);
+      const irrfMensal = (perfil.rendas || [])
+        .filter((renda) => renda.ativo && renda.categoria === "salario")
+        .reduce((acc, renda) => acc + normalizarNumero(renda.deducoes?.irrf), 0);
+      const impostoInvestimentosMensal = normalizarNumero(resumoInvestimentos?.impostoAtual, 0);
+      const impostosTotaisMensal = impostoInvestimentosMensal + inssMensal + irrfMensal;
+      const detalhamentoImpostos = [];
+
+      if (impostoInvestimentosMensal > 0) {
+        detalhamentoImpostos.push(`Investimentos somam ${formatterMoeda.format(impostoInvestimentosMensal)} de imposto estimado por mês.`);
+      } else {
+        detalhamentoImpostos.push("Investimentos não geraram imposto mensal estimado relevante com os dados atuais.");
+      }
+      if (inssMensal > 0 || irrfMensal > 0) {
+        detalhamentoImpostos.push(`Rendas salariais somam ${formatterMoeda.format(inssMensal)} de INSS e ${formatterMoeda.format(irrfMensal)} de IRRF por mês.`);
+      } else {
+        detalhamentoImpostos.push("Não há salários ativos com tributação automática de INSS e IRRF no perfil.");
+      }
+      detalhamentoImpostos.push("Outras deduções informadas manualmente nas rendas não entram neste resumo tributário.");
+
+      return {
+        impostoInvestimentosMensal,
+        inssMensal,
+        irrfMensal,
+        impostosTotaisMensal,
+        detalhamentoImpostos
       };
     }
 
@@ -3210,6 +3249,22 @@
           <span>${renderizarLabelComTooltip("Renda passiva total / mês", "Soma da renda passiva líquida dos investimentos com a renda passiva gerada pelos bens.")}</span>
           <strong>${formatterMoeda.format(resumo.rendaPassivaTotalAtual)}</strong>
         </div>
+        <div class="metric">
+          <span>${renderizarLabelComTooltip("IR investimentos / mês", "Soma do imposto estimado mensal dos investimentos, incluindo a lógica atual de IR e come-cotas.")}</span>
+          <strong>${formatterMoeda.format(resumo.impostoInvestimentosMensal)}</strong>
+        </div>
+        <div class="metric">
+          <span>${renderizarLabelComTooltip("INSS / mês", "Soma da contribuição previdenciária calculada automaticamente nas rendas da categoria Salário CLT.")}</span>
+          <strong>${formatterMoeda.format(resumo.inssMensal)}</strong>
+        </div>
+        <div class="metric">
+          <span>${renderizarLabelComTooltip("IRRF / mês", "Soma do imposto de renda retido na fonte calculado automaticamente nas rendas da categoria Salário CLT.")}</span>
+          <strong>${formatterMoeda.format(resumo.irrfMensal)}</strong>
+        </div>
+        <div class="metric destaque">
+          <span>${renderizarLabelComTooltip("Carga tributária total / mês", "Soma do IR estimado dos investimentos com INSS e IRRF das rendas salariais.")}</span>
+          <strong>${formatterMoeda.format(resumo.impostosTotaisMensal)}</strong>
+        </div>
         <div class="campo-completo">
           <article class="investimento-card">
             <div class="investimento-topo" style="margin-bottom: ${notasResumoExpandidas ? "14px" : "0"};">
@@ -3226,8 +3281,33 @@
             </div>
           </article>
         </div>
+        <div class="campo-completo">
+          <article class="investimento-card">
+            <div class="investimento-topo" style="margin-bottom: ${impostosResumoExpandido ? "14px" : "0"};">
+              <div class="investimento-titulo">
+                <strong>Resumo de impostos</strong>
+                <span>Consolidação mensal dos tributos calculados automaticamente no painel.</span>
+              </div>
+              <div class="acoes-card">
+                <button id="btnToggleImpostosResumo" class="btn-toggle" type="button" aria-expanded="${impostosResumoExpandido ? "true" : "false"}"><span class="chevron">▶</span></button>
+              </div>
+            </div>
+            <div class="investimento-corpo" style="display: ${impostosResumoExpandido ? "block" : "none"};">
+              <div class="resultado-inline">
+                <div class="resultado-box"><span>IR investimentos</span><strong>${formatterMoeda.format(resumo.impostoInvestimentosMensal)}</strong></div>
+                <div class="resultado-box"><span>INSS</span><strong>${formatterMoeda.format(resumo.inssMensal)}</strong></div>
+                <div class="resultado-box"><span>IRRF</span><strong>${formatterMoeda.format(resumo.irrfMensal)}</strong></div>
+              </div>
+              <ul class="lista-notas">${resumo.detalhamentoImpostos.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+            </div>
+          </article>
+        </div>
       `;
       listaNotasEl.innerHTML = "";
+      resumoGridEl.querySelector("#btnToggleImpostosResumo")?.addEventListener("click", () => {
+        impostosResumoExpandido = !impostosResumoExpandido;
+        renderizarResumo(resumo);
+      });
       resumoGridEl.querySelector("#btnToggleNotasResumo")?.addEventListener("click", () => {
         notasResumoExpandidas = !notasResumoExpandidas;
         renderizarResumo(resumo);
@@ -3265,6 +3345,7 @@
         rendaPassivaTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoTotal || 0), 0),
         rendaPassivaBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaBens || 0), 0),
         rendaMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaMensal || 0), 0),
+        impostosTotais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.impostosTotaisMensais || 0), 0),
         custosFixosMensais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.custosFixosMensais || 0), 0)
       }));
       const projecaoAnualTotal = Array.from({ length: 30 }, (_, indice) => ({
@@ -3273,6 +3354,7 @@
         patrimonioBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioBens || 0), 0),
         rendaPassivaBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.rendaPassivaBens || 0), 0),
         rendaMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.rendaMensal || 0), 0),
+        impostosTotais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.impostosTotais || 0), 0),
         custosFixos: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.custosFixos || 0), 0)
       }));
       return {
@@ -3283,6 +3365,7 @@
         dividaTotalBens: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.dividaTotalBens, 0),
         custosFixosMensais: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.total, 0),
         rendaMensalAtiva: projecoesPorPerfil.reduce((acc, item) => acc + item.perfil.rendaMensal, 0),
+        impostosTotaisMensais: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.impostosTotaisMensal, 0),
         projecaoMensalTotal,
         projecaoAnualTotal
       };
@@ -3325,6 +3408,16 @@
         borderWidth: 2
       });
       datasets.push({
+        label: "Impostos da Família / mês",
+        data: familia.projecaoMensalTotal.map((linha) => linha.impostosTotais),
+        borderColor: "#f59e0b",
+        backgroundColor: "rgba(245, 158, 11, 0.1)",
+        yAxisID: "y1",
+        tension: 0.12,
+        pointRadius: 0,
+        borderWidth: 2
+      });
+      datasets.push({
         label: "Custos Fixos da Família",
         data: familia.projecaoMensalTotal.map((linha) => linha.custosFixosMensais),
         borderColor: "#dc2626",
@@ -3357,6 +3450,7 @@
           ${familia.projecoesPorPerfil.map((item) => `<th>${escapeHtml(item.perfil.nome)}</th>`).join("")}
           <th>Patrimônio em Bens</th>
           <th>Renda Mensal</th>
+          <th>Impostos Totais</th>
           <th>Custos Fixos</th>
           <th>Renda Passiva de Bens</th>
           <th class="coluna-total">Total Família</th>
@@ -3372,6 +3466,7 @@
           ${familia.projecoesPorPerfil.map((item) => `<td>${formatterMoeda.format(item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0)}</td>`).join("")}
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioBens || 0)}</td>
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.rendaMensal || 0)}</td>
+          <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.impostosTotais || 0)}</td>
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.custosFixos || 0)}</td>
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.rendaPassivaBens || 0)}</td>
           <td class="coluna-total">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioTotal || 0)}</td>
@@ -3472,6 +3567,15 @@
           pointRadius: 0
         },
         {
+          label: "Impostos totais / mês",
+          data: projecaoMensal.map((item) => item.impostosTotaisMensais),
+          borderColor: "#f59e0b",
+          backgroundColor: "rgba(245, 158, 11, 0.1)",
+          yAxisID: "y1",
+          tension: 0.12,
+          pointRadius: 0
+        },
+        {
           label: "Custos fixos / mês",
           data: projecaoMensal.map((item) => item.custosFixosMensais),
           borderColor: "#dc2626",
@@ -3536,11 +3640,12 @@
           <th>Patrimônio Final</th>
           <th>Patrimônio em Bens</th>
           <th>Renda Mensal</th>
+          <th>Impostos Totais</th>
           <th>Custos Fixos</th>
           <th>Renda Passiva de Bens</th>
           <th>Aportes</th>
           <th>Rendimento Bruto</th>
-          <th>IR / Come-Cotas</th>
+          <th>IR Invest. / Come-Cotas</th>
           <th>Rendimento Líquido</th>
         `;
       }
@@ -3551,6 +3656,7 @@
           <td>${formatterMoeda.format(linha.patrimonioFinal)}</td>
           <td>${formatterMoeda.format(linha.patrimonioBens)}</td>
           <td>${formatterMoeda.format(linha.rendaMensal)}</td>
+          <td>${formatterMoeda.format(linha.impostosTotais)}</td>
           <td>${formatterMoeda.format(linha.custosFixos)}</td>
           <td>${formatterMoeda.format(linha.rendaPassivaBens)}</td>
           <td>${formatterMoeda.format(linha.aportes)}</td>
@@ -3697,7 +3803,9 @@
         let patrimonioInvestimentos = 0;
         let patrimonioBens = 0;
         let rendimentoBrutoTotal = 0;
-        let impostoTotal = 0;
+        let impostoInvestimentosTotal = 0;
+        let inssMensal = 0;
+        let irrfMensal = 0;
         let rendimentoLiquidoInvestimentos = 0;
         let rendaPassivaBens = 0;
         let rendaMensal = 0;
@@ -3711,9 +3819,13 @@
             return;
           }
           if (mes > 1 && renda.taxaMensalCrescimento !== 0) {
-            renda.valorLiquido *= 1 + renda.taxaMensalCrescimento;
+            renda.valorBruto *= 1 + renda.taxaMensalCrescimento;
+            renda.outrasDeducoes *= 1 + renda.taxaMensalCrescimento;
           }
-          rendaMensal += renda.valorLiquido;
+          const deducoes = calcularDeducoesProjetadasRenda(renda);
+          rendaMensal += Math.max(0, renda.valorBruto - deducoes.total);
+          inssMensal += deducoes.inss;
+          irrfMensal += deducoes.irrf;
         });
 
         estadoInvestimentos.forEach((item) => {
@@ -3742,7 +3854,7 @@
           item.patrimonio = patrimonioBase + rendimentoLiquido;
           patrimonioInvestimentos += item.patrimonio;
           rendimentoBrutoTotal += rendimentoBruto;
-          impostoTotal += impostoMes;
+          impostoInvestimentosTotal += impostoMes;
           rendimentoLiquidoInvestimentos += rendimentoLiquido;
         });
 
@@ -3788,7 +3900,11 @@
           patrimonioTotal: patrimonioInvestimentos + patrimonioBens,
           aportesTotal,
           rendimentoBrutoTotal: rendimentoBrutoTotal + rendaPassivaBens,
-          impostoTotal,
+          impostoTotal: impostoInvestimentosTotal,
+          impostoInvestimentosMensal: impostoInvestimentosTotal,
+          inssMensal,
+          irrfMensal,
+          impostosTotaisMensais: impostoInvestimentosTotal + inssMensal + irrfMensal,
           rendimentoLiquidoTotal: rendimentoLiquidoInvestimentos + rendaPassivaBens,
           rendaPassivaBens,
           rendaMensal,
@@ -3808,6 +3924,10 @@
           patrimonioFinal: fatia[fatia.length - 1]?.patrimonioTotal || 0,
           patrimonioBens: fatia[fatia.length - 1]?.patrimonioBens || 0,
           rendaMensal: fatia.reduce((acc, item) => acc + item.rendaMensal, 0),
+          impostoInvestimentos: fatia.reduce((acc, item) => acc + item.impostoInvestimentosMensal, 0),
+          inss: fatia.reduce((acc, item) => acc + item.inssMensal, 0),
+          irrf: fatia.reduce((acc, item) => acc + item.irrfMensal, 0),
+          impostosTotais: fatia.reduce((acc, item) => acc + item.impostosTotaisMensais, 0),
           custosFixos: fatia.reduce((acc, item) => acc + item.custosFixosMensais, 0),
           rendaPassivaBens: fatia.reduce((acc, item) => acc + item.rendaPassivaBens, 0),
           aportes: fatia.reduce((acc, item) => acc + item.aportesTotal, 0),
@@ -3839,7 +3959,9 @@
     function criarEstadoRenda(renda) {
       return {
         ativo: renda.ativo !== false,
-        valorLiquido: normalizarNumero(renda.valorLiquidoMensal),
+        categoria: renda.categoria || "outros",
+        valorBruto: normalizarNumero(renda.valorBrutoMensal),
+        outrasDeducoes: normalizarNumero(renda.deducoes?.outrasDeducoes),
         taxaMensalCrescimento: calcularTaxaMensal(normalizarNumero(renda.crescimentoAnual)),
         idadeEncerramento: renda.idadeEncerramento ?? null
       };
@@ -3891,6 +4013,26 @@
 
     function calcularRendaMensalAtivaPerfil(perfil) {
       return normalizarNumero(perfil.rendaMensal);
+    }
+
+    function calcularDeducoesProjetadasRenda(renda) {
+      const outrasDeducoes = normalizarNumero(renda.outrasDeducoes, 0);
+      if (renda.categoria === "salario") {
+        const inss = calcularInss2025(renda.valorBruto);
+        const irrf = calcularIrrf2025(Math.max(0, renda.valorBruto - inss));
+        return {
+          inss,
+          irrf,
+          outrasDeducoes,
+          total: inss + irrf + outrasDeducoes
+        };
+      }
+      return {
+        inss: 0,
+        irrf: 0,
+        outrasDeducoes,
+        total: outrasDeducoes
+      };
     }
 
     function calcularLucroLiquidoEmpresaAtual(empresa) {
