@@ -1294,7 +1294,7 @@
             <div class="card secao">
               <h2>Resumo</h2>
               <div id="resumoGrid" class="resumo-grid"></div>
-              <ul id="listaNotas" class="lista-notas"></ul>
+              <div id="listaNotas" class="lista-notas-wrap"></div>
             </div>
 
             <div id="cardRadar" class="card secao">
@@ -1501,6 +1501,7 @@
     let abaAtiva = "visao-geral";
     let modoVisao = "perfil";
     let abaConteudoPrincipalAtiva = "resumo";
+    let notasResumoExpandidas = false;
     let ignorarSalvarBeforeUnload = false;
 
     const listaInvestimentosEl = document.getElementById("listaInvestimentos");
@@ -3209,8 +3210,28 @@
           <span>${renderizarLabelComTooltip("Renda passiva total / mês", "Soma da renda passiva líquida dos investimentos com a renda passiva gerada pelos bens.")}</span>
           <strong>${formatterMoeda.format(resumo.rendaPassivaTotalAtual)}</strong>
         </div>
+        <div class="campo-completo">
+          <article class="investimento-card">
+            <div class="investimento-topo" style="margin-bottom: ${notasResumoExpandidas ? "14px" : "0"};">
+              <div class="investimento-titulo">
+                <strong>Notas de resumo</strong>
+                <span>Observações e premissas usadas nos cálculos atuais.</span>
+              </div>
+              <div class="acoes-card">
+                <button id="btnToggleNotasResumo" class="btn-toggle" type="button" aria-expanded="${notasResumoExpandidas ? "true" : "false"}"><span class="chevron">▶</span></button>
+              </div>
+            </div>
+            <div class="investimento-corpo" style="display: ${notasResumoExpandidas ? "block" : "none"};">
+              <ul class="lista-notas">${resumo.notas.map((nota) => `<li>${escapeHtml(nota)}</li>`).join("")}</ul>
+            </div>
+          </article>
+        </div>
       `;
-      listaNotasEl.innerHTML = resumo.notas.map((nota) => `<li>${escapeHtml(nota)}</li>`).join("");
+      listaNotasEl.innerHTML = "";
+      resumoGridEl.querySelector("#btnToggleNotasResumo")?.addEventListener("click", () => {
+        notasResumoExpandidas = !notasResumoExpandidas;
+        renderizarResumo(resumo);
+      });
     }
 
     function renderizarRadarFinanceiro(resumo) {
