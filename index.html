@@ -931,6 +931,93 @@
       scrollbar-width: thin;
     }
 
+    .cabecalho-projecao {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .topo-projecao {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .cabecalho-projecao h2 {
+      margin: 0;
+    }
+
+    .periodos-projecao {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .controles-projecao {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .menu-series-projecao {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 16px;
+      background: var(--superficie-suave);
+      padding: 12px 14px;
+    }
+
+    .menu-series-projecao .investimento-topo {
+      margin-bottom: 0;
+    }
+
+    .series-projecao {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      margin-top: 12px;
+    }
+
+    .serie-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--borda);
+      border-radius: 999px;
+      background: var(--superficie-suave);
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .serie-chip input {
+      width: auto;
+      margin: 0;
+      accent-color: var(--azul);
+    }
+
+    .periodo-btn {
+      padding: 0.45rem 0.8rem;
+      cursor: pointer;
+      border: 1px solid var(--borda);
+      border-radius: 999px;
+      background: var(--superficie-suave);
+      color: var(--muted);
+      font: inherit;
+      font-weight: 700;
+    }
+
+    .periodo-btn.ativo {
+      background: var(--azul);
+      color: #fff;
+      border-color: transparent;
+    }
+
     .tab {
       padding: 0.5rem 1rem;
       cursor: pointer;
@@ -1311,11 +1398,20 @@
         </section>
 
         <section class="card secao card-grafico">
-          <h2>Projeção de 30 anos</h2>
+          <div class="cabecalho-projecao">
+            <div class="topo-projecao">
+              <h2 id="tituloProjecao">Projeção de 30 anos</h2>
+              <div id="periodosProjecao" class="periodos-projecao"></div>
+            </div>
+            
+          </div>
           <div id="tabsProjecao" class="tabs-container"></div>
           <div class="chart-wrap">
             <canvas id="graficoProjecao"></canvas>
           </div>
+          <div class="controles-projecao">
+              <div id="menuSeriesProjecao" class="menu-series-projecao"></div>
+            </div>
           <div id="rodapeProjecao" class="rodape">
             O gráfico mostra patrimônio acumulado total e renda mensal líquida estimada ao longo de 30 anos.
             Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.
@@ -1475,6 +1571,16 @@
     const formatterMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
     const formatterPercentual = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const TIPOS = ["Renda Fixa", "Fundo de Investimento", "Ações", "Crypto", "CDB", "CDI (%)"];
+    const PERIODOS_PROJECAO = [5, 10, 20, 30, 50];
+    const PERIODO_MAXIMO_PROJECAO_ANOS = 50;
+    const SERIES_GRAFICO = [
+      { id: "patrimonioTotal", label: "Patrimônio total" },
+      { id: "patrimonioBens", label: "Patrimônio em bens" },
+      { id: "rendaPassivaTotal", label: "Renda passiva / mês" },
+      { id: "rendaMensal", label: "Renda mensal / mês" },
+      { id: "impostosTotais", label: "Impostos / mês" },
+      { id: "custosFixos", label: "Custos fixos / mês" }
+    ];
     const CATEGORIAS_RENDA = {
       salario: "Salário CLT",
       freelance: "Freelance / Autônomo",
@@ -1501,6 +1607,9 @@
     let abaAtiva = "visao-geral";
     let modoVisao = "perfil";
     let abaConteudoPrincipalAtiva = "resumo";
+    let periodoProjecaoAnos = 30;
+    let seriesGraficoVisiveis = Object.fromEntries(SERIES_GRAFICO.map((serie) => [serie.id, true]));
+    let menuSeriesGraficoExpandido = false;
     let impostosResumoExpandido = false;
     let notasResumoExpandidas = false;
     let ignorarSalvarBeforeUnload = false;
@@ -1527,6 +1636,9 @@
     const btnMenuConfiguracoesEl = document.getElementById("btnMenuConfiguracoes");
     const menuConfiguracoesEl = document.getElementById("menuConfiguracoes");
     const tabsProjecaoEl = document.getElementById("tabsProjecao");
+    const tituloProjecaoEl = document.getElementById("tituloProjecao");
+    const periodosProjecaoEl = document.getElementById("periodosProjecao");
+    const menuSeriesProjecaoEl = document.getElementById("menuSeriesProjecao");
     const rendaMensalInfoEl = document.getElementById("rendaMensalInfo");
     const custosMensaisInfoEl = document.getElementById("custosMensaisInfo");
     const radarFinanceiroEl = document.getElementById("radarFinanceiro");
@@ -2301,6 +2413,7 @@
     function renderizarTudo(recriarCards = true) {
       sincronizarCamposPerfil();
       renderizarBarraPerfis();
+      renderizarControlesPeriodoProjecao();
 
       if (estaNaVisaoFamilia()) {
         renderizarVisaoFamilia();
@@ -2359,6 +2472,58 @@
       barraPerfisEl.querySelector('[data-acao="adicionar-perfil"]')?.addEventListener("click", adicionarPerfil);
     }
 
+    function renderizarControlesPeriodoProjecao() {
+      tituloProjecaoEl.textContent = `Projeção de ${periodoProjecaoAnos} anos`;
+      periodosProjecaoEl.innerHTML = PERIODOS_PROJECAO.map((periodo) => `
+        <button class="periodo-btn ${periodo === periodoProjecaoAnos ? "ativo" : ""}" type="button" data-periodo-projecao="${periodo}">${periodo} anos</button>
+      `).join("");
+      periodosProjecaoEl.querySelectorAll("[data-periodo-projecao]").forEach((botao) => {
+        botao.addEventListener("click", () => {
+          const proximoPeriodo = Number(botao.dataset.periodoProjecao);
+          if (!PERIODOS_PROJECAO.includes(proximoPeriodo) || proximoPeriodo === periodoProjecaoAnos) return;
+          periodoProjecaoAnos = proximoPeriodo;
+          renderizarTudo(false);
+        });
+      });
+
+      menuSeriesProjecaoEl.innerHTML = `
+        <div class="investimento-topo">
+          <div class="investimento-titulo">
+            <strong>Indicadores do gráfico</strong>
+            <span>Selecione quais séries deseja visualizar.</span>
+          </div>
+          <div class="acoes-card">
+            <button id="btnToggleSeriesProjecao" class="btn-toggle" type="button" aria-expanded="${menuSeriesGraficoExpandido ? "true" : "false"}"><span class="chevron">▶</span></button>
+          </div>
+        </div>
+        <div class="investimento-corpo" style="display: ${menuSeriesGraficoExpandido ? "block" : "none"};">
+          <div class="series-projecao">
+            ${SERIES_GRAFICO.map((serie) => `
+              <label class="serie-chip">
+                <input type="checkbox" data-serie-grafico="${serie.id}" ${seriesGraficoVisiveis[serie.id] !== false ? "checked" : ""} />
+                ${serie.label}
+              </label>
+            `).join("")}
+          </div>
+        </div>
+      `;
+      menuSeriesProjecaoEl.querySelector("#btnToggleSeriesProjecao")?.addEventListener("click", () => {
+        menuSeriesGraficoExpandido = !menuSeriesGraficoExpandido;
+        renderizarControlesPeriodoProjecao();
+      });
+      menuSeriesProjecaoEl.querySelectorAll("[data-serie-grafico]").forEach((campo) => {
+        campo.addEventListener("change", (evento) => {
+          const chave = evento.target.dataset.serieGrafico;
+          seriesGraficoVisiveis[chave] = evento.target.checked;
+          if (Object.values(seriesGraficoVisiveis).every((valor) => valor === false)) {
+            seriesGraficoVisiveis[chave] = true;
+            evento.target.checked = true;
+          }
+          renderizarProjecaoAtiva();
+        });
+      });
+    }
+
     function renderizarVisaoPerfil() {
       painelSuperiorEl.classList.remove("modo-familia");
       layoutPrincipalEl.classList.remove("modo-familia");
@@ -2369,7 +2534,8 @@
       painelFamiliaEl.style.display = "none";
       cardRadarEl.classList.remove("oculto");
       tabsProjecaoEl.classList.remove("oculto");
-      rodapeProjecaoEl.textContent = "O gráfico mostra patrimônio total, patrimônio em bens e renda passiva mensal líquida ao longo de 30 anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.";
+      periodosProjecaoEl.classList.remove("oculto");
+      rodapeProjecaoEl.textContent = `O gráfico mostra patrimônio total, patrimônio em bens e renda passiva mensal líquida ao longo de ${periodoProjecaoAnos} anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.`;
     }
 
     function renderizarVisaoFamilia() {
@@ -2387,7 +2553,8 @@
       perfilFormEl.classList.add("oculto");
       cardRadarEl.classList.add("oculto");
       tabsProjecaoEl.classList.add("oculto");
-      rodapeProjecaoEl.textContent = "A projeção da Família agrega dinamicamente investimentos e bens de todos os perfis.";
+      periodosProjecaoEl.classList.remove("oculto");
+      rodapeProjecaoEl.textContent = `A projeção da Família agrega dinamicamente investimentos e bens de todos os perfis ao longo de ${periodoProjecaoAnos} anos.`;
 
       if (!familia.quantidadePerfisAtivos) {
         painelFamiliaEl.style.display = "grid";
@@ -3338,7 +3505,7 @@
         resumo: calcularResumoGeral(perfil)
       }));
       const quantidadePerfisAtivos = projecoesPorPerfil.length;
-      const projecaoMensalTotal = Array.from({ length: 360 }, (_, indice) => ({
+      const projecaoMensalTotal = Array.from({ length: PERIODO_MAXIMO_PROJECAO_ANOS * 12 }, (_, indice) => ({
         mes: indice + 1,
         patrimonioTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioTotal || 0), 0),
         patrimonioBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioBens || 0), 0),
@@ -3348,7 +3515,7 @@
         impostosTotais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.impostosTotaisMensais || 0), 0),
         custosFixosMensais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.custosFixosMensais || 0), 0)
       }));
-      const projecaoAnualTotal = Array.from({ length: 30 }, (_, indice) => ({
+      const projecaoAnualTotal = Array.from({ length: PERIODO_MAXIMO_PROJECAO_ANOS }, (_, indice) => ({
         ano: indice + 1,
         patrimonioTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0), 0),
         patrimonioBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioBens || 0), 0),
@@ -3373,64 +3540,88 @@
 
     function renderizarGraficoFamilia(familia) {
       const ctx = document.getElementById("graficoProjecao");
-      const labels = familia.projecaoMensalTotal.map((item) => item.mes % 60 === 0 ? `Ano ${item.mes / 12}` : "");
-      const datasets = familia.projecoesPorPerfil.map((item, indice) => {
-        const cor = obterCorPerfil(indice);
-        return {
-          label: item.perfil.nome,
-          data: item.resumo.projecaoMensal.map((linha) => linha.patrimonioTotal),
-          borderColor: cor.borda,
-          backgroundColor: cor.fundo,
+      const projecaoMensal = familia.projecaoMensalTotal.slice(0, periodoProjecaoAnos * 12);
+      const labels = projecaoMensal.map((item) => item.mes % 60 === 0 ? `Ano ${item.mes / 12}` : "");
+      const datasets = [];
+      if (seriesGraficoVisiveis.patrimonioTotal !== false) {
+        datasets.push(...familia.projecoesPorPerfil.map((item, indice) => {
+          const cor = obterCorPerfil(indice);
+          return {
+            label: item.perfil.nome,
+            data: item.resumo.projecaoMensal.slice(0, periodoProjecaoAnos * 12).map((linha) => linha.patrimonioTotal),
+            borderColor: cor.borda,
+            backgroundColor: cor.fundo,
+            yAxisID: "y",
+            tension: 0.28,
+            pointRadius: 0,
+            borderWidth: 2
+          };
+        }));
+      }
+      if (seriesGraficoVisiveis.patrimonioBens !== false) {
+        datasets.push({
+          label: "Patrimônio em Bens",
+          data: projecaoMensal.map((linha) => linha.patrimonioBens),
+          borderColor: "#ea580c",
+          backgroundColor: "rgba(234, 88, 12, 0.15)",
           yAxisID: "y",
           tension: 0.28,
           pointRadius: 0,
           borderWidth: 2
-        };
-      });
-      datasets.push({
-        label: "Patrimônio em Bens",
-        data: familia.projecaoMensalTotal.map((linha) => linha.patrimonioBens),
-        borderColor: "#ea580c",
-        backgroundColor: "rgba(234, 88, 12, 0.15)",
-        yAxisID: "y",
-        tension: 0.28,
-        pointRadius: 0,
-        borderWidth: 2
-      });
-      datasets.push({
-        label: "Renda Mensal da Família",
-        data: familia.projecaoMensalTotal.map((linha) => linha.rendaMensal),
-        borderColor: "#7c3aed",
-        backgroundColor: "rgba(124, 58, 237, 0.12)",
-        yAxisID: "y1",
-        tension: 0.18,
-        pointRadius: 0,
-        borderWidth: 2
-      });
-      datasets.push({
-        label: "Impostos da Família / mês",
-        data: familia.projecaoMensalTotal.map((linha) => linha.impostosTotais),
-        borderColor: "#f59e0b",
-        backgroundColor: "rgba(245, 158, 11, 0.1)",
-        yAxisID: "y1",
-        tension: 0.12,
-        pointRadius: 0,
-        borderWidth: 2
-      });
-      datasets.push({
-        label: "Custos Fixos da Família",
-        data: familia.projecaoMensalTotal.map((linha) => linha.custosFixosMensais),
-        borderColor: "#dc2626",
-        backgroundColor: "rgba(220, 38, 38, 0.1)",
-        yAxisID: "y1",
-        tension: 0,
-        pointRadius: 0,
-        borderWidth: 2
-      });
-      if (familia.quantidadePerfisAtivos > 1) {
+        });
+      }
+      if (seriesGraficoVisiveis.rendaMensal !== false) {
+        datasets.push({
+          label: "Renda Mensal da Família",
+          data: projecaoMensal.map((linha) => linha.rendaMensal),
+          borderColor: "#7c3aed",
+          backgroundColor: "rgba(124, 58, 237, 0.12)",
+          yAxisID: "y1",
+          tension: 0.18,
+          pointRadius: 0,
+          borderWidth: 2
+        });
+      }
+      if (seriesGraficoVisiveis.rendaPassivaTotal !== false) {
+        datasets.push({
+          label: "Renda passiva da Família / mês",
+          data: projecaoMensal.map((linha) => linha.rendaPassivaTotal),
+          borderColor: "#059669",
+          backgroundColor: "rgba(5, 150, 105, 0.12)",
+          yAxisID: "y1",
+          tension: 0.28,
+          pointRadius: 0,
+          borderWidth: 2
+        });
+      }
+      if (seriesGraficoVisiveis.impostosTotais !== false) {
+        datasets.push({
+          label: "Impostos da Família / mês",
+          data: projecaoMensal.map((linha) => linha.impostosTotais),
+          borderColor: "#f59e0b",
+          backgroundColor: "rgba(245, 158, 11, 0.1)",
+          yAxisID: "y1",
+          tension: 0.12,
+          pointRadius: 0,
+          borderWidth: 2
+        });
+      }
+      if (seriesGraficoVisiveis.custosFixos !== false) {
+        datasets.push({
+          label: "Custos Fixos da Família",
+          data: projecaoMensal.map((linha) => linha.custosFixosMensais),
+          borderColor: "#dc2626",
+          backgroundColor: "rgba(220, 38, 38, 0.1)",
+          yAxisID: "y1",
+          tension: 0,
+          pointRadius: 0,
+          borderWidth: 2
+        });
+      }
+      if (familia.quantidadePerfisAtivos > 1 && seriesGraficoVisiveis.patrimonioTotal !== false) {
         datasets.push({
           label: "Total Família",
-          data: familia.projecaoMensalTotal.map((linha) => linha.patrimonioTotal),
+          data: projecaoMensal.map((linha) => linha.patrimonioTotal),
           borderColor: "#eab308",
           backgroundColor: "rgba(234, 179, 8, 0.16)",
           yAxisID: "y",
@@ -3439,7 +3630,7 @@
           borderWidth: 4
         });
       }
-      desenharGrafico(labels, datasets, familia.projecaoMensalTotal, null);
+      desenharGrafico(labels, datasets, projecaoMensal, null);
     }
 
     function renderizarTabelaFamilia(familia) {
@@ -3460,7 +3651,7 @@
         corpoTabelaEl.innerHTML = `<tr><td colspan="7">Nenhum patrimônio encontrado nos perfis. Adicione investimentos, bens, rendas ou custos fixos em um perfil individual.</td></tr>`;
         return;
       }
-      corpoTabelaEl.innerHTML = Array.from({ length: 30 }, (_, indice) => `
+      corpoTabelaEl.innerHTML = Array.from({ length: periodoProjecaoAnos }, (_, indice) => `
         <tr>
           <td>${indice + 1}</td>
           ${familia.projecoesPorPerfil.map((item) => `<td>${formatterMoeda.format(item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0)}</td>`).join("")}
@@ -3522,70 +3713,82 @@
     }
 
     function renderizarGrafico(projecaoMensal, dataNascimento = "") {
-      const labels = projecaoMensal.map((item) => {
+      const projecaoFiltrada = projecaoMensal.slice(0, periodoProjecaoAnos * 12);
+      const labels = projecaoFiltrada.map((item) => {
         if (item.mes % 60 !== 0) return "";
         const ano = item.mes / 12;
         const idade = obterIdadeNaProjecao(dataNascimento, ano);
         return idade !== null ? `Ano ${ano} (${idade} anos)` : `Ano ${ano}`;
       });
-      const datasets = [
-        {
+      const datasets = [];
+      if (seriesGraficoVisiveis.patrimonioTotal !== false) {
+        datasets.push({
           label: "Patrimônio total",
-          data: projecaoMensal.map((item) => item.patrimonioTotal),
+          data: projecaoFiltrada.map((item) => item.patrimonioTotal),
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.16)",
           yAxisID: "y",
           tension: 0.28,
           fill: true,
           pointRadius: 0
-        },
-        {
+        });
+      }
+      if (seriesGraficoVisiveis.patrimonioBens !== false) {
+        datasets.push({
           label: "Patrimônio em Bens",
-          data: projecaoMensal.map((item) => item.patrimonioBens),
+          data: projecaoFiltrada.map((item) => item.patrimonioBens),
           borderColor: "#ea580c",
           backgroundColor: "rgba(234, 88, 12, 0.12)",
           yAxisID: "y",
           tension: 0.28,
           pointRadius: 0
-        },
-        {
+        });
+      }
+      if (seriesGraficoVisiveis.rendaPassivaTotal !== false) {
+        datasets.push({
           label: "Renda passiva total / mês",
-          data: projecaoMensal.map((item) => item.rendimentoLiquidoTotal),
+          data: projecaoFiltrada.map((item) => item.rendimentoLiquidoTotal),
           borderColor: "#059669",
           backgroundColor: "rgba(5, 150, 105, 0.12)",
           yAxisID: "y1",
           tension: 0.28,
           pointRadius: 0
-        },
-        {
+        });
+      }
+      if (seriesGraficoVisiveis.rendaMensal !== false) {
+        datasets.push({
           label: "Renda mensal / mês",
-          data: projecaoMensal.map((item) => item.rendaMensal),
+          data: projecaoFiltrada.map((item) => item.rendaMensal),
           borderColor: "#7c3aed",
           backgroundColor: "rgba(124, 58, 237, 0.12)",
           yAxisID: "y1",
           tension: 0.18,
           pointRadius: 0
-        },
-        {
+        });
+      }
+      if (seriesGraficoVisiveis.impostosTotais !== false) {
+        datasets.push({
           label: "Impostos totais / mês",
-          data: projecaoMensal.map((item) => item.impostosTotaisMensais),
+          data: projecaoFiltrada.map((item) => item.impostosTotaisMensais),
           borderColor: "#f59e0b",
           backgroundColor: "rgba(245, 158, 11, 0.1)",
           yAxisID: "y1",
           tension: 0.12,
           pointRadius: 0
-        },
-        {
+        });
+      }
+      if (seriesGraficoVisiveis.custosFixos !== false) {
+        datasets.push({
           label: "Custos fixos / mês",
-          data: projecaoMensal.map((item) => item.custosFixosMensais),
+          data: projecaoFiltrada.map((item) => item.custosFixosMensais),
           borderColor: "#dc2626",
           backgroundColor: "rgba(220, 38, 38, 0.1)",
           yAxisID: "y1",
           tension: 0,
           pointRadius: 0
-        }
-      ];
-      desenharGrafico(labels, datasets, projecaoMensal, dataNascimento);
+        });
+      }
+      desenharGrafico(labels, datasets, projecaoFiltrada, dataNascimento);
     }
 
     function desenharGrafico(labels, datasets, linhas, dataNascimento = null) {
@@ -3598,7 +3801,7 @@
           maintainAspectRatio: false,
           interaction: { mode: "index", intersect: false },
           plugins: {
-            legend: { position: "top" },
+            legend: { display: false },
             tooltip: {
               callbacks: {
                 title(contextos) {
@@ -3649,7 +3852,7 @@
           <th>Rendimento Líquido</th>
         `;
       }
-      corpoTabelaEl.innerHTML = projecaoAnual.map((linha) => `
+      corpoTabelaEl.innerHTML = projecaoAnual.slice(0, periodoProjecaoAnos).map((linha) => `
         <tr>
           <td>${linha.ano}</td>
           ${mostrarIdade ? `<td>${linha.idade ?? "-"}</td>` : ""}
@@ -3706,7 +3909,7 @@
     }
 
     function formatarMarcoTemporal(mes, idade = null) {
-      if (!mes) return "Não atinge em 30 anos";
+      if (!mes) return `Não atinge em ${PERIODO_MAXIMO_PROJECAO_ANOS} anos`;
       const ano = Math.ceil(mes / 12);
       return idade !== null ? `Ano ${ano} (${idade} anos)` : `Ano ${ano}`;
     }
@@ -3798,7 +4001,7 @@
       const taxaValorizacaoImovelMensal = calcularTaxaMensal(3);
       const taxaReajusteAluguelMensal = calcularTaxaMensal(4);
 
-      for (let mes = 1; mes <= 360; mes += 1) {
+      for (let mes = 1; mes <= PERIODO_MAXIMO_PROJECAO_ANOS * 12; mes += 1) {
         const dataMes = new Date(hoje.getFullYear(), hoje.getMonth() + mes, 1);
         let patrimonioInvestimentos = 0;
         let patrimonioBens = 0;
@@ -3916,7 +4119,7 @@
 
     function agruparProjecaoAnualPerfil(projecaoMensal, dataNascimento = "") {
       const linhas = [];
-      for (let ano = 1; ano <= 30; ano += 1) {
+      for (let ano = 1; ano <= PERIODO_MAXIMO_PROJECAO_ANOS; ano += 1) {
         const fatia = projecaoMensal.slice((ano - 1) * 12, ano * 12);
         linhas.push({
           ano,
