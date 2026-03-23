@@ -1726,8 +1726,7 @@
             </div>
           </div>
           
-          <div id="rodapeProjecao" class="rodape">
-            
+          <div id="rodapeProjecao" class="rodape">            
           </div>
 
           <div id="heatmapsProjecao" class="radars-projecao"></div>
@@ -1791,123 +1790,231 @@
     </section>
 
     <section id="conteudoRendaMensalPrincipal" class="conteudo-aba-principal oculto">
-      <section class="card secao secao-principal">
-        <div class="cabecalho-secao">
-          <h2>Renda Mensal</h2>
-          <button id="btnAdicionarRenda" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Renda</button>
-        </div>
-        <div id="resumoRendaMensal" class="resumo-grid"></div>
-        <div id="formRendaMensal" class="investimento-card" style="display: none; margin-top: 18px;">
-          <div class="grid-campos">
-            <div class="campo-completo">
-              <label>Descrição</label>
-              <input id="rendaDescricao" type="text" placeholder="Ex: Salário empresa X" />
+      <div class="investimentos-layout">
+        <section class="card secao secao-principal">
+          <div class="cabecalho-secao">
+            <h2>Renda Mensal</h2>
+            <button id="btnAdicionarRenda" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Renda</button>
+          </div>
+          <div id="formRendaMensal" class="investimento-card" style="display: none; margin-top: 18px;">
+            <div class="grid-campos">
+              <div class="campo-completo">
+                <label>Descrição</label>
+                <input id="rendaDescricao" type="text" placeholder="Ex: Salário empresa X" />
+              </div>
+              <div>
+                <label>Categoria</label>
+                <select id="rendaCategoria"></select>
+              </div>
+              <div>
+                <label>Valor bruto mensal (R$)</label>
+                <input id="rendaValorBruto" type="number" min="0" step="0.01" />
+              </div>
+              <div>
+                <label>Outras deduções (R$)</label>
+                <input id="rendaOutrasDeducoes" type="number" min="0" step="0.01" />
+              </div>
+              <div>
+                <label>Crescimento anual (%)</label>
+                <input id="rendaCrescimentoAnual" type="number" step="0.01" />
+              </div>
+              <div>
+                <label>Idade de encerramento</label>
+                <input id="rendaIdadeEncerramento" type="number" min="0" step="1" />
+              </div>
             </div>
-            <div>
-              <label>Categoria</label>
-              <select id="rendaCategoria"></select>
-            </div>
-            <div>
-              <label>Valor bruto mensal (R$)</label>
-              <input id="rendaValorBruto" type="number" min="0" step="0.01" />
-            </div>
-            <div>
-              <label>Outras deduções (R$)</label>
-              <input id="rendaOutrasDeducoes" type="number" min="0" step="0.01" />
-            </div>
-            <div>
-              <label>Crescimento anual (%)</label>
-              <input id="rendaCrescimentoAnual" type="number" step="0.01" />
-            </div>
-            <div>
-              <label>Idade de encerramento</label>
-              <input id="rendaIdadeEncerramento" type="number" min="0" step="1" />
+            <div class="sublista-topo" style="margin-top: 14px;">
+              <button id="btnSalvarRenda" class="btn-adicionar btn-adicionar-inline" type="button">Salvar renda</button>
+              <button id="btnCancelarRenda" class="btn-menu" type="button">Cancelar</button>
             </div>
           </div>
-          <div class="sublista-topo" style="margin-top: 14px;">
-            <button id="btnSalvarRenda" class="btn-adicionar btn-adicionar-inline" type="button">Salvar renda</button>
-            <button id="btnCancelarRenda" class="btn-menu" type="button">Cancelar</button>
-          </div>
-        </div>
-        <div id="listaRendas" class="categorias-custos" style="margin-top: 18px;"></div>
-      </section>
+          <div id="listaRendas" class="categorias-custos" style="margin-top: 18px;"></div>
+        </section>
+        <aside id="sidebarRendaMensal" class="sidebar-investimentos">
+          <section class="card secao">
+            <h2>Resumo da Renda</h2>
+            <div id="resumoRendaMensal" class="resumo-grid"></div>
+          </section>
+          <section class="card secao">
+            <h2>Radar de Renda</h2>
+            <div class="chart-wrap">
+              <div class="radar-canvas-wrap">
+                <canvas id="graficoRadarRendaMensalSidebar"></canvas>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
     </section>
 
     <section id="conteudoBensPrincipal" class="conteudo-aba-principal oculto">
-      <section class="card secao secao-principal">
-        <div class="cabecalho-secao">
-          <h2>Bens</h2>
-          <div class="toolbar-acoes">
-            <button id="btnAdicionarImovel" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Imóvel</button>
-            <button id="btnAdicionarEmpresa" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Empresa</button>
+      <div class="investimentos-layout">
+        <section class="card secao secao-principal">
+          <div class="cabecalho-secao">
+            <h2>Bens</h2>
+            <button id="btnAdicionarBem" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Bem</button>
           </div>
-        </div>
-        <div class="sublista-bloco secao-bens">
-          <div class="secao-bens-header">
-            <div>
-              <h3>Imóveis</h3>
-              <p>Patrimônio imobiliário com controle de financiamento e geração de aluguel.</p>
+          <div id="formBem" class="investimento-card" style="display: none; margin-top: 18px;">
+            <div class="grid-campos">
+              <div>
+                <label>Categoria</label>
+                <select id="bemCategoriaCadastro"></select>
+              </div>
+              <div class="campo-completo">
+                <label>Descrição</label>
+                <input id="bemDescricaoCadastro" type="text" placeholder="Ex: Apartamento alugado" />
+              </div>
+              <div id="blocoBemCategoriaMovel">
+                <label>Categoria do móvel</label>
+                <input id="bemSubcategoriaCadastro" type="text" placeholder="Ex: Veículo" />
+              </div>
+              <div>
+                <label>Valor estimado (R$)</label>
+                <input id="bemValorEstimadoCadastro" type="number" min="0" step="0.01" />
+              </div>
+              <div id="blocoBemStatusCadastro" class="campo-completo">
+                <label>Status</label>
+                <div class="grupo-flags">
+                  <label class="flag-check"><input id="bemStatusFinanciadoCadastro" type="checkbox" />Financiado</label>
+                  <label class="flag-check"><input id="bemStatusQuitadoCadastro" type="checkbox" checked />Quitado</label>
+                  <label class="flag-check"><input id="bemStatusReceitaCadastro" type="checkbox" />Gera receita</label>
+                </div>
+              </div>
+              <div id="blocoBemReceitaPassivaCadastro" class="campo-completo" style="display: none;">
+                <label>Natureza da receita</label>
+                <div class="grupo-flags">
+                  <label class="flag-check"><input id="bemReceitaPassivaCadastro" type="checkbox" />Receita passiva</label>
+                </div>
+              </div>
+              <div id="blocoBemReceitaMensalCadastro" style="display: none;">
+                <label>Receita mensal (R$)</label>
+                <input id="bemReceitaMensalCadastro" type="number" min="0" step="0.01" />
+              </div>
+              <div id="blocoBemCustosFixosCadastro" style="display: none;">
+                <label>Custos fixos (R$)</label>
+                <input id="bemCustosFixosCadastro" type="number" min="0" step="0.01" />
+              </div>
+              <div id="blocoBemSaldoDevedorCadastro" style="display: none;">
+                <label>Saldo devedor (R$)</label>
+                <input id="bemSaldoDevedorCadastro" type="number" min="0" step="0.01" />
+              </div>
+              <div id="blocoBemParcelaMensalCadastro" style="display: none;">
+                <label>Parcela mensal (R$)</label>
+                <input id="bemParcelaMensalCadastro" type="number" min="0" step="0.01" />
+              </div>
+              <div id="blocoBemTaxaJurosCadastro" style="display: none;">
+                <label>Taxa de juros anual (%)</label>
+                <input id="bemTaxaJurosAnualCadastro" type="number" min="0" step="0.01" />
+              </div>
+              <div id="blocoBemMesesRestantesCadastro" style="display: none;">
+                <label>Meses restantes</label>
+                <input id="bemMesesRestantesCadastro" type="number" min="0" step="1" />
+              </div>
+              <div id="blocoBemAluguelMensalCadastro" style="display: none;">
+                <label>Receita mensal bruta (R$)</label>
+                <input id="bemAluguelMensalBrutoCadastro" type="number" min="0" step="0.01" />
+              </div>
+              <div id="blocoBemTaxaVacanciaCadastro" style="display: none;">
+                <label>Taxa de vacância (%)</label>
+                <input id="bemTaxaVacanciaCadastro" type="number" min="0" step="0.01" />
+              </div>
+              <div id="blocoBemIptuCadastro" style="display: none;">
+                <label>IPTU / impostos anuais (R$)</label>
+                <input id="bemIptuAnualCadastro" type="number" min="0" step="0.01" />
+              </div>
+              <div id="blocoBemCondominioCadastro" style="display: none;">
+                <label>Custos mensais recorrentes (R$)</label>
+                <input id="bemCondominioMensalCadastro" type="number" min="0" step="0.01" />
+              </div>
+              <div id="blocoBemManutencaoCadastro" style="display: none;">
+                <label>Custos de manutenção mensal (R$)</label>
+                <input id="bemCustosManutencaoMensalCadastro" type="number" min="0" step="0.01" />
+              </div>
+            </div>
+            <div class="sublista-topo" style="margin-top: 14px;">
+              <button id="btnSalvarBem" class="btn-adicionar btn-adicionar-inline" type="button">Salvar bem</button>
+              <button id="btnCancelarBem" class="btn-menu" type="button">Cancelar</button>
             </div>
           </div>
-          <div id="listaImoveis" class="lista-investimentos"></div>
-        </div>
-        <div class="sublista-bloco secao-bens">
-          <div class="secao-bens-header">
-            <div>
-              <h3>Empresas</h3>
-              <p>Negócios operacionais com lucro mensal e sub-listas de dívidas.</p>
+          <div id="listaBens" class="categorias-custos" style="margin-top: 18px;"></div>
+        </section>
+        <aside id="sidebarBens" class="sidebar-investimentos">
+          <section class="card secao">
+            <h2>Resumo de Bens</h2>
+            <div id="resumoBensSidebar" class="resumo-grid"></div>
+          </section>
+          <section class="card secao">
+            <h2>Composição de Bens</h2>
+            <div class="chart-wrap">
+              <div class="radar-canvas-wrap">
+                <canvas id="graficoBubbleBensSidebar"></canvas>
+              </div>
             </div>
-          </div>
-          <div id="listaEmpresas" class="lista-investimentos"></div>
-        </div>
-      </section>
+          </section>
+        </aside>
+      </div>
     </section>
 
     <section id="conteudoCustosFixosPrincipal" class="conteudo-aba-principal oculto">
-      <section class="card secao secao-principal">
-        <div class="cabecalho-secao">
-          <h2>Custos Fixos</h2>
-          <button id="btnAdicionarCustoFixo" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Custo Fixo</button>
-        </div>
-        <div id="formCustoFixo" class="investimento-card" style="display: none;">
-          <div class="grid-campos">
-            <div class="campo-completo">
-              <label>Descrição</label>
-              <input id="custoDescricao" type="text" placeholder="Ex: Conta de luz" />
+      <div class="investimentos-layout">
+        <section class="card secao secao-principal">
+          <div class="cabecalho-secao">
+            <h2>Custos Fixos</h2>
+            <button id="btnAdicionarCustoFixo" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Custo Fixo</button>
+          </div>
+          <div id="formCustoFixo" class="investimento-card" style="display: none;">
+            <div class="grid-campos">
+              <div class="campo-completo">
+                <label>Descrição</label>
+                <input id="custoDescricao" type="text" placeholder="Ex: Conta de luz" />
+              </div>
+              <div>
+                <label>Categoria</label>
+                <select id="custoCategoria"></select>
+              </div>
+              <div>
+                <label>Valor do período (R$)</label>
+                <input id="custoValorMensal" type="number" min="0" step="0.01" />
+              </div>
+              <div>
+                <label>Periodicidade</label>
+                <select id="custoPeriodicidade"></select>
+              </div>
+              <div id="blocoCustoMesVencimento" style="display: none;">
+                <label>Mês de vencimento</label>
+                <select id="custoMesVencimento"></select>
+              </div>
+              <div id="blocoCustoDiaVencimento">
+                <label>Dia de vencimento</label>
+                <input id="custoDiaVencimento" type="number" min="1" max="31" step="1" />
+              </div>
+              <div>
+                <label>Tipo</label>
+                <select id="custoTipo"></select>
+              </div>
             </div>
-            <div>
-              <label>Categoria</label>
-              <select id="custoCategoria"></select>
-            </div>
-            <div>
-              <label>Valor do período (R$)</label>
-              <input id="custoValorMensal" type="number" min="0" step="0.01" />
-            </div>
-            <div>
-              <label>Periodicidade</label>
-              <select id="custoPeriodicidade"></select>
-            </div>
-            <div id="blocoCustoMesVencimento" style="display: none;">
-              <label>Mês de vencimento</label>
-              <select id="custoMesVencimento"></select>
-            </div>
-            <div id="blocoCustoDiaVencimento">
-              <label>Dia de vencimento</label>
-              <input id="custoDiaVencimento" type="number" min="1" max="31" step="1" />
-            </div>
-            <div>
-              <label>Tipo</label>
-              <select id="custoTipo"></select>
+            <div class="sublista-topo" style="margin-top: 14px;">
+              <button id="btnSalvarCustoFixo" class="btn-adicionar btn-adicionar-inline" type="button">Salvar custo</button>
+              <button id="btnCancelarCustoFixo" class="btn-menu" type="button">Cancelar</button>
             </div>
           </div>
-          <div class="sublista-topo" style="margin-top: 14px;">
-            <button id="btnSalvarCustoFixo" class="btn-adicionar btn-adicionar-inline" type="button">Salvar custo</button>
-            <button id="btnCancelarCustoFixo" class="btn-menu" type="button">Cancelar</button>
-          </div>
-        </div>
-        <div id="listaCustosFixos" class="categorias-custos"></div>
-        <div id="rodapeCustosFixos" class="custo-rodape"></div>
-      </section>
+          <div id="listaCustosFixos" class="categorias-custos"></div>
+        </section>
+        <aside id="sidebarCustosFixos" class="sidebar-investimentos">
+          <section class="card secao">
+            <h2>Resumo de Custos</h2>
+            <div id="rodapeCustosFixos" class="custo-rodape"></div>
+          </section>
+          <section class="card secao">
+            <h2>Radar de Custos</h2>
+            <div class="chart-wrap">
+              <div class="radar-canvas-wrap">
+                <canvas id="graficoRadarCustosSidebar"></canvas>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
     </section>
   </div>
 
@@ -1949,6 +2056,11 @@
       pagamento: "Pagamentos Recorrentes",
       outro: "Outros"
     };
+    const CATEGORIAS_BENS = {
+      imovel: "Imóvel",
+      movel: "Móvel",
+      empresa: "Empresa"
+    };
     const PERIODICIDADES_CUSTO = {
       mensal: "Mensal",
       semestral: "Semestral",
@@ -1969,6 +2081,9 @@
     let graficoProjecaoFluxo = null;
     let graficoRadarInvestimentos = null;
     let graficoRadarInvestimentosSidebar = null;
+    let graficoRadarRendaMensalSidebar = null;
+    let graficoRadarCustosSidebar = null;
+    let graficoBubbleBensSidebar = null;
     let graficoRadarCustos = null;
     let debounceAtualizacao = null;
     let abaAtiva = "visao-geral";
@@ -1984,8 +2099,43 @@
 
     const listaInvestimentosEl = document.getElementById("listaInvestimentos");
     const cardPoderAporteInvestimentosEl = document.getElementById("cardPoderAporteInvestimentos");
-    const listaImoveisEl = document.getElementById("listaImoveis");
-    const listaEmpresasEl = document.getElementById("listaEmpresas");
+    const formBemEl = document.getElementById("formBem");
+    const bemCategoriaCadastroEl = document.getElementById("bemCategoriaCadastro");
+    const bemDescricaoCadastroEl = document.getElementById("bemDescricaoCadastro");
+    const bemSubcategoriaCadastroEl = document.getElementById("bemSubcategoriaCadastro");
+    const bemValorEstimadoCadastroEl = document.getElementById("bemValorEstimadoCadastro");
+    const blocoBemCategoriaMovelEl = document.getElementById("blocoBemCategoriaMovel");
+    const blocoBemStatusCadastroEl = document.getElementById("blocoBemStatusCadastro");
+    const bemStatusFinanciadoCadastroEl = document.getElementById("bemStatusFinanciadoCadastro");
+    const bemStatusQuitadoCadastroEl = document.getElementById("bemStatusQuitadoCadastro");
+    const bemStatusReceitaCadastroEl = document.getElementById("bemStatusReceitaCadastro");
+    const blocoBemReceitaPassivaCadastroEl = document.getElementById("blocoBemReceitaPassivaCadastro");
+    const bemReceitaPassivaCadastroEl = document.getElementById("bemReceitaPassivaCadastro");
+    const blocoBemReceitaMensalCadastroEl = document.getElementById("blocoBemReceitaMensalCadastro");
+    const bemReceitaMensalCadastroEl = document.getElementById("bemReceitaMensalCadastro");
+    const blocoBemCustosFixosCadastroEl = document.getElementById("blocoBemCustosFixosCadastro");
+    const bemCustosFixosCadastroEl = document.getElementById("bemCustosFixosCadastro");
+    const blocoBemSaldoDevedorCadastroEl = document.getElementById("blocoBemSaldoDevedorCadastro");
+    const bemSaldoDevedorCadastroEl = document.getElementById("bemSaldoDevedorCadastro");
+    const blocoBemParcelaMensalCadastroEl = document.getElementById("blocoBemParcelaMensalCadastro");
+    const bemParcelaMensalCadastroEl = document.getElementById("bemParcelaMensalCadastro");
+    const blocoBemTaxaJurosCadastroEl = document.getElementById("blocoBemTaxaJurosCadastro");
+    const bemTaxaJurosAnualCadastroEl = document.getElementById("bemTaxaJurosAnualCadastro");
+    const blocoBemMesesRestantesCadastroEl = document.getElementById("blocoBemMesesRestantesCadastro");
+    const bemMesesRestantesCadastroEl = document.getElementById("bemMesesRestantesCadastro");
+    const blocoBemAluguelMensalCadastroEl = document.getElementById("blocoBemAluguelMensalCadastro");
+    const bemAluguelMensalBrutoCadastroEl = document.getElementById("bemAluguelMensalBrutoCadastro");
+    const blocoBemTaxaVacanciaCadastroEl = document.getElementById("blocoBemTaxaVacanciaCadastro");
+    const bemTaxaVacanciaCadastroEl = document.getElementById("bemTaxaVacanciaCadastro");
+    const blocoBemIptuCadastroEl = document.getElementById("blocoBemIptuCadastro");
+    const bemIptuAnualCadastroEl = document.getElementById("bemIptuAnualCadastro");
+    const blocoBemCondominioCadastroEl = document.getElementById("blocoBemCondominioCadastro");
+    const bemCondominioMensalCadastroEl = document.getElementById("bemCondominioMensalCadastro");
+    const blocoBemManutencaoCadastroEl = document.getElementById("blocoBemManutencaoCadastro");
+    const bemCustosManutencaoMensalCadastroEl = document.getElementById("bemCustosManutencaoMensalCadastro");
+    const btnSalvarBemEl = document.getElementById("btnSalvarBem");
+    const btnCancelarBemEl = document.getElementById("btnCancelarBem");
+    const listaBensEl = document.getElementById("listaBens");
     const painelFamiliaEl = document.getElementById("painelFamilia");
     const cardFamiliaResumoEl = document.getElementById("cardFamiliaResumo");
     const resumoGridEl = document.getElementById("resumoGrid");
@@ -1996,8 +2146,7 @@
     const cotacaoUsdBrlEl = document.getElementById("cotacaoUsdBrl");
     const cotacaoEurBrlEl = document.getElementById("cotacaoEurBrl");
     const btnAdicionarEl = document.getElementById("btnAdicionar");
-    const btnAdicionarImovelEl = document.getElementById("btnAdicionarImovel");
-    const btnAdicionarEmpresaEl = document.getElementById("btnAdicionarEmpresa");
+    const btnAdicionarBemEl = document.getElementById("btnAdicionarBem");
     const btnAdicionarCustoFixoEl = document.getElementById("btnAdicionarCustoFixo");
     const btnTemaEl = document.getElementById("btnTema");
     const btnMenuDadosEl = document.getElementById("btnMenuDados");
@@ -2042,6 +2191,10 @@
     const conteudoBensPrincipalEl = document.getElementById("conteudoBensPrincipal");
     const conteudoCustosFixosPrincipalEl = document.getElementById("conteudoCustosFixosPrincipal");
     const resumoRendaMensalEl = document.getElementById("resumoRendaMensal");
+    const graficoRadarRendaMensalSidebarEl = document.getElementById("graficoRadarRendaMensalSidebar");
+    const graficoRadarCustosSidebarEl = document.getElementById("graficoRadarCustosSidebar");
+    const resumoBensSidebarEl = document.getElementById("resumoBensSidebar");
+    const graficoBubbleBensSidebarEl = document.getElementById("graficoBubbleBensSidebar");
     const listaRendasEl = document.getElementById("listaRendas");
     const formRendaMensalEl = document.getElementById("formRendaMensal");
     const btnAdicionarRendaEl = document.getElementById("btnAdicionarRenda");
@@ -2071,6 +2224,7 @@
     aplicarTema();
     inicializarSeletoresRenda();
     inicializarSeletoresCustosFixos();
+    inicializarSeletoresBens();
     sincronizarCamposPerfil();
 
     taxaCdiReferenciaEl.addEventListener("input", () => {
@@ -2106,23 +2260,7 @@
       renderizarTudo(true);
     });
 
-    btnAdicionarImovelEl.addEventListener("click", () => {
-      const perfil = obterPerfilAtivo();
-      const novoImovel = criarImovelPadrao();
-      novoImovel.expandido = true;
-      perfil.imoveis.unshift(novoImovel);
-      salvarEstado();
-      renderizarTudo(true);
-    });
-
-    btnAdicionarEmpresaEl.addEventListener("click", () => {
-      const perfil = obterPerfilAtivo();
-      const novaEmpresa = criarEmpresaPadrao();
-      novaEmpresa.expandido = true;
-      perfil.empresas.unshift(novaEmpresa);
-      salvarEstado();
-      renderizarTudo(true);
-    });
+    btnAdicionarBemEl.addEventListener("click", abrirFormularioBem);
 
     btnTemaEl.addEventListener("click", () => {
       ESTADO.temaPreferenciaManual = true;
@@ -2168,6 +2306,20 @@
     btnAdicionarRendaEl.addEventListener("click", abrirFormularioRenda);
     btnSalvarRendaEl.addEventListener("click", salvarNovaRenda);
     btnCancelarRendaEl.addEventListener("click", fecharFormularioRenda);
+    bemCategoriaCadastroEl.addEventListener("change", aplicarVisibilidadeFormularioBem);
+    bemStatusFinanciadoCadastroEl.addEventListener("change", () => {
+      if (bemStatusFinanciadoCadastroEl.checked) bemStatusQuitadoCadastroEl.checked = false;
+      if (!bemStatusFinanciadoCadastroEl.checked && !bemStatusQuitadoCadastroEl.checked) bemStatusQuitadoCadastroEl.checked = true;
+      aplicarVisibilidadeFormularioBem();
+    });
+    bemStatusQuitadoCadastroEl.addEventListener("change", () => {
+      if (bemStatusQuitadoCadastroEl.checked) bemStatusFinanciadoCadastroEl.checked = false;
+      if (!bemStatusQuitadoCadastroEl.checked && !bemStatusFinanciadoCadastroEl.checked) bemStatusFinanciadoCadastroEl.checked = true;
+      aplicarVisibilidadeFormularioBem();
+    });
+    bemStatusReceitaCadastroEl.addEventListener("change", aplicarVisibilidadeFormularioBem);
+    btnSalvarBemEl.addEventListener("click", salvarNovoBem);
+    btnCancelarBemEl.addEventListener("click", fecharFormularioBem);
     custoPeriodicidadeEl.addEventListener("change", () => aplicarVisibilidadeCamposPeriodicidadeCusto(custoPeriodicidadeEl.value));
     btnToggleTabelaProjecaoEl.addEventListener("click", () => {
       tabelaProjecaoExpandida = !tabelaProjecaoExpandida;
@@ -2264,6 +2416,7 @@
         rendas: [],
         investimentos: [criarInvestimentoPadrao()],
         imoveis: [],
+        bensMoveis: [],
         empresas: [],
         custosFixos: [],
         custosCategoriasExpandidas: {
@@ -2277,6 +2430,7 @@
 
     function normalizarPerfil(perfil) {
       perfil.imoveis = perfil.imoveis || [];
+      perfil.bensMoveis = perfil.bensMoveis || [];
       perfil.empresas = perfil.empresas || [];
       const perfilNormalizado = {
         id: perfil.id || crypto.randomUUID(),
@@ -2291,6 +2445,7 @@
           ? perfil.investimentos.map(normalizarInvestimento)
           : [criarInvestimentoPadrao()],
         imoveis: Array.isArray(perfil.imoveis) ? perfil.imoveis.map(normalizarImovel) : [],
+        bensMoveis: Array.isArray(perfil.bensMoveis) ? perfil.bensMoveis.map(normalizarBemMovel) : [],
         empresas: Array.isArray(perfil.empresas) ? perfil.empresas.map(normalizarEmpresa) : [],
         custosFixos: normalizarCustosFixos(perfil.custosFixos, normalizarNumero(perfil.custosMensais, 0)),
         custosCategoriasExpandidas: normalizarExpansaoCategoriasCustos(perfil.custosCategoriasExpandidas)
@@ -2394,6 +2549,42 @@
       };
     }
 
+    function criarBemMovelPadrao() {
+      return {
+        id: crypto.randomUUID(),
+        descricao: "",
+        valorEstimado: 0,
+        categoria: "",
+        status: { financiado: false, quitado: true, geraReceita: false },
+        saldoDevedor: 0,
+        parcelaMensal: 0,
+        taxaJurosAnual: 0,
+        mesesRestantes: 0,
+        aluguelMensalBruto: 0,
+        taxaVacancia: 0,
+        iptuAnual: 0,
+        condominioMensal: 0,
+        custosManutencaoMensal: 0,
+        expandido: false
+      };
+    }
+
+    function criarBemPorCategoria(categoria, descricao = "") {
+      if (categoria === "imovel") {
+        const item = criarImovelPadrao();
+        item.descricao = descricao;
+        return { lista: "imoveis", item };
+      }
+      if (categoria === "empresa") {
+        const item = criarEmpresaPadrao();
+        item.descricao = descricao;
+        return { lista: "empresas", item };
+      }
+      const item = criarBemMovelPadrao();
+      item.descricao = descricao;
+      return { lista: "bensMoveis", item };
+    }
+
     function normalizarInvestimento(investimento) {
       return {
         id: investimento.id || crypto.randomUUID(),
@@ -2456,6 +2647,33 @@
         emprestimos: Array.isArray(empresa.emprestimos) ? empresa.emprestimos.map(normalizarDivida) : [],
         financiamentos: Array.isArray(empresa.financiamentos) ? empresa.financiamentos.map(normalizarDivida) : [],
         expandido: empresa.expandido === true
+      };
+    }
+
+    function normalizarBemMovel(bem) {
+      const status = bem?.status || {};
+      const financiado = status.financiado === true;
+      const quitado = financiado ? false : status.quitado !== false;
+      return {
+        id: bem?.id || crypto.randomUUID(),
+        descricao: bem?.descricao || "",
+        valorEstimado: normalizarNumero(bem?.valorEstimado, 0),
+        categoria: bem?.categoria || "",
+        status: {
+          financiado,
+          quitado,
+          geraReceita: status.geraReceita === true
+        },
+        saldoDevedor: normalizarNumero(bem?.saldoDevedor, 0),
+        parcelaMensal: normalizarNumero(bem?.parcelaMensal, 0),
+        taxaJurosAnual: normalizarNumero(bem?.taxaJurosAnual, 0),
+        mesesRestantes: normalizarNumero(bem?.mesesRestantes, 0),
+        aluguelMensalBruto: normalizarNumero(bem?.aluguelMensalBruto, 0),
+        taxaVacancia: normalizarNumero(bem?.taxaVacancia, 0),
+        iptuAnual: normalizarNumero(bem?.iptuAnual, 0),
+        condominioMensal: normalizarNumero(bem?.condominioMensal, 0),
+        custosManutencaoMensal: normalizarNumero(bem?.custosManutencaoMensal, 0),
+        expandido: bem?.expandido === true
       };
     }
 
@@ -2674,6 +2892,7 @@
       return ESTADO.perfis.filter((perfil) => (
         (Array.isArray(perfil.investimentos) && perfil.investimentos.length > 0) ||
         (Array.isArray(perfil.imoveis) && perfil.imoveis.length > 0) ||
+        (Array.isArray(perfil.bensMoveis) && perfil.bensMoveis.length > 0) ||
         (Array.isArray(perfil.empresas) && perfil.empresas.length > 0) ||
         (Array.isArray(perfil.custosFixos) && perfil.custosFixos.length > 0) ||
         perfil.rendaMensal > 0
@@ -2857,6 +3076,7 @@
         renderizarCustosFixos();
       }
       renderizarResumoRendaMensal();
+      renderizarSidebarRendaMensal();
       renderizarRodapeCustosFixos();
 
       const perfil = obterPerfilAtivo();
@@ -2990,7 +3210,7 @@
       cardRadarEl.classList.remove("oculto");
       tabsProjecaoEl.classList.remove("oculto");
       periodosProjecaoEl.classList.remove("oculto");
-      rodapeProjecaoEl.textContent = `Os gráficos mostram a projeção ${modoValorProjecao === "real" ? "real" : "nominal"} do patrimônio e do fluxo mensal ao longo de ${periodoProjecaoAnos} anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.`;
+      rodapeProjecaoEl.textContent = `Os gráficos mostram a projeção ${modoValorProjecao === "real" ? "real" : "nominal"} do patrimônio e do fluxo mensal ao longo de ${periodoProjecaoAnos} anos.`;
     }
 
     function renderizarVisaoFamilia() {
@@ -3051,7 +3271,7 @@
             </div>
           </div>
           <div class="familia-copy">
-            A visão Família soma automaticamente investimentos, imóveis e empresas de todos os perfis, mantendo a lógica de merge e filtragem do painel individual.
+            A visão Família soma automaticamente investimentos, imóveis, bens móveis e empresas de todos os perfis, mantendo a lógica de merge e filtragem do painel individual.
           </div>
           <ul class="familia-notas lista-notas">
             ${familia.projecoesPorPerfil.map((item) => `<li>${escapeHtml(item.perfil.nome)} contribui com ${formatterMoeda.format(item.resumo.rendaPassivaTotalAtual)} de renda passiva mensal e ${formatterMoeda.format(item.resumo.patrimonioTotalAtual)} de patrimônio total.</li>`).join("")}
@@ -3069,7 +3289,7 @@
       const linhaFinal = projecaoMensal[Math.max(0, periodoProjecaoAnos * 12 - 1)];
       if (!linhaFinal) return;
       rodapeProjecaoEl.innerHTML = `
-        Os gráficos mostram a projeção ${modoValorProjecao === "real" ? "real" : "nominal"} do patrimônio e do fluxo mensal ao longo de ${periodoProjecaoAnos} anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.
+        Os gráficos mostram a projeção ${modoValorProjecao === "real" ? "real" : "nominal"} do patrimônio e do fluxo mensal ao longo de ${periodoProjecaoAnos} anos.
         <span class="resumo-projecao-final">Ao final do período: ${formatterMoeda.format(linhaFinal.patrimonioTotal)} nominais, equivalente a ${formatterMoeda.format(linhaFinal.patrimonioTotalReal)} em valores de hoje com IPCA de ${formatterPercentual.format(obterInflacaoPerfil(perfil))}% a.a.</span>
       `;
     }
@@ -3108,7 +3328,7 @@
     }
 
     function sincronizarExpansaoLista(lista) {
-      if (Array.isArray(lista) && lista.length === 1) lista[0].expandido = true;
+      if (!Array.isArray(lista)) return;
     }
 
     function renderizarInvestimentos() {
@@ -3183,18 +3403,56 @@
     }
 
     function renderizarBens() {
-      renderizarImoveis();
-      renderizarEmpresas();
+      const perfil = obterPerfilAtivo();
+      const secoes = [
+        {
+          categoria: "imovel",
+          titulo: "Imóveis",
+          descricao: "Patrimônio imobiliário com controle de financiamento e geração de aluguel.",
+          quantidade: perfil.imoveis.length
+        },
+        {
+          categoria: "movel",
+          titulo: "Móveis",
+          descricao: "Veículos, embarcações, equipamentos e outros bens físicos com valor estimado.",
+          quantidade: perfil.bensMoveis.length
+        },
+        {
+          categoria: "empresa",
+          titulo: "Empresas",
+          descricao: "Negócios operacionais com lucro mensal e sub-listas de dívidas.",
+          quantidade: perfil.empresas.length
+        }
+      ];
+      listaBensEl.innerHTML = secoes.map((secao) => `
+        <article class="investimento-card">
+          <div class="investimento-topo">
+            <div class="investimento-titulo">
+              <strong>${secao.titulo}</strong>
+              <span class="badge-tipo">${secao.quantidade} ${secao.quantidade === 1 ? "item" : "itens"}</span>
+              <span>${secao.descricao}</span>
+            </div>
+          </div>
+          <div class="investimento-corpo" style="display: block;">
+            <div id="listaBens-${secao.categoria}" class="lista-investimentos"></div>
+          </div>
+        </article>
+      `).join("");
+      renderizarImoveis(document.getElementById("listaBens-imovel"));
+      renderizarBensMoveis(document.getElementById("listaBens-movel"));
+      renderizarEmpresas(document.getElementById("listaBens-empresa"));
+      renderizarSidebarBens();
     }
 
-    function renderizarImoveis() {
+    function renderizarImoveis(containerEl) {
       const perfil = obterPerfilAtivo();
       sincronizarExpansaoLista(perfil.imoveis);
+      if (!containerEl) return;
       if (!perfil.imoveis.length) {
-        listaImoveisEl.innerHTML = '<div class="vazio">Nenhum imóvel cadastrado.</div>';
+        containerEl.innerHTML = '<div class="vazio">Nenhum imóvel cadastrado.</div>';
         return;
       }
-      listaImoveisEl.innerHTML = "";
+      containerEl.innerHTML = "";
       perfil.imoveis.forEach((imovel) => {
         const resumo = obterResumoImovel(imovel);
         const card = document.createElement("article");
@@ -3262,18 +3520,96 @@
           checkbox.addEventListener("change", (evento) => atualizarStatusImovel(imovel.id, evento.target.dataset.status, evento.target.checked));
         });
 
-        listaImoveisEl.appendChild(card);
+        containerEl.appendChild(card);
       });
     }
 
-    function renderizarEmpresas() {
+    function renderizarBensMoveis(containerEl) {
       const perfil = obterPerfilAtivo();
-      sincronizarExpansaoLista(perfil.empresas);
-      if (!perfil.empresas.length) {
-        listaEmpresasEl.innerHTML = '<div class="vazio">Nenhuma empresa cadastrada.</div>';
+      sincronizarExpansaoLista(perfil.bensMoveis);
+      if (!containerEl) return;
+      if (!perfil.bensMoveis.length) {
+        containerEl.innerHTML = '<div class="vazio">Nenhum bem móvel cadastrado.</div>';
         return;
       }
-      listaEmpresasEl.innerHTML = "";
+      containerEl.innerHTML = "";
+      perfil.bensMoveis.forEach((bem) => {
+        const card = document.createElement("article");
+        card.className = "investimento-card";
+        card.innerHTML = `
+          <div class="investimento-topo">
+            <div class="investimento-titulo">
+              <strong>${escapeHtml(bem.descricao || "Novo bem móvel")}</strong>
+              <span class="badge-tipo">${formatterMoeda.format(bem.valorEstimado)}</span>
+              <span>${escapeHtml(obterResumoBemMovel(bem))}</span>
+            </div>
+            <div class="acoes-card">
+              <button class="btn-toggle" type="button" data-acao="toggle" aria-expanded="${bem.expandido ? "true" : "false"}"><span class="chevron">▶</span></button>
+              <button class="btn-remover" type="button" data-acao="remover" aria-label="Remover bem móvel">X</button>
+            </div>
+          </div>
+          <div class="investimento-corpo" style="display: ${bem.expandido ? "block" : "none"};">
+            <div class="grid-campos">
+              <div class="campo-completo"><label>Descrição</label><input data-campo="descricao" type="text" value="${escapeHtml(bem.descricao)}" placeholder="Ex: Carro" /></div>
+              <div><label>Categoria</label><input data-campo="categoria" type="text" value="${escapeHtml(bem.categoria)}" placeholder="Ex: Veículo" /></div>
+              <div><label>Valor estimado (R$)</label><input data-campo="valorEstimado" type="number" min="0" step="0.01" value="${bem.valorEstimado}" /></div>
+              <div class="campo-completo">
+                <label>Status</label>
+                <div class="grupo-flags">
+                  ${renderizarFlagCheckbox("financiado", "Financiado", bem.status.financiado)}
+                  ${renderizarFlagCheckbox("quitado", "Quitado", bem.status.quitado)}
+                  ${renderizarFlagCheckbox("geraReceita", "Gera receita", bem.status.geraReceita)}
+                </div>
+              </div>
+              ${bem.status.financiado ? `
+                <div><label>Saldo devedor (R$)</label><input data-campo="saldoDevedor" type="number" min="0" step="0.01" value="${bem.saldoDevedor}" /></div>
+                <div><label>Parcela mensal (R$)</label><input data-campo="parcelaMensal" type="number" min="0" step="0.01" value="${bem.parcelaMensal}" /></div>
+                <div><label>Taxa de juros anual (%)</label><input data-campo="taxaJurosAnual" type="number" min="0" step="0.01" value="${bem.taxaJurosAnual}" /></div>
+                <div><label>Meses restantes</label><input data-campo="mesesRestantes" type="number" min="0" step="1" value="${bem.mesesRestantes}" /></div>
+              ` : ""}
+              ${bem.status.geraReceita ? `
+                <div><label>Receita mensal bruta (R$)</label><input data-campo="aluguelMensalBruto" type="number" min="0" step="0.01" value="${bem.aluguelMensalBruto}" /></div>
+                <div><label>Taxa de vacância (%)</label><input data-campo="taxaVacancia" type="number" min="0" step="0.01" value="${bem.taxaVacancia}" /></div>
+                <div><label>Impostos/taxas anuais (R$)</label><input data-campo="iptuAnual" type="number" min="0" step="0.01" value="${bem.iptuAnual}" /></div>
+                <div><label>Custos mensais recorrentes (R$)</label><input data-campo="condominioMensal" type="number" min="0" step="0.01" value="${bem.condominioMensal}" /></div>
+                <div><label>Custos de manutenção mensal (R$)</label><input data-campo="custosManutencaoMensal" type="number" min="0" step="0.01" value="${bem.custosManutencaoMensal}" /></div>
+              ` : ""}
+            </div>
+            <div class="resultado-inline">
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Patrimônio líquido", "Valor estimado do bem móvel menos o saldo devedor do financiamento, quando existir.")}</span><strong>${formatterMoeda.format(bem.valorEstimado - obterDividaBemMovel(bem))}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Renda passiva / mês", "Receita mensal líquida após vacância, taxas e manutenção. A parcela do financiamento entra em custos fixos, não aqui.")}</span><strong>${formatterMoeda.format(calcularRendaPassivaBemMovelAtual(bem))}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Dívida atual", "Saldo devedor do financiamento do bem móvel ainda em aberto.")}</span><strong>${formatterMoeda.format(obterDividaBemMovel(bem))}</strong></div>
+            </div>
+          </div>
+        `;
+        card.addEventListener("click", (evento) => {
+          if (evento.target.closest('[data-acao="toggle"]')) return alternarExpandido(perfil.bensMoveis, bem.id, card);
+          if (evento.target.dataset.acao === "remover") {
+            perfil.bensMoveis = perfil.bensMoveis.filter((item) => item.id !== bem.id);
+            salvarEstado();
+            renderizarTudo(true);
+          }
+        });
+        card.querySelectorAll("[data-campo]").forEach((campo) => {
+          campo.addEventListener("input", (evento) => atualizarCampoBemMovel(bem.id, evento.target.dataset.campo, evento.target.value));
+          campo.addEventListener("blur", () => renderizarTudo(true));
+        });
+        card.querySelectorAll("[data-status]").forEach((checkbox) => {
+          checkbox.addEventListener("change", (evento) => atualizarStatusBemMovel(bem.id, evento.target.dataset.status, evento.target.checked));
+        });
+        containerEl.appendChild(card);
+      });
+    }
+
+    function renderizarEmpresas(containerEl) {
+      const perfil = obterPerfilAtivo();
+      sincronizarExpansaoLista(perfil.empresas);
+      if (!containerEl) return;
+      if (!perfil.empresas.length) {
+        containerEl.innerHTML = '<div class="vazio">Nenhuma empresa cadastrada.</div>';
+        return;
+      }
+      containerEl.innerHTML = "";
       perfil.empresas.forEach((empresa) => {
         const resumo = obterResumoEmpresa(empresa);
         const card = document.createElement("article");
@@ -3353,7 +3689,7 @@
           campo.addEventListener("blur", () => renderizarTudo(true));
         });
 
-        listaEmpresasEl.appendChild(card);
+        containerEl.appendChild(card);
       });
     }
 
@@ -3368,6 +3704,12 @@
         .map((label, indice) => `<option value="${indice + 1}">${label}</option>`)
         .join("");
       custoTipoEl.innerHTML = Object.entries(TIPOS_CUSTOS)
+        .map(([valor, label]) => `<option value="${valor}">${label}</option>`)
+        .join("");
+    }
+
+    function inicializarSeletoresBens() {
+      bemCategoriaCadastroEl.innerHTML = Object.entries(CATEGORIAS_BENS)
         .map(([valor, label]) => `<option value="${valor}">${label}</option>`)
         .join("");
     }
@@ -3388,6 +3730,91 @@
       rendaCategoriaEl.innerHTML = Object.entries(CATEGORIAS_RENDA)
         .map(([valor, label]) => `<option value="${valor}">${label}</option>`)
         .join("");
+    }
+
+    function abrirFormularioBem() {
+      formBemEl.style.display = "block";
+      bemCategoriaCadastroEl.value = "imovel";
+      bemDescricaoCadastroEl.value = "";
+      bemSubcategoriaCadastroEl.value = "";
+      bemValorEstimadoCadastroEl.value = "";
+      bemStatusFinanciadoCadastroEl.checked = false;
+      bemStatusQuitadoCadastroEl.checked = true;
+      bemStatusReceitaCadastroEl.checked = false;
+      bemReceitaPassivaCadastroEl.checked = false;
+      bemReceitaMensalCadastroEl.value = "";
+      bemCustosFixosCadastroEl.value = "";
+      bemSaldoDevedorCadastroEl.value = "";
+      bemParcelaMensalCadastroEl.value = "";
+      bemTaxaJurosAnualCadastroEl.value = "";
+      bemMesesRestantesCadastroEl.value = "";
+      bemAluguelMensalBrutoCadastroEl.value = "";
+      bemTaxaVacanciaCadastroEl.value = "";
+      bemIptuAnualCadastroEl.value = "";
+      bemCondominioMensalCadastroEl.value = "";
+      bemCustosManutencaoMensalCadastroEl.value = "";
+      aplicarVisibilidadeFormularioBem();
+      bemDescricaoCadastroEl.focus();
+    }
+
+    function fecharFormularioBem() {
+      formBemEl.style.display = "none";
+    }
+
+    function aplicarVisibilidadeFormularioBem() {
+      const categoria = bemCategoriaCadastroEl.value;
+      const ehEmpresa = categoria === "empresa";
+      const ehMovel = categoria === "movel";
+      const mostrarStatus = categoria === "imovel" || categoria === "movel";
+      const mostrarFinanciamento = mostrarStatus && bemStatusFinanciadoCadastroEl.checked;
+      const mostrarReceitaBem = mostrarStatus && bemStatusReceitaCadastroEl.checked;
+
+      blocoBemCategoriaMovelEl.style.display = ehMovel ? "block" : "none";
+      blocoBemStatusCadastroEl.style.display = mostrarStatus ? "block" : "none";
+      blocoBemReceitaPassivaCadastroEl.style.display = ehEmpresa ? "block" : "none";
+      blocoBemReceitaMensalCadastroEl.style.display = ehEmpresa ? "block" : "none";
+      blocoBemCustosFixosCadastroEl.style.display = ehEmpresa ? "block" : "none";
+      blocoBemSaldoDevedorCadastroEl.style.display = mostrarFinanciamento ? "block" : "none";
+      blocoBemParcelaMensalCadastroEl.style.display = mostrarFinanciamento ? "block" : "none";
+      blocoBemTaxaJurosCadastroEl.style.display = mostrarFinanciamento ? "block" : "none";
+      blocoBemMesesRestantesCadastroEl.style.display = mostrarFinanciamento ? "block" : "none";
+      blocoBemAluguelMensalCadastroEl.style.display = mostrarReceitaBem ? "block" : "none";
+      blocoBemTaxaVacanciaCadastroEl.style.display = mostrarReceitaBem ? "block" : "none";
+      blocoBemIptuCadastroEl.style.display = mostrarReceitaBem ? "block" : "none";
+      blocoBemCondominioCadastroEl.style.display = mostrarReceitaBem ? "block" : "none";
+      blocoBemManutencaoCadastroEl.style.display = mostrarReceitaBem ? "block" : "none";
+    }
+
+    function salvarNovoBem() {
+      const perfil = obterPerfilAtivo();
+      const { lista, item } = criarBemPorCategoria(bemCategoriaCadastroEl.value, bemDescricaoCadastroEl.value.trim());
+      item.valorEstimado = normalizarNumero(bemValorEstimadoCadastroEl.value, 0);
+      if (lista === "bensMoveis") {
+        item.categoria = bemSubcategoriaCadastroEl.value.trim();
+      }
+      if (lista === "empresas") {
+        item.receitaMensal = normalizarNumero(bemReceitaMensalCadastroEl.value, 0);
+        item.custosFixos = normalizarNumero(bemCustosFixosCadastroEl.value, 0);
+        item.receitaPassiva = bemReceitaPassivaCadastroEl.checked;
+      } else {
+        item.status.financiado = bemStatusFinanciadoCadastroEl.checked;
+        item.status.quitado = !bemStatusFinanciadoCadastroEl.checked ? bemStatusQuitadoCadastroEl.checked : false;
+        item.status.geraReceita = bemStatusReceitaCadastroEl.checked;
+        item.saldoDevedor = normalizarNumero(bemSaldoDevedorCadastroEl.value, 0);
+        item.parcelaMensal = normalizarNumero(bemParcelaMensalCadastroEl.value, 0);
+        item.taxaJurosAnual = normalizarNumero(bemTaxaJurosAnualCadastroEl.value, 0);
+        item.mesesRestantes = normalizarNumero(bemMesesRestantesCadastroEl.value, 0);
+        item.aluguelMensalBruto = normalizarNumero(bemAluguelMensalBrutoCadastroEl.value, 0);
+        item.taxaVacancia = normalizarNumero(bemTaxaVacanciaCadastroEl.value, 0);
+        item.iptuAnual = normalizarNumero(bemIptuAnualCadastroEl.value, 0);
+        item.condominioMensal = normalizarNumero(bemCondominioMensalCadastroEl.value, 0);
+        item.custosManutencaoMensal = normalizarNumero(bemCustosManutencaoMensalCadastroEl.value, 0);
+      }
+      item.expandido = true;
+      perfil[lista].unshift(item);
+      salvarEstado();
+      fecharFormularioBem();
+      renderizarTudo(true);
     }
 
     function abrirFormularioRenda() {
@@ -3521,6 +3948,11 @@
       `;
     }
 
+    function renderizarSidebarRendaMensal() {
+      const perfil = obterPerfilAtivo();
+      renderizarRadarRendaMensalSidebar(calcularResumoRendasPorCategoriaPerfil(perfil));
+    }
+
     function agruparRendasPorCategoria(rendas) {
       return Object.keys(CATEGORIAS_RENDA).reduce((acc, categoria) => {
         acc[categoria] = rendas.filter((item) => item.categoria === categoria);
@@ -3564,6 +3996,22 @@
         totalDeducoes,
         totalLiquido,
         capacidadePoupanca: totalLiquido - normalizarNumero(custosMensais)
+      };
+    }
+
+    function calcularResumoRendasPorCategoriaPerfil(perfil) {
+      const totais = Object.keys(CATEGORIAS_RENDA).reduce((acc, categoria) => {
+        acc[categoria] = 0;
+        return acc;
+      }, {});
+      (perfil?.rendas || []).forEach((renda) => {
+        if (!renda.ativo) return;
+        totais[renda.categoria] += normalizarNumero(renda.valorLiquidoMensal);
+      });
+      return {
+        labels: Object.values(CATEGORIAS_RENDA),
+        valores: Object.keys(CATEGORIAS_RENDA).map((categoria) => totais[categoria]),
+        total: Object.values(totais).reduce((acc, valor) => acc + valor, 0)
       };
     }
 
@@ -3667,19 +4115,20 @@
       });
 
       renderizarRodapeCustosFixos();
+      renderizarSidebarCustosFixos();
     }
 
     function renderizarRodapeCustosFixos() {
       const perfil = obterPerfilAtivo();
-      const totais = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis);
+      const totais = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis, perfil.bensMoveis);
       rodapeCustosFixosEl.innerHTML = `
         <div class="resumo-grid">
           <div class="metric destaque">
-            <span>${renderizarLabelComTooltip("Total mensal de custos fixos", "Soma de todos os custos fixos cadastrados mais parcelas ativas de financiamentos imobiliários.")}</span>
+            <span>${renderizarLabelComTooltip("Total mensal de custos fixos", "Soma de todos os custos fixos cadastrados mais parcelas ativas de financiamentos imobiliários e de bens móveis.")}</span>
             <strong>${formatterMoeda.format(totais.total)}</strong>
           </div>
           <div class="metric">
-            <span>${renderizarLabelComTooltip("Total essencial", "Soma dos custos marcados como essenciais, incluindo parcelas de financiamentos imobiliários ativos.")}</span>
+            <span>${renderizarLabelComTooltip("Total essencial", "Soma dos custos marcados como essenciais, incluindo parcelas de financiamentos imobiliários e de bens móveis ativos.")}</span>
             <strong>${formatterMoeda.format(totais.essencial)}</strong>
           </div>
           <div class="metric">
@@ -3692,6 +4141,11 @@
           </div>
         </div>
       `;
+    }
+
+    function renderizarSidebarCustosFixos() {
+      const perfil = obterPerfilAtivo();
+      renderizarRadarCustosSidebar(calcularResumoCustosPorCategoriaPerfil(perfil));
     }
 
     function agruparCustosPorCategoria(custosFixos) {
@@ -3740,7 +4194,7 @@
       renderizarTudo(true);
     }
 
-    function calcularResumoCustosFixos(custosFixos, rendaMensal, imoveis = []) {
+    function calcularResumoCustosFixos(custosFixos, rendaMensal, imoveis = [], bensMoveis = []) {
       const essencial = custosFixos
         .filter((item) => item.tipo === "essencial")
         .reduce((soma, item) => soma + calcularValorMensalEquivalenteCusto(item), 0);
@@ -3748,13 +4202,54 @@
         .filter((item) => item.tipo === "discricionario")
         .reduce((soma, item) => soma + calcularValorMensalEquivalenteCusto(item), 0);
       const parcelasFinanciamentosImoveis = somarParcelasFinanciamentosImoveis(imoveis);
-      const total = essencial + discricionario + parcelasFinanciamentosImoveis;
+      const parcelasFinanciamentosBensMoveis = somarParcelasFinanciamentosBensMoveis(bensMoveis);
+      const total = essencial + discricionario + parcelasFinanciamentosImoveis + parcelasFinanciamentosBensMoveis;
       return {
         total,
-        essencial: essencial + parcelasFinanciamentosImoveis,
+        essencial: essencial + parcelasFinanciamentosImoveis + parcelasFinanciamentosBensMoveis,
         discricionario,
         percentualRenda: rendaMensal > 0 ? (total / rendaMensal) * 100 : null
       };
+    }
+
+    function calcularComposicaoBens(perfil) {
+      const patrimonioImoveis = (perfil?.imoveis || []).reduce((acc, item) => acc + normalizarNumero(item.valorEstimado), 0);
+      const patrimonioBensMoveis = (perfil?.bensMoveis || []).reduce((acc, item) => acc + normalizarNumero(item.valorEstimado), 0);
+      const patrimonioEmpresas = (perfil?.empresas || []).reduce((acc, item) => acc + normalizarNumero(item.valorEstimado), 0);
+      return {
+        labels: ["Imóveis", "Bens Móveis", "Empresas"],
+        valores: [patrimonioImoveis, patrimonioBensMoveis, patrimonioEmpresas],
+        patrimonioImoveis,
+        patrimonioBensMoveis,
+        patrimonioEmpresas
+      };
+    }
+
+    function renderizarSidebarBens() {
+      const perfil = obterPerfilAtivo();
+      const resumo = calcularResumoBens(perfil.imoveis, perfil.bensMoveis, perfil.empresas);
+      const composicao = calcularComposicaoBens(perfil);
+      if (resumoBensSidebarEl) {
+        resumoBensSidebarEl.innerHTML = `
+          <div class="metric destaque">
+            <span>${renderizarLabelComTooltip("Patrimônio em bens", "Soma dos valores estimados de imóveis, bens móveis e empresas do perfil.")}</span>
+            <strong>${formatterMoeda.format(resumo.patrimonioBensAtual)}</strong>
+          </div>
+          <div class="metric">
+            <span>${renderizarLabelComTooltip("Renda passiva de bens", "Soma da receita líquida dos imóveis e bens móveis com geração de receita e do lucro das empresas passivas.")}</span>
+            <strong>${formatterMoeda.format(resumo.rendaPassivaBensAtual)}</strong>
+          </div>
+          <div class="metric">
+            <span>${renderizarLabelComTooltip("Dívida total de bens", "Soma das dívidas de imóveis, bens móveis financiados e empresas cadastradas.")}</span>
+            <strong>${formatterMoeda.format(resumo.dividaTotalBens)}</strong>
+          </div>
+          <div class="metric">
+            <span>${renderizarLabelComTooltip("Quantidade de bens", "Quantidade total de imóveis, bens móveis e empresas cadastrados no perfil.")}</span>
+            <strong>${perfil.imoveis.length + perfil.bensMoveis.length + perfil.empresas.length}</strong>
+          </div>
+        `;
+      }
+      renderizarGraficoBubbleBens(composicao);
     }
 
     function atualizarCampoInvestimento(id, campo, valor) {
@@ -3787,6 +4282,42 @@
         if (!checked && !imovel.status.financiado) imovel.status.financiado = true;
       } else {
         imovel.status.geraReceita = checked;
+      }
+      salvarEstado();
+      renderizarTudo(true);
+    }
+
+    function atualizarCampoBemMovel(id, campo, valor) {
+      const bem = obterPerfilAtivo().bensMoveis.find((item) => item.id === id);
+      if (!bem) return;
+      bem[campo] = [
+        "valorEstimado",
+        "saldoDevedor",
+        "parcelaMensal",
+        "taxaJurosAnual",
+        "mesesRestantes",
+        "aluguelMensalBruto",
+        "taxaVacancia",
+        "iptuAnual",
+        "condominioMensal",
+        "custosManutencaoMensal"
+      ].includes(campo) ? normalizarNumero(valor) : valor;
+      salvarEstado();
+      agendarAtualizacao(false);
+    }
+
+    function atualizarStatusBemMovel(id, statusCampo, checked) {
+      const bem = obterPerfilAtivo().bensMoveis.find((item) => item.id === id);
+      if (!bem) return;
+      if (statusCampo === "financiado") {
+        bem.status.financiado = checked;
+        bem.status.quitado = !checked;
+      } else if (statusCampo === "quitado") {
+        bem.status.quitado = checked;
+        if (checked) bem.status.financiado = false;
+        if (!checked && !bem.status.financiado) bem.status.financiado = true;
+      } else {
+        bem.status.geraReceita = checked;
       }
       salvarEstado();
       renderizarTudo(true);
@@ -3836,7 +4367,7 @@
     function alternarExpandido(lista, id, card) {
       const item = lista.find((registro) => registro.id === id);
       if (!item || !card) return;
-      item.expandido = lista.length === 1 ? true : !item.expandido;
+      item.expandido = !item.expandido;
       salvarEstado();
       const corpo = card.querySelector(".investimento-corpo");
       const botao = card.querySelector(".btn-toggle");
@@ -3846,8 +4377,8 @@
 
     function calcularResumoGeral(perfil) {
       const resumoInvestimentos = calcularResumoInvestimentos(perfil.investimentos, perfil.taxaCdiReferencia, perfil.cotacoes);
-      const resumoBens = calcularResumoBens(perfil.imoveis, perfil.empresas);
-      const resumoCustosFixos = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis);
+      const resumoBens = calcularResumoBens(perfil.imoveis, perfil.bensMoveis, perfil.empresas);
+      const resumoCustosFixos = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis, perfil.bensMoveis);
       const resumoImpostos = calcularResumoImpostos(perfil, resumoInvestimentos);
       const poderAporte = calcularPoderAportePerfil(perfil);
       const projecaoMensal = calcularProjecaoMensalPerfil(perfil);
@@ -3930,22 +4461,22 @@
       };
     }
 
-    function calcularResumoBens(imoveis, empresas) {
+    function calcularResumoBens(imoveis, bensMoveis, empresas) {
       return {
-        patrimonioBensAtual: somarPatrimonioBensAtual(imoveis, empresas),
-        rendaPassivaBensAtual: somarRendaPassivaBensAtual(imoveis, empresas),
-        dividaTotalBens: somarDividaBensAtual(imoveis, empresas)
+        patrimonioBensAtual: somarPatrimonioBensAtual(imoveis, bensMoveis, empresas),
+        rendaPassivaBensAtual: somarRendaPassivaBensAtual(imoveis, bensMoveis, empresas),
+        dividaTotalBens: somarDividaBensAtual(imoveis, bensMoveis, empresas)
       };
     }
 
     function renderizarResumo(resumo) {
       resumoGridEl.innerHTML = `
         <div class="metric">
-          <span>${renderizarLabelComTooltip("Patrimônio total", "Soma do total investido com o valor estimado de imóveis e empresas cadastrados.")}</span>
+          <span>${renderizarLabelComTooltip("Patrimônio total", "Soma do total investido com o valor estimado de imóveis, bens móveis e empresas cadastrados.")}</span>
           <strong>${formatterMoeda.format(resumo.patrimonioTotalAtual)}</strong>
         </div>
         <div class="metric">
-          <span>${renderizarLabelComTooltip("Patrimônio em bens", "Soma dos valores estimados de todos os imóveis e empresas do perfil.")}</span>
+          <span>${renderizarLabelComTooltip("Patrimônio em bens", "Soma dos valores estimados de todos os imóveis, bens móveis e empresas do perfil.")}</span>
           <strong>${formatterMoeda.format(resumo.patrimonioBensAtual)}</strong>
         </div>
         <div class="metric">
@@ -4434,12 +4965,23 @@
     }
 
     function obterInstanciaRadarInvestimentos(canvasId) {
-      return canvasId === "graficoRadarInvestimentosSidebar" ? graficoRadarInvestimentosSidebar : graficoRadarInvestimentos;
+      if (canvasId === "graficoRadarInvestimentosSidebar") return graficoRadarInvestimentosSidebar;
+      if (canvasId === "graficoRadarRendaMensalSidebar") return graficoRadarRendaMensalSidebar;
+      if (canvasId === "graficoRadarCustosSidebar") return graficoRadarCustosSidebar;
+      return graficoRadarInvestimentos;
     }
 
     function definirInstanciaRadarInvestimentos(canvasId, instancia) {
       if (canvasId === "graficoRadarInvestimentosSidebar") {
         graficoRadarInvestimentosSidebar = instancia;
+        return;
+      }
+      if (canvasId === "graficoRadarRendaMensalSidebar") {
+        graficoRadarRendaMensalSidebar = instancia;
+        return;
+      }
+      if (canvasId === "graficoRadarCustosSidebar") {
+        graficoRadarCustosSidebar = instancia;
         return;
       }
       graficoRadarInvestimentos = instancia;
@@ -4476,6 +5018,123 @@
 
     function desenharRadarInvestimentos(resumo) {
       renderizarRadarInvestimentosCanvas("graficoRadarInvestimentos", resumo);
+    }
+
+    function renderizarRadarRendaMensalSidebar(resumo) {
+      if (!graficoRadarRendaMensalSidebarEl) return;
+      renderizarRadarInvestimentosCanvas("graficoRadarRendaMensalSidebar", resumo, {
+        label: "Renda líquida",
+        borderColor: "#0ea5e9",
+        backgroundColor: "rgba(14, 165, 233, 0.16)",
+        pointBorderColor: "#bae6fd"
+      });
+    }
+
+    function renderizarRadarCustosSidebar(resumo) {
+      if (!graficoRadarCustosSidebarEl) return;
+      renderizarRadarInvestimentosCanvas("graficoRadarCustosSidebar", resumo, {
+        label: "Custos",
+        borderColor: "#dc2626",
+        backgroundColor: "rgba(220, 38, 38, 0.16)",
+        pointBorderColor: "#fca5a5"
+      });
+    }
+
+    function renderizarGraficoBubbleBens(resumo) {
+      if (!graficoBubbleBensSidebarEl) return;
+      if (graficoBubbleBensSidebar) {
+        graficoBubbleBensSidebar.destroy();
+        graficoBubbleBensSidebar = null;
+      }
+      const total = resumo.valores.reduce((acc, valor) => acc + valor, 0);
+      const paleta = [
+        { fundo: "rgba(37, 99, 235, 0.52)", borda: "#3b82f6" },
+        { fundo: "rgba(234, 88, 12, 0.52)", borda: "#f97316" },
+        { fundo: "rgba(220, 38, 38, 0.48)", borda: "#ef4444" }
+      ];
+      const datasets = resumo.labels.map((label, indice) => {
+        const valor = resumo.valores[indice] || 0;
+        const proporcao = total > 0 ? valor / total : 0;
+        const raio = valor > 0 ? Math.max(14, Math.min(56, 18 + proporcao * 90)) : 10;
+        const posicoes = [
+          { x: 30, y: 42 },
+          { x: 68, y: 36 },
+          { x: 50, y: 72 }
+        ];
+        const posicao = posicoes[indice] || { x: 50, y: 50 };
+        return {
+          label,
+          data: [{ x: posicao.x, y: posicao.y, r: raio, valorOriginal: valor, percentual: proporcao * 100 }],
+          backgroundColor: paleta[indice]?.fundo || "rgba(148, 163, 184, 0.45)",
+          borderColor: paleta[indice]?.borda || "#94a3b8",
+          borderWidth: 2
+        };
+      });
+      graficoBubbleBensSidebar = new Chart(graficoBubbleBensSidebarEl, {
+        type: "bubble",
+        plugins: [{
+          id: "rotulosPercentuaisBubbleBens",
+          afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            ctx.save();
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+              const meta = chart.getDatasetMeta(datasetIndex);
+              meta.data.forEach((elemento, indice) => {
+                const ponto = dataset.data[indice];
+                const percentual = ponto?.percentual || 0;
+                const raio = ponto?.r || 0;
+                if (percentual <= 0 || raio < 16) return;
+                const posicao = elemento.getProps(["x", "y"], true);
+                ctx.fillStyle = "#f8fafc";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.font = `700 ${raio >= 32 ? 15 : 12}px Inter, system-ui, sans-serif`;
+                ctx.fillText(`${Math.round(percentual)}%`, posicao.x, posicao.y);
+              });
+            });
+            ctx.restore();
+          }
+        }],
+        data: {
+          datasets
+        },
+        options: {
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                color: getComputedStyle(document.body).getPropertyValue("--muted").trim() || "#93a9c5",
+                usePointStyle: true,
+                padding: 16,
+                font: { weight: "700" }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label(contexto) {
+                  const valor = contexto.raw?.valorOriginal ?? 0;
+                  return `${contexto.dataset.label}: ${formatterMoeda.format(valor)}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              min: 0,
+              max: 100,
+              display: false,
+              grid: { display: false }
+            },
+            y: {
+              min: 0,
+              max: 100,
+              display: false,
+              grid: { display: false }
+            }
+          }
+        }
+      });
     }
 
     function desenharRadarCustos(resumo) {
@@ -4695,7 +5354,10 @@
             }
           },
           scales: {
-            x: { grid: { color: "rgba(148, 163, 184, 0.12)" } },
+            x: {
+              grid: { display: false },
+              ticks: { display: false }
+            },
             y: {
               position: "left",
               ticks: {
@@ -4989,6 +5651,7 @@
       }));
       const estadoRendas = investimentoId ? [] : (perfil.rendas || []).map((renda) => criarEstadoRenda(renda));
       const estadoImoveis = investimentoId ? [] : perfil.imoveis.map(criarEstadoImovel);
+      const estadoBensMoveis = investimentoId ? [] : (perfil.bensMoveis || []).map(criarEstadoBemMovel);
       const estadoEmpresas = investimentoId ? [] : perfil.empresas.map(criarEstadoEmpresa);
       const custosFixosBaseMensais = investimentoId ? 0 : normalizarNumero((perfil.custosFixos || []).reduce((soma, custo) => soma + calcularValorMensalEquivalenteCusto(custo), 0));
       const linhas = [];
@@ -5089,6 +5752,19 @@
             aplicarPagamentoDivida(item);
           }
           patrimonioBens += item.valor;
+          rendaPassivaBens += rendaMes;
+        });
+
+        estadoBensMoveis.forEach((bem) => {
+          let rendaMes = 0;
+          if (bem.geraReceita) {
+            rendaMes = bem.aluguel * (1 - bem.vacancia / 100) - (bem.iptuAnual / 12) - bem.condominio - bem.manutencao;
+          }
+          if (bem.financiado && bem.mesesRestantes > 0) {
+            custosFixosMensais += bem.parcela;
+            aplicarPagamentoDivida(bem);
+          }
+          patrimonioBens += bem.valor;
           rendaPassivaBens += rendaMes;
         });
 
@@ -5215,6 +5891,23 @@
       };
     }
 
+    function criarEstadoBemMovel(bem) {
+      return {
+        valor: normalizarNumero(bem.valorEstimado),
+        financiado: bem.status.financiado,
+        geraReceita: bem.status.geraReceita,
+        saldo: normalizarNumero(bem.saldoDevedor),
+        parcela: normalizarNumero(bem.parcelaMensal),
+        taxaMensal: calcularTaxaMensal(normalizarNumero(bem.taxaJurosAnual)),
+        mesesRestantes: normalizarNumero(bem.mesesRestantes),
+        aluguel: normalizarNumero(bem.aluguelMensalBruto),
+        vacancia: normalizarNumero(bem.taxaVacancia),
+        iptuAnual: normalizarNumero(bem.iptuAnual),
+        condominio: normalizarNumero(bem.condominioMensal),
+        manutencao: normalizarNumero(bem.custosManutencaoMensal)
+      };
+    }
+
     function criarEstadoRenda(renda) {
       return {
         ativo: renda.ativo !== false,
@@ -5306,6 +5999,21 @@
       return imovel.status.financiado ? normalizarNumero(imovel.saldoDevedor) : 0;
     }
 
+    function calcularRendaPassivaBemMovelAtual(bem) {
+      let renda = 0;
+      if (bem.status.geraReceita) {
+        renda += normalizarNumero(bem.aluguelMensalBruto) * (1 - normalizarNumero(bem.taxaVacancia) / 100);
+        renda -= normalizarNumero(bem.iptuAnual) / 12;
+        renda -= normalizarNumero(bem.condominioMensal);
+        renda -= normalizarNumero(bem.custosManutencaoMensal);
+      }
+      return renda;
+    }
+
+    function obterDividaBemMovel(bem) {
+      return bem.status.financiado ? normalizarNumero(bem.saldoDevedor) : 0;
+    }
+
     function obterDividaEmpresa(empresa) {
       return [...empresa.emprestimos, ...empresa.financiamentos].reduce((acc, item) => acc + normalizarNumero(item.saldoDevedor), 0);
     }
@@ -5322,18 +6030,27 @@
       }, 0);
     }
 
-    function somarPatrimonioBensAtual(imoveis, empresas) {
+    function somarParcelasFinanciamentosBensMoveis(bensMoveis) {
+      return bensMoveis.reduce((acc, item) => {
+        return acc + (item.status?.financiado && normalizarNumero(item.mesesRestantes) > 0 ? normalizarNumero(item.parcelaMensal) : 0);
+      }, 0);
+    }
+
+    function somarPatrimonioBensAtual(imoveis, bensMoveis, empresas) {
       return imoveis.reduce((acc, item) => acc + normalizarNumero(item.valorEstimado), 0) +
+        bensMoveis.reduce((acc, item) => acc + normalizarNumero(item.valorEstimado), 0) +
         empresas.reduce((acc, item) => acc + normalizarNumero(item.valorEstimado), 0);
     }
 
-    function somarRendaPassivaBensAtual(imoveis, empresas) {
+    function somarRendaPassivaBensAtual(imoveis, bensMoveis, empresas) {
       return imoveis.reduce((acc, item) => acc + calcularRendaPassivaImovelAtual(item), 0) +
+        bensMoveis.reduce((acc, item) => acc + calcularRendaPassivaBemMovelAtual(item), 0) +
         empresas.reduce((acc, item) => acc + calcularRendaPassivaEmpresaAtual(item), 0);
     }
 
-    function somarDividaBensAtual(imoveis, empresas) {
+    function somarDividaBensAtual(imoveis, bensMoveis, empresas) {
       return imoveis.reduce((acc, item) => acc + obterDividaImovel(item), 0) +
+        bensMoveis.reduce((acc, item) => acc + obterDividaBemMovel(item), 0) +
         empresas.reduce((acc, item) => acc + obterDividaEmpresa(item), 0);
     }
 
@@ -5352,6 +6069,22 @@
 
     function obterResumoEmpresa(empresa) {
       return `${empresa.receitaPassiva ? "Lucro passivo" : "Lucro operacional"}: ${formatterMoeda.format(calcularLucroLiquidoEmpresaAtual(empresa))}/mês`;
+    }
+
+    function obterResumoBemMovel(bem) {
+      if (bem.status.financiado && bem.status.geraReceita) {
+        return `${bem.categoria || "Bem móvel"} financiado e com receita • ${formatterMoeda.format(obterDividaBemMovel(bem))} restantes`;
+      }
+      if (bem.status.financiado) {
+        return `${bem.categoria || "Bem móvel"} financiado • ${formatterMoeda.format(obterDividaBemMovel(bem))} restantes`;
+      }
+      if (bem.status.geraReceita) {
+        return `${bem.categoria || "Bem móvel"} com receita líquida: ${formatterMoeda.format(calcularRendaPassivaBemMovelAtual(bem))}/mês`;
+      }
+      if (bem.status.quitado) {
+        return bem.categoria ? `${bem.categoria} quitado` : "Quitado";
+      }
+      return bem.categoria ? `${bem.categoria} • ${formatterMoeda.format(bem.valorEstimado)}` : `Valor estimado: ${formatterMoeda.format(bem.valorEstimado)}`;
     }
 
     function renderizarFlagCheckbox(chave, label, checked) {
@@ -5476,6 +6209,9 @@
       }
       if (perfil.empresas.some((item) => !item.receitaPassiva)) {
         notas.push("Empresas com receita ativa não entram na renda passiva; apenas o valor estimado do negócio compõe o patrimônio.");
+      }
+      if ((perfil.bensMoveis || []).some((item) => normalizarNumero(item.valorEstimado) > 0)) {
+        notas.push("Bens móveis entram no patrimônio em bens pelo valor estimado informado e podem ser modelados como quitados, financiados e com geração de receita.");
       }
       if (perfil.investimentos.some((item) => item.tipo === "Fundo de Investimento")) {
         notas.push("Fundos: come-cotas de 15% em maio e novembro reduz o patrimônio projetado semestralmente.");
