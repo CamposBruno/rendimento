@@ -187,7 +187,7 @@
 
     .menu-config-corpo {
       display: grid;
-      grid-template-columns: 1.45fr 1fr 1fr 1fr auto;
+      grid-template-columns: 1.45fr 1fr 1fr 1fr 1fr 1fr auto;
       gap: 14px;
       align-items: end;
     }
@@ -1585,6 +1585,14 @@
             <label for="inflacaoIpca">Inflação (IPCA) % a.a.</label>
             <input id="inflacaoIpca" type="number" step="0.01" min="0" />
           </div>
+          <div class="campo-topo">
+            <label for="cotacaoUsdBrl">USD/BRL</label>
+            <input id="cotacaoUsdBrl" type="number" step="0.0001" min="0" />
+          </div>
+          <div class="campo-topo">
+            <label for="cotacaoEurBrl">EUR/BRL</label>
+            <input id="cotacaoEurBrl" type="number" step="0.0001" min="0" />
+          </div>
         </div>
       </div>
     </section>
@@ -1852,7 +1860,9 @@
     const CHAVE_STORAGE = "calculadora-renda-passiva";
     const formatterMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
     const formatterPercentual = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formatterQuatroCasas = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
     const TIPOS = ["Renda Fixa", "Fundo de Investimento", "Ações", "Crypto", "CDB", "CDI (%)"];
+    const MOEDAS = ["BRL", "USD", "EUR"];
     const PERIODOS_PROJECAO = [5, 10, 20, 30, 50];
     const PERIODO_MAXIMO_PROJECAO_ANOS = 50;
     const MODOS_VALOR_PROJECAO = {
@@ -1925,6 +1935,8 @@
     const corpoTabelaEl = document.getElementById("corpoTabela");
     const taxaCdiReferenciaEl = document.getElementById("taxaCdiReferencia");
     const inflacaoIpcaEl = document.getElementById("inflacaoIpca");
+    const cotacaoUsdBrlEl = document.getElementById("cotacaoUsdBrl");
+    const cotacaoEurBrlEl = document.getElementById("cotacaoEurBrl");
     const btnAdicionarEl = document.getElementById("btnAdicionar");
     const btnAdicionarImovelEl = document.getElementById("btnAdicionarImovel");
     const btnAdicionarEmpresaEl = document.getElementById("btnAdicionarEmpresa");
@@ -2010,6 +2022,18 @@
 
     inflacaoIpcaEl.addEventListener("input", () => {
       obterPerfilAtivo().inflacaoIpca = normalizarNumero(inflacaoIpcaEl.value, 4.5);
+      salvarEstado();
+      agendarAtualizacao(true);
+    });
+
+    cotacaoUsdBrlEl.addEventListener("input", () => {
+      obterPerfilAtivo().cotacoes.usdBrl = normalizarNumero(cotacaoUsdBrlEl.value, 5);
+      salvarEstado();
+      agendarAtualizacao(true);
+    });
+
+    cotacaoEurBrlEl.addEventListener("input", () => {
+      obterPerfilAtivo().cotacoes.eurBrl = normalizarNumero(cotacaoEurBrlEl.value, 5.5);
       salvarEstado();
       agendarAtualizacao(true);
     });
@@ -2153,6 +2177,7 @@
       perfilMigrado.dataNascimento = "";
       perfilMigrado.taxaCdiReferencia = normalizarNumero(estadoAntigo.taxaCdiReferencia, 13.25);
       perfilMigrado.inflacaoIpca = 4.5;
+      perfilMigrado.cotacoes = normalizarCotacoes(estadoAntigo.cotacoes);
       perfilMigrado.rendas = normalizarRendas(undefined, normalizarNumero(estadoAntigo.rendaMensal, 0));
       perfilMigrado.investimentos = Array.isArray(estadoAntigo.investimentos) && estadoAntigo.investimentos.length
         ? estadoAntigo.investimentos.map(normalizarInvestimento)
@@ -2175,6 +2200,7 @@
         dataNascimento: "",
         taxaCdiReferencia: 13.25,
         inflacaoIpca: 4.5,
+        cotacoes: normalizarCotacoes(),
         rendaMensal: 0,
         rendas: [],
         investimentos: [criarInvestimentoPadrao()],
@@ -2199,6 +2225,7 @@
         dataNascimento: perfil.dataNascimento || "",
         taxaCdiReferencia: normalizarNumero(perfil.taxaCdiReferencia, 13.25),
         inflacaoIpca: normalizarNumero(perfil.inflacaoIpca, 4.5),
+        cotacoes: normalizarCotacoes(perfil.cotacoes),
         rendaMensal: normalizarNumero(perfil.rendaMensal, 0),
         rendas: normalizarRendas(perfil.rendas, normalizarNumero(perfil.rendaMensal, 0)),
         investimentos: Array.isArray(perfil.investimentos) && perfil.investimentos.length
@@ -2255,6 +2282,7 @@
         id: crypto.randomUUID(),
         descricao: "",
         tipo: "Renda Fixa",
+        moeda: "BRL",
         taxaAnual: 12,
         valorInvestido: 10000,
         aporteMensal: 500,
@@ -2312,6 +2340,7 @@
         id: investimento.id || crypto.randomUUID(),
         descricao: investimento.descricao || "",
         tipo: TIPOS.includes(investimento.tipo) ? investimento.tipo : "Renda Fixa",
+        moeda: normalizarMoeda(investimento.moeda),
         taxaAnual: normalizarNumero(investimento.taxaAnual, 0),
         valorInvestido: normalizarNumero(investimento.valorInvestido, 0),
         aporteMensal: normalizarNumero(investimento.aporteMensal, 0),
@@ -2537,6 +2566,8 @@
       const perfil = obterPerfilAtivo();
       taxaCdiReferenciaEl.value = perfil.taxaCdiReferencia;
       inflacaoIpcaEl.value = perfil.inflacaoIpca;
+      cotacaoUsdBrlEl.value = normalizarNumero(perfil.cotacoes.usdBrl, 5).toFixed(4);
+      cotacaoEurBrlEl.value = normalizarNumero(perfil.cotacoes.eurBrl, 5.5).toFixed(4);
       rendaMensalInfoEl.innerHTML = `
         <span>${renderizarLabelComTooltip("Renda mensal", "Soma líquida das fontes de renda ativas cadastradas no perfil.")}</span>
         <strong>${formatterMoeda.format(perfil.rendaMensal)}</strong>
@@ -3020,7 +3051,9 @@
 
       listaInvestimentosEl.innerHTML = "";
       perfil.investimentos.forEach((investimento) => {
-        const calculoAtual = calcularRendimentoMensalInvestimento(investimento, perfil.taxaCdiReferencia);
+        const calculoAtual = calcularRendimentoMensalInvestimento(investimento, perfil.taxaCdiReferencia, perfil.cotacoes);
+        const valorInvestidoBrl = converterParaBrl(investimento.valorInvestido, investimento.moeda, perfil.cotacoes);
+        const aporteMensalBrl = converterParaBrl(investimento.aporteMensal, investimento.moeda, perfil.cotacoes);
         const card = document.createElement("article");
         card.className = "investimento-card";
         card.innerHTML = `
@@ -3038,15 +3071,18 @@
             <div class="grid-campos">
               <div class="campo-completo"><label>Descrição</label><input data-campo="descricao" type="text" value="${escapeHtml(investimento.descricao)}" placeholder="Ex: Tesouro Selic" /></div>
               <div><label>Tipo</label><select data-campo="tipo">${TIPOS.map((tipo) => `<option value="${tipo}" ${investimento.tipo === tipo ? "selected" : ""}>${tipo}</option>`).join("")}</select></div>
+              <div><label>Moeda</label><select data-campo="moeda">${MOEDAS.map((moeda) => `<option value="${moeda}" ${investimento.moeda === moeda ? "selected" : ""}>${moeda}</option>`).join("")}</select></div>
               <div><label>${investimento.tipo === "CDI (%)" ? "Percentual do CDI (%)" : "Rentabilidade anual (% a.a.)"}</label><input data-campo="taxaAnual" type="number" min="0" step="0.01" value="${investimento.taxaAnual}" /></div>
-              <div><label>Valor já investido (R$)</label><input data-campo="valorInvestido" type="number" min="0" step="0.01" value="${investimento.valorInvestido}" /></div>
-              <div><label>Aporte mensal (R$)</label><input data-campo="aporteMensal" type="number" min="0" step="0.01" value="${investimento.aporteMensal}" /></div>
+              <div><label>Valor já investido (${investimento.moeda})</label><input data-campo="valorInvestido" type="number" min="0" step="0.01" value="${investimento.valorInvestido}" /></div>
+              <div><label>Aporte mensal (${investimento.moeda})</label><input data-campo="aporteMensal" type="number" min="0" step="0.01" value="${investimento.aporteMensal}" /></div>
               <div><label>Data de início</label><input data-campo="dataInicio" type="date" value="${investimento.dataInicio}" /></div>
             </div>
             <div class="resultado-inline">
-              <div class="resultado-box"><span>${renderizarLabelComTooltip("Rendimento bruto / mês", "Rentabilidade mensal estimada antes de impostos, calculada sobre o valor investido e a taxa do investimento.")}</span><strong>${formatterMoeda.format(calculoAtual.rendimentoBruto)}</strong></div>
-              <div class="resultado-box"><span>${renderizarLabelComTooltip("IR estimado / mês", "Estimativa de imposto incidente sobre o rendimento mensal, conforme o tipo de investimento.")}</span><strong>${formatterMoeda.format(calculoAtual.imposto)}</strong></div>
-              <div class="resultado-box"><span>${renderizarLabelComTooltip("Rendimento líquido / mês", "Rendimento bruto menos o imposto estimado do período.")}</span><strong>${formatterMoeda.format(calculoAtual.rendimentoLiquido)}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Valor investido", "Valor principal do investimento na moeda nativa, com consolidado em BRL logo abaixo.")}</span><strong>${formatarValorMoeda(investimento.valorInvestido, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(valorInvestidoBrl)})</small>` : ""}</div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Aporte mensal", "Aporte configurado na moeda nativa do investimento, convertido para BRL na consolidação.")}</span><strong>${formatarValorMoeda(investimento.aporteMensal, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(aporteMensalBrl)})</small>` : ""}</div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Rendimento bruto / mês", "Rentabilidade mensal estimada antes de impostos, calculada sobre o valor investido e a taxa do investimento.")}</span><strong>${formatarValorMoeda(calculoAtual.rendimentoBruto, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.rendimentoBrutoBrl)})</small>` : ""}</div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("IR estimado / mês", "Estimativa de imposto incidente sobre o rendimento mensal. Em USD/EUR, a projeção não aplica tributação brasileira por simplificação.")}</span><strong>${formatarValorMoeda(calculoAtual.imposto, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.impostoBrl)})</small>` : ""}</div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Rendimento líquido / mês", "Rendimento bruto menos o imposto estimado do período.")}</span><strong>${formatarValorMoeda(calculoAtual.rendimentoLiquido, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.rendimentoLiquidoBrl)})</small>` : ""}</div>
             </div>
             ${calculoAtual.nota ? `<div class="nota-card">${escapeHtml(calculoAtual.nota)}</div>` : ""}
           </div>
@@ -3066,6 +3102,9 @@
         card.querySelectorAll("[data-campo]").forEach((campo) => {
           campo.addEventListener("input", (evento) => {
             atualizarCampoInvestimento(investimento.id, evento.target.dataset.campo, evento.target.value);
+          });
+          campo.addEventListener("blur", () => {
+            renderizarTudo(true);
           });
         });
 
@@ -3653,7 +3692,7 @@
       if (!investimento) return;
       investimento[campo] = ["taxaAnual", "valorInvestido", "aporteMensal"].includes(campo) ? normalizarNumero(valor) : valor;
       salvarEstado();
-      if (campo === "tipo") return renderizarTudo(true);
+      if (["tipo", "moeda"].includes(campo)) return renderizarTudo(true);
       if (campo === "descricao") renderizarAbas();
       agendarAtualizacao(false);
     }
@@ -3736,7 +3775,7 @@
     }
 
     function calcularResumoGeral(perfil) {
-      const resumoInvestimentos = calcularResumoInvestimentos(perfil.investimentos, perfil.taxaCdiReferencia);
+      const resumoInvestimentos = calcularResumoInvestimentos(perfil.investimentos, perfil.taxaCdiReferencia, perfil.cotacoes);
       const resumoBens = calcularResumoBens(perfil.imoveis, perfil.empresas);
       const resumoCustosFixos = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis);
       const resumoImpostos = calcularResumoImpostos(perfil, resumoInvestimentos);
@@ -3761,7 +3800,7 @@
     function calcularPoderAportePerfil(perfil) {
       const rendaLiquidaMensal = normalizarNumero(perfil.rendaMensal);
       const custosFixosTotais = normalizarNumero(perfil.custosMensais);
-      const aportesConfigurados = (perfil.investimentos || []).reduce((soma, investimento) => soma + normalizarNumero(investimento.aporteMensal), 0);
+      const aportesConfigurados = (perfil.investimentos || []).reduce((soma, investimento) => soma + converterParaBrl(investimento.aporteMensal, investimento.moeda, perfil.cotacoes), 0);
       const poderAporte = rendaLiquidaMensal - custosFixosTotais - aportesConfigurados;
       const percentualSobreRenda = rendaLiquidaMensal > 0 ? poderAporte / rendaLiquidaMensal : 0;
       let status = "positivo";
@@ -3779,13 +3818,13 @@
       };
     }
 
-    function calcularResumoInvestimentos(investimentos, taxaCdiReferencia) {
-      const resumoAtual = investimentos.map((investimento) => calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia));
+    function calcularResumoInvestimentos(investimentos, taxaCdiReferencia, cotacoes) {
+      const resumoAtual = investimentos.map((investimento) => calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia, cotacoes));
       return {
-        totalInvestido: investimentos.reduce((acc, item) => acc + normalizarNumero(item.valorInvestido), 0),
-        rendimentoBrutoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoBruto, 0),
-        impostoAtual: resumoAtual.reduce((acc, item) => acc + item.imposto, 0),
-        rendimentoLiquidoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoLiquido, 0)
+        totalInvestido: investimentos.reduce((acc, item) => acc + converterParaBrl(item.valorInvestido, item.moeda, cotacoes), 0),
+        rendimentoBrutoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoBrutoBrl, 0),
+        impostoAtual: resumoAtual.reduce((acc, item) => acc + item.impostoBrl, 0),
+        rendimentoLiquidoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoLiquidoBrl, 0)
       };
     }
 
@@ -4176,11 +4215,12 @@
     function renderizarProjecaoAtiva() {
       const perfil = obterPerfilAtivo();
       const filtroInvestimentoId = abaAtiva === "visao-geral" ? null : abaAtiva;
+      const investimentoSelecionado = filtroInvestimentoId ? perfil.investimentos.find((investimento) => investimento.id === filtroInvestimentoId) || null : null;
       const projecaoMensal = calcularProjecaoMensalPerfil(perfil, filtroInvestimentoId);
       const projecaoAnual = agruparProjecaoAnualPerfil(projecaoMensal, perfil.dataNascimento);
       renderizarGrafico(projecaoMensal, perfil.dataNascimento);
       renderizarRadarsProjecao(perfil, false);
-      renderizarTabela(projecaoAnual, perfil.dataNascimento);
+      renderizarTabela(projecaoAnual, perfil.dataNascimento, investimentoSelecionado);
       atualizarRodapeProjecaoPerfil(perfil, projecaoMensal);
     }
 
@@ -4261,7 +4301,7 @@
         return acc;
       }, {});
       (perfil?.investimentos || []).forEach((investimento) => {
-        totais[investimento.tipo] += normalizarNumero(investimento.valorInvestido);
+        totais[investimento.tipo] += converterParaBrl(investimento.valorInvestido, investimento.moeda, perfil?.cotacoes);
       });
       return {
         labels: TIPOS,
@@ -4277,7 +4317,7 @@
       }, {});
       ESTADO.perfis.forEach((perfil) => {
         (perfil.investimentos || []).forEach((investimento) => {
-          totais[investimento.tipo] += normalizarNumero(investimento.valorInvestido);
+          totais[investimento.tipo] += converterParaBrl(investimento.valorInvestido, investimento.moeda, perfil.cotacoes);
         });
       });
       return {
@@ -4293,7 +4333,7 @@
         return acc;
       }, {});
       (perfil?.investimentos || []).forEach((investimento) => {
-        totais[investimento.tipo] += normalizarNumero(investimento.aporteMensal);
+        totais[investimento.tipo] += converterParaBrl(investimento.aporteMensal, investimento.moeda, perfil?.cotacoes);
       });
       return {
         labels: TIPOS,
@@ -4581,9 +4621,44 @@
       });
     }
 
-    function renderizarTabela(projecaoAnual, dataNascimento = "") {
+    function renderizarTabela(projecaoAnual, dataNascimento = "", investimentoContexto = null) {
       const mostrarIdade = Boolean(dataNascimento);
       const thead = document.querySelector("thead tr");
+      if (investimentoContexto) {
+        if (thead) {
+          thead.innerHTML = `
+            <th>Ano</th>
+            ${mostrarIdade ? "<th>Idade</th>" : ""}
+            <th>Patrimônio (${investimentoContexto.moeda})</th>
+            <th>Equiv. BRL</th>
+            <th>Aportes (${investimentoContexto.moeda})</th>
+            <th>Equiv. BRL</th>
+            <th>Rendimento Bruto (${investimentoContexto.moeda})</th>
+            <th>Equiv. BRL</th>
+            <th>IR / Come-Cotas (${investimentoContexto.moeda})</th>
+            <th>Equiv. BRL</th>
+            <th>Rendimento Líquido (${investimentoContexto.moeda})</th>
+            <th>Equiv. BRL</th>
+          `;
+        }
+        corpoTabelaEl.innerHTML = projecaoAnual.slice(0, periodoProjecaoAnos).map((linha) => `
+          <tr>
+            <td>${linha.ano}</td>
+            ${mostrarIdade ? `<td>${linha.idade ?? "-"}</td>` : ""}
+            <td>${formatarValorMoeda(linha.patrimonioInvestimentosNativo, investimentoContexto.moeda)}</td>
+            <td class="coluna-real">${formatterMoeda.format(linha.patrimonioFinal)}</td>
+            <td>${formatarValorMoeda(linha.aportesNativo, investimentoContexto.moeda)}</td>
+            <td class="coluna-real">${formatterMoeda.format(linha.aportes)}</td>
+            <td>${formatarValorMoeda(linha.rendimentoBrutoNativo, investimentoContexto.moeda)}</td>
+            <td class="coluna-real">${formatterMoeda.format(linha.rendimentoBruto)}</td>
+            <td>${formatarValorMoeda(linha.impostoInvestimentosNativo, investimentoContexto.moeda)}</td>
+            <td class="coluna-real">${formatterMoeda.format(linha.impostoInvestimentos)}</td>
+            <td>${formatarValorMoeda(linha.rendimentoLiquidoNativo, investimentoContexto.moeda)}</td>
+            <td class="coluna-real">${formatterMoeda.format(linha.rendimentoLiquido)}</td>
+          </tr>
+        `).join("");
+        return;
+      }
       if (thead) {
         thead.innerHTML = `
           <th>Ano</th>
@@ -4686,25 +4761,33 @@
       return idade !== null ? `Hoje (${idade} anos)` : "Hoje";
     }
 
-    function calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia) {
+    function calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia, cotacoes) {
       const taxaAnualEfetiva = obterTaxaAnualEfetiva(investimento, taxaCdiReferencia);
       const taxaMensal = calcularTaxaMensal(taxaAnualEfetiva);
       const rendimentoBruto = investimento.valorInvestido * taxaMensal;
-      const dadosImposto = aplicarImpostoRenda({
-        tipo: investimento.tipo,
-        rendimentoBruto,
-        valorBase: investimento.valorInvestido,
-        dataInicio: investimento.dataInicio,
-        dataReferencia: new Date(),
-        rendimentoSemestreAcumulado: rendimentoBruto,
-        considerarComeCotas: false
-      });
+      // Simplificação intencional: investimentos em USD/EUR não aplicam tributação brasileira na projeção.
+      const dadosImposto = investimento.moeda === "BRL"
+        ? aplicarImpostoRenda({
+            tipo: investimento.tipo,
+            rendimentoBruto,
+            valorBase: investimento.valorInvestido,
+            dataInicio: investimento.dataInicio,
+            dataReferencia: new Date(),
+            rendimentoSemestreAcumulado: rendimentoBruto,
+            considerarComeCotas: false
+          })
+        : { imposto: 0, nota: "Investimento em moeda estrangeira: tributação brasileira não aplicada nesta versão." };
+      const rendimentoBrutoBrl = converterParaBrl(rendimentoBruto, investimento.moeda, cotacoes);
+      const impostoBrl = converterParaBrl(dadosImposto.imposto, investimento.moeda, cotacoes);
       return {
         taxaAnualEfetiva,
         taxaMensal,
         rendimentoBruto,
+        rendimentoBrutoBrl,
         imposto: dadosImposto.imposto,
+        impostoBrl,
         rendimentoLiquido: rendimentoBruto - dadosImposto.imposto,
+        rendimentoLiquidoBrl: rendimentoBrutoBrl - impostoBrl,
         nota: dadosImposto.nota
       };
     }
@@ -4792,15 +4875,20 @@
         const dataMes = new Date(hoje.getFullYear(), hoje.getMonth() + mes, 1);
         const fatorInflacaoAcumulado = Math.pow(1 + taxaInflacaoMensal, mes);
         let patrimonioInvestimentos = 0;
+        let patrimonioInvestimentosNativo = 0;
         let patrimonioBens = 0;
         let rendimentoBrutoTotal = 0;
+        let rendimentoBrutoInvestimentosNativo = 0;
         let impostoInvestimentosTotal = 0;
+        let impostoInvestimentosTotalNativo = 0;
         let inssMensal = 0;
         let irrfMensal = 0;
         let rendimentoLiquidoInvestimentos = 0;
+        let rendimentoLiquidoInvestimentosNativo = 0;
         let rendaPassivaBens = 0;
         let rendaMensal = 0;
         let aportesTotal = 0;
+        let aportesTotalNativo = 0;
         let custosFixosMensais = custosFixosBaseMensais * fatorInflacaoAcumulado;
 
         estadoRendas.forEach((renda) => {
@@ -4823,9 +4911,12 @@
           const taxaMensal = calcularTaxaMensal(obterTaxaAnualEfetiva(item, perfil.taxaCdiReferencia));
           const patrimonioBase = item.patrimonio + normalizarNumero(item.aporteMensal);
           const rendimentoBruto = patrimonioBase * taxaMensal;
-          aportesTotal += normalizarNumero(item.aporteMensal);
+          aportesTotal += converterParaBrl(item.aporteMensal, item.moeda, perfil.cotacoes);
+          aportesTotalNativo += normalizarNumero(item.aporteMensal);
           let impostoMes = 0;
-          if (item.tipo === "Fundo de Investimento") {
+          if (item.moeda !== "BRL") {
+            impostoMes = 0;
+          } else if (item.tipo === "Fundo de Investimento") {
             item.rendimentoSemestreAcumulado += rendimentoBruto;
             const mesCalendario = dataMes.getMonth();
             if (mesCalendario === 4 || mesCalendario === 10) {
@@ -4843,10 +4934,14 @@
           }
           const rendimentoLiquido = rendimentoBruto - impostoMes;
           item.patrimonio = patrimonioBase + rendimentoLiquido;
-          patrimonioInvestimentos += item.patrimonio;
-          rendimentoBrutoTotal += rendimentoBruto;
-          impostoInvestimentosTotal += impostoMes;
-          rendimentoLiquidoInvestimentos += rendimentoLiquido;
+          patrimonioInvestimentos += converterParaBrl(item.patrimonio, item.moeda, perfil.cotacoes);
+          patrimonioInvestimentosNativo += item.patrimonio;
+          rendimentoBrutoTotal += converterParaBrl(rendimentoBruto, item.moeda, perfil.cotacoes);
+          rendimentoBrutoInvestimentosNativo += rendimentoBruto;
+          impostoInvestimentosTotal += converterParaBrl(impostoMes, item.moeda, perfil.cotacoes);
+          impostoInvestimentosTotalNativo += impostoMes;
+          rendimentoLiquidoInvestimentos += converterParaBrl(rendimentoLiquido, item.moeda, perfil.cotacoes);
+          rendimentoLiquidoInvestimentosNativo += rendimentoLiquido;
         });
 
         estadoImoveis.forEach((item) => {
@@ -4888,16 +4983,20 @@
           mes,
           fatorInflacaoAcumulado,
           patrimonioInvestimentos,
+          patrimonioInvestimentosNativo,
           patrimonioBens,
           patrimonioTotal: patrimonioInvestimentos + patrimonioBens,
           patrimonioInvestimentosReal: ajustarValorReal(patrimonioInvestimentos, fatorInflacaoAcumulado),
           patrimonioBensReal: ajustarValorReal(patrimonioBens, fatorInflacaoAcumulado),
           patrimonioTotalReal: ajustarValorReal(patrimonioInvestimentos + patrimonioBens, fatorInflacaoAcumulado),
           aportesTotal,
+          aportesTotalNativo,
           aportesTotalReal: ajustarValorReal(aportesTotal, fatorInflacaoAcumulado),
           rendimentoBrutoTotal: rendimentoBrutoTotal + rendaPassivaBens,
+          rendimentoBrutoInvestimentosNativo,
           rendimentoBrutoTotalReal: ajustarValorReal(rendimentoBrutoTotal + rendaPassivaBens, fatorInflacaoAcumulado),
           impostoTotal: impostoInvestimentosTotal,
+          impostoInvestimentosTotalNativo,
           impostoTotalReal: ajustarValorReal(impostoInvestimentosTotal, fatorInflacaoAcumulado),
           impostoInvestimentosMensal: impostoInvestimentosTotal,
           impostoInvestimentosMensalReal: ajustarValorReal(impostoInvestimentosTotal, fatorInflacaoAcumulado),
@@ -4908,6 +5007,7 @@
           impostosTotaisMensais: impostoInvestimentosTotal + inssMensal + irrfMensal,
           impostosTotaisMensaisReal: ajustarValorReal(impostoInvestimentosTotal + inssMensal + irrfMensal, fatorInflacaoAcumulado),
           rendimentoLiquidoInvestimentosMensal: rendimentoLiquidoInvestimentos,
+          rendimentoLiquidoInvestimentosMensalNativo: rendimentoLiquidoInvestimentosNativo,
           rendimentoLiquidoInvestimentosMensalReal: ajustarValorReal(rendimentoLiquidoInvestimentos, fatorInflacaoAcumulado),
           rendimentoLiquidoTotal: rendimentoLiquidoInvestimentos + rendaPassivaBens,
           rendimentoLiquidoTotalReal: ajustarValorReal(rendimentoLiquidoInvestimentos + rendaPassivaBens, fatorInflacaoAcumulado),
@@ -4931,12 +5031,14 @@
           idade: obterIdadeNaProjecao(dataNascimento, ano),
           patrimonioFinal: fatia[fatia.length - 1]?.patrimonioTotal || 0,
           patrimonioFinalReal: fatia[fatia.length - 1]?.patrimonioTotalReal || 0,
+          patrimonioInvestimentosNativo: fatia[fatia.length - 1]?.patrimonioInvestimentosNativo || 0,
           patrimonioBens: fatia[fatia.length - 1]?.patrimonioBens || 0,
           patrimonioBensReal: fatia[fatia.length - 1]?.patrimonioBensReal || 0,
           rendaMensal: fatia.reduce((acc, item) => acc + item.rendaMensal, 0),
           rendaMensalReal: fatia.reduce((acc, item) => acc + item.rendaMensalReal, 0),
           impostoInvestimentos: fatia.reduce((acc, item) => acc + item.impostoInvestimentosMensal, 0),
           impostoInvestimentosReal: fatia.reduce((acc, item) => acc + item.impostoInvestimentosMensalReal, 0),
+          impostoInvestimentosNativo: fatia.reduce((acc, item) => acc + item.impostoInvestimentosTotalNativo, 0),
           inss: fatia.reduce((acc, item) => acc + item.inssMensal, 0),
           inssReal: fatia.reduce((acc, item) => acc + item.inssMensalReal, 0),
           irrf: fatia.reduce((acc, item) => acc + item.irrfMensal, 0),
@@ -4948,12 +5050,15 @@
           rendaPassivaBens: fatia.reduce((acc, item) => acc + item.rendaPassivaBens, 0),
           rendaPassivaBensReal: fatia.reduce((acc, item) => acc + item.rendaPassivaBensReal, 0),
           aportes: fatia.reduce((acc, item) => acc + item.aportesTotal, 0),
+          aportesNativo: fatia.reduce((acc, item) => acc + item.aportesTotalNativo, 0),
           aportesReal: fatia.reduce((acc, item) => acc + item.aportesTotalReal, 0),
           rendimentoBruto: fatia.reduce((acc, item) => acc + item.rendimentoBrutoTotal, 0),
+          rendimentoBrutoNativo: fatia.reduce((acc, item) => acc + item.rendimentoBrutoInvestimentosNativo, 0),
           rendimentoBrutoReal: fatia.reduce((acc, item) => acc + item.rendimentoBrutoTotalReal, 0),
           imposto: fatia.reduce((acc, item) => acc + item.impostoTotal, 0),
           impostoReal: fatia.reduce((acc, item) => acc + item.impostoTotalReal, 0),
           rendimentoLiquido: fatia.reduce((acc, item) => acc + item.rendimentoLiquidoTotal, 0),
+          rendimentoLiquidoNativo: fatia.reduce((acc, item) => acc + item.rendimentoLiquidoInvestimentosMensalNativo, 0),
           rendimentoLiquidoReal: fatia.reduce((acc, item) => acc + item.rendimentoLiquidoTotalReal, 0)
         });
       }
@@ -5218,6 +5323,7 @@
     function gerarNotasResumo(perfil, resumoBens) {
       const notas = [
         `CDI de referência atual: ${formatterPercentual.format(perfil.taxaCdiReferencia)}% a.a.`,
+        `Câmbio manual atual: USD/BRL ${formatterQuatroCasas.format(perfil.cotacoes.usdBrl)} e EUR/BRL ${formatterQuatroCasas.format(perfil.cotacoes.eurBrl)}.`,
         `Renda mensal líquida atual: ${formatterMoeda.format(perfil.rendaMensal)}.`,
         `Patrimônio em bens atual: ${formatterMoeda.format(resumoBens.patrimonioBensAtual)}.`,
         `Renda passiva de bens atual: ${formatterMoeda.format(resumoBens.rendaPassivaBensAtual)} por mês.`,
@@ -5240,6 +5346,9 @@
       }
       if (perfil.investimentos.some((item) => item.tipo === "Fundo de Investimento")) {
         notas.push("Fundos: come-cotas de 15% em maio e novembro reduz o patrimônio projetado semestralmente.");
+      }
+      if (perfil.investimentos.some((item) => item.moeda !== "BRL")) {
+        notas.push("Investimentos em USD/EUR usam câmbio constante informado manualmente e não aplicam tributação brasileira nesta versão.");
       }
       return notas;
     }
@@ -5267,6 +5376,42 @@
     function normalizarNumero(valor, fallback = 0) {
       const numero = Number(valor);
       return Number.isFinite(numero) ? numero : fallback;
+    }
+
+    function normalizarMoeda(moeda) {
+      return MOEDAS.includes(moeda) ? moeda : "BRL";
+    }
+
+    function normalizarCotacoes(cotacoes = {}) {
+      return {
+        usdBrl: normalizarNumero(cotacoes.usdBrl, 5),
+        eurBrl: normalizarNumero(cotacoes.eurBrl, 5.5)
+      };
+    }
+
+    function converterParaBrl(valor, moeda, cotacoes) {
+      const valorNormalizado = normalizarNumero(valor, 0);
+      const cotacoesNormalizadas = normalizarCotacoes(cotacoes);
+      if (moeda === "USD") return valorNormalizado * cotacoesNormalizadas.usdBrl;
+      if (moeda === "EUR") return valorNormalizado * cotacoesNormalizadas.eurBrl;
+      return valorNormalizado;
+    }
+
+    function obterSimboloMoeda(moeda) {
+      if (moeda === "USD") return "US$";
+      if (moeda === "EUR") return "€";
+      return "R$";
+    }
+
+    function formatarValorMoeda(valor, moeda) {
+      const valorNormalizado = normalizarNumero(valor, 0);
+      if (moeda === "USD") {
+        return `${obterSimboloMoeda(moeda)} ${valorNormalizado.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      if (moeda === "EUR") {
+        return `${obterSimboloMoeda(moeda)} ${valorNormalizado.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      return formatterMoeda.format(valorNormalizado);
     }
 
     function escapeHtml(valor) {
