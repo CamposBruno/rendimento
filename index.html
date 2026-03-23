@@ -903,6 +903,64 @@
       height: 420px;
     }
 
+    .radars-projecao {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .radar-card {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 16px;
+      background: var(--superficie-suave);
+      padding: 14px;
+    }
+
+    .radar-card-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .radar-card-titulo {
+      display: grid;
+      gap: 4px;
+    }
+
+    .radar-card-titulo strong {
+      font-size: 1rem;
+    }
+
+    .radar-card-titulo span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
+    .radar-card-total {
+      color: var(--muted);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .radar-card .chart-wrap {
+      height: 300px;
+    }
+
+    .radar-canvas-wrap {
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 1100px) {
+      .radars-projecao {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .card-grafico {
       position: sticky;
       top: 16px;
@@ -1409,20 +1467,31 @@
           <div class="chart-wrap">
             <canvas id="graficoProjecao"></canvas>
           </div>
+          
           <div class="controles-projecao">
-              <div id="menuSeriesProjecao" class="menu-series-projecao"></div>
-            </div>
-          <div id="rodapeProjecao" class="rodape">
-            O gráfico mostra patrimônio acumulado total e renda mensal líquida estimada ao longo de 30 anos.
-            Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.
+            <div id="menuSeriesProjecao" class="menu-series-projecao"></div>
           </div>
+          
+          <div id="rodapeProjecao" class="rodape">
+            
+          </div>
+
+          <div id="heatmapsProjecao" class="radars-projecao"></div>
         </section>
       </section>
 
       <section class="painel-projecao">
         <section class="card secao">
-          <h2>Tabela de Projeção Anual</h2>
-          <div class="tabela-wrap">
+          <div class="investimento-topo" id="topoTabelaProjecao" style="margin-bottom: 0;">
+            <div class="investimento-titulo">
+              <strong>Tabela de Projeção Anual</strong>
+              <span>Detalhamento anual consolidado da projeção.</span>
+            </div>
+            <div class="acoes-card">
+              <button id="btnToggleTabelaProjecao" class="btn-toggle" type="button" aria-expanded="false"><span class="chevron">▶</span></button>
+            </div>
+          </div>
+          <div class="tabela-wrap" id="tabelaWrapProjecao" style="display: none;">
             <table>
               <thead>
                 <tr>
@@ -1603,6 +1672,8 @@
     window.addEventListener("beforeunload", salvarEstado);
 
     let graficoProjecao = null;
+    let graficoRadarInvestimentos = null;
+    let graficoRadarCustos = null;
     let debounceAtualizacao = null;
     let abaAtiva = "visao-geral";
     let modoVisao = "perfil";
@@ -1610,6 +1681,7 @@
     let periodoProjecaoAnos = 30;
     let seriesGraficoVisiveis = Object.fromEntries(SERIES_GRAFICO.map((serie) => [serie.id, true]));
     let menuSeriesGraficoExpandido = false;
+    let tabelaProjecaoExpandida = false;
     let impostosResumoExpandido = false;
     let notasResumoExpandidas = false;
     let ignorarSalvarBeforeUnload = false;
@@ -1639,11 +1711,15 @@
     const tituloProjecaoEl = document.getElementById("tituloProjecao");
     const periodosProjecaoEl = document.getElementById("periodosProjecao");
     const menuSeriesProjecaoEl = document.getElementById("menuSeriesProjecao");
+    const heatmapsProjecaoEl = document.getElementById("heatmapsProjecao");
     const rendaMensalInfoEl = document.getElementById("rendaMensalInfo");
     const custosMensaisInfoEl = document.getElementById("custosMensaisInfo");
     const radarFinanceiroEl = document.getElementById("radarFinanceiro");
     const barraPerfisEl = document.getElementById("barraPerfis");
     const perfilFormEl = document.getElementById("perfilForm");
+    const topoTabelaProjecaoEl = document.getElementById("topoTabelaProjecao");
+    const tabelaWrapProjecaoEl = document.getElementById("tabelaWrapProjecao");
+    const btnToggleTabelaProjecaoEl = document.getElementById("btnToggleTabelaProjecao");
     const nomePerfilEl = document.getElementById("nomePerfil");
     const dataNascimentoPerfilEl = document.getElementById("dataNascimentoPerfil");
     const btnRemoverPerfilEl = document.getElementById("btnRemoverPerfil");
@@ -1768,6 +1844,10 @@
     btnAdicionarRendaEl.addEventListener("click", abrirFormularioRenda);
     btnSalvarRendaEl.addEventListener("click", salvarNovaRenda);
     btnCancelarRendaEl.addEventListener("click", fecharFormularioRenda);
+    btnToggleTabelaProjecaoEl.addEventListener("click", () => {
+      tabelaProjecaoExpandida = !tabelaProjecaoExpandida;
+      aplicarEstadoTabelaProjecao();
+    });
     btnAdicionarCustoFixoEl.addEventListener("click", () => abrirFormularioCustoFixo());
     btnSalvarCustoFixoEl.addEventListener("click", salvarNovoCustoFixo);
     btnCancelarCustoFixoEl.addEventListener("click", fecharFormularioCustoFixo);
@@ -2412,6 +2492,7 @@
 
     function renderizarTudo(recriarCards = true) {
       sincronizarCamposPerfil();
+      aplicarEstadoTabelaProjecao();
       renderizarBarraPerfis();
       renderizarControlesPeriodoProjecao();
 
@@ -2437,6 +2518,13 @@
       renderizarAbas();
       renderizarProjecaoAtiva();
       aplicarAbaConteudoPrincipal();
+    }
+
+    function aplicarEstadoTabelaProjecao() {
+      if (!tabelaWrapProjecaoEl || !btnToggleTabelaProjecaoEl || !topoTabelaProjecaoEl) return;
+      tabelaWrapProjecaoEl.style.display = tabelaProjecaoExpandida ? "block" : "none";
+      btnToggleTabelaProjecaoEl.setAttribute("aria-expanded", tabelaProjecaoExpandida ? "true" : "false");
+      topoTabelaProjecaoEl.style.marginBottom = tabelaProjecaoExpandida ? "14px" : "0";
     }
 
     function renderizarBarraPerfis() {
@@ -2560,6 +2648,7 @@
         painelFamiliaEl.style.display = "grid";
         painelFamiliaEl.innerHTML = `<div class="familia-vazio">Nenhum patrimônio encontrado nos perfis. Adicione investimentos, bens, rendas ou custos fixos em um perfil individual.</div>`;
         renderizarGraficoFamilia(familia);
+        renderizarRadarsProjecao(null, true);
         renderizarTabelaFamilia(familia);
         return;
       }
@@ -2603,6 +2692,7 @@
       `;
 
       renderizarGraficoFamilia(familia);
+      renderizarRadarsProjecao(familia, true);
       renderizarTabelaFamilia(familia);
     }
 
@@ -3512,6 +3602,7 @@
         rendaPassivaTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoTotal || 0), 0),
         rendaPassivaBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaBens || 0), 0),
         rendaMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaMensal || 0), 0),
+        rendimentoLiquidoInvestimentosMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoInvestimentosMensal || 0), 0),
         impostosTotais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.impostosTotaisMensais || 0), 0),
         custosFixosMensais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.custosFixosMensais || 0), 0)
       }));
@@ -3709,7 +3800,206 @@
       const projecaoMensal = calcularProjecaoMensalPerfil(perfil, filtroInvestimentoId);
       const projecaoAnual = agruparProjecaoAnualPerfil(projecaoMensal, perfil.dataNascimento);
       renderizarGrafico(projecaoMensal, perfil.dataNascimento);
+      renderizarRadarsProjecao(perfil, false);
       renderizarTabela(projecaoAnual, perfil.dataNascimento);
+    }
+
+    function renderizarRadarsProjecao(contexto, visaoFamilia = false) {
+      const resumoInvestimentos = visaoFamilia ? calcularResumoInvestimentosFamilia() : calcularResumoInvestimentosPorCategoriaPerfil(contexto);
+      const resumoCustos = visaoFamilia ? calcularResumoCustosFamiliaPorCategoria() : calcularResumoCustosPorCategoriaPerfil(contexto);
+      heatmapsProjecaoEl.innerHTML = `
+        <article class="radar-card">
+          <div class="radar-card-topo">
+            <div class="radar-card-titulo">
+              <strong>${visaoFamilia ? "Radar de investimentos da família" : "Radar de investimentos"}</strong>
+              <span>Distribuição atual do patrimônio investido por categoria.</span>
+            </div>
+            <div class="radar-card-total">Total: ${formatterMoeda.format(resumoInvestimentos.total)}</div>
+          </div>
+          <div class="chart-wrap">
+            <div class="radar-canvas-wrap">
+              <canvas id="graficoRadarInvestimentos"></canvas>
+            </div>
+          </div>
+        </article>
+        <article class="radar-card">
+          <div class="radar-card-topo">
+            <div class="radar-card-titulo">
+              <strong>${visaoFamilia ? "Radar de custos da família" : "Radar de custos"}</strong>
+              <span>Distribuição atual dos custos fixos por categoria.</span>
+            </div>
+            <div class="radar-card-total">Total: ${formatterMoeda.format(resumoCustos.total)}</div>
+          </div>
+          <div class="chart-wrap">
+            <div class="radar-canvas-wrap">
+              <canvas id="graficoRadarCustos"></canvas>
+            </div>
+          </div>
+        </article>
+      `;
+      desenharRadarInvestimentos(resumoInvestimentos);
+      desenharRadarCustos(resumoCustos);
+    }
+
+    function calcularResumoInvestimentosPorCategoriaPerfil(perfil) {
+      const totais = TIPOS.reduce((acc, tipo) => {
+        acc[tipo] = 0;
+        return acc;
+      }, {});
+      (perfil?.investimentos || []).forEach((investimento) => {
+        totais[investimento.tipo] += normalizarNumero(investimento.valorInvestido);
+      });
+      return {
+        labels: TIPOS,
+        valores: TIPOS.map((tipo) => totais[tipo]),
+        total: TIPOS.reduce((acc, tipo) => acc + totais[tipo], 0)
+      };
+    }
+
+    function calcularResumoInvestimentosFamilia() {
+      const totais = TIPOS.reduce((acc, tipo) => {
+        acc[tipo] = 0;
+        return acc;
+      }, {});
+      ESTADO.perfis.forEach((perfil) => {
+        (perfil.investimentos || []).forEach((investimento) => {
+          totais[investimento.tipo] += normalizarNumero(investimento.valorInvestido);
+        });
+      });
+      return {
+        labels: TIPOS,
+        valores: TIPOS.map((tipo) => totais[tipo]),
+        total: TIPOS.reduce((acc, tipo) => acc + totais[tipo], 0)
+      };
+    }
+
+    function calcularResumoCustosPorCategoriaPerfil(perfil) {
+      const totais = Object.keys(CATEGORIAS_CUSTOS).reduce((acc, categoria) => {
+        acc[categoria] = 0;
+        return acc;
+      }, {});
+      (perfil?.custosFixos || []).forEach((custo) => {
+        totais[custo.categoria] += normalizarNumero(custo.valorMensal);
+      });
+      const financiamentoImobiliario = somarParcelasFinanciamentosImoveis(perfil?.imoveis || []);
+      const labelsBase = Object.values(CATEGORIAS_CUSTOS);
+      const valoresBase = Object.keys(CATEGORIAS_CUSTOS).map((categoria) => totais[categoria]);
+      const labels = financiamentoImobiliario > 0 ? [...labelsBase, "Financ. Imobiliário"] : labelsBase;
+      const valores = financiamentoImobiliario > 0 ? [...valoresBase, financiamentoImobiliario] : valoresBase;
+      return {
+        labels,
+        valores,
+        total: valores.reduce((acc, valor) => acc + valor, 0)
+      };
+    }
+
+    function calcularResumoCustosFamiliaPorCategoria() {
+      const totais = Object.keys(CATEGORIAS_CUSTOS).reduce((acc, categoria) => {
+        acc[categoria] = 0;
+        return acc;
+      }, {});
+      let financiamentoImobiliario = 0;
+      ESTADO.perfis.forEach((perfil) => {
+        (perfil.custosFixos || []).forEach((custo) => {
+          totais[custo.categoria] += normalizarNumero(custo.valorMensal);
+        });
+        financiamentoImobiliario += somarParcelasFinanciamentosImoveis(perfil.imoveis || []);
+      });
+      const labelsBase = Object.values(CATEGORIAS_CUSTOS);
+      const valoresBase = Object.keys(CATEGORIAS_CUSTOS).map((categoria) => totais[categoria]);
+      const labels = financiamentoImobiliario > 0 ? [...labelsBase, "Financ. Imobiliário"] : labelsBase;
+      const valores = financiamentoImobiliario > 0 ? [...valoresBase, financiamentoImobiliario] : valoresBase;
+      return {
+        labels,
+        valores,
+        total: valores.reduce((acc, valor) => acc + valor, 0)
+      };
+    }
+
+    function desenharRadarInvestimentos(resumo) {
+      const ctx = document.getElementById("graficoRadarInvestimentos");
+      if (!ctx) return;
+      if (graficoRadarInvestimentos) graficoRadarInvestimentos.destroy();
+      graficoRadarInvestimentos = new Chart(ctx, {
+        type: "radar",
+        data: {
+          labels: resumo.labels,
+          datasets: [{
+            label: "Investimentos",
+            data: resumo.valores,
+            borderColor: "#2563eb",
+            backgroundColor: "rgba(37, 99, 235, 0.18)",
+            pointBackgroundColor: "#2563eb",
+            pointBorderColor: "#93c5fd",
+            pointRadius: 3,
+            borderWidth: 2
+          }]
+        },
+        options: obterOpcoesRadar()
+      });
+    }
+
+    function desenharRadarCustos(resumo) {
+      const ctx = document.getElementById("graficoRadarCustos");
+      if (!ctx) return;
+      if (graficoRadarCustos) graficoRadarCustos.destroy();
+      graficoRadarCustos = new Chart(ctx, {
+        type: "radar",
+        data: {
+          labels: resumo.labels,
+          datasets: [{
+            label: "Custos",
+            data: resumo.valores,
+            borderColor: "#dc2626",
+            backgroundColor: "rgba(220, 38, 38, 0.16)",
+            pointBackgroundColor: "#dc2626",
+            pointBorderColor: "#fca5a5",
+            pointRadius: 3,
+            borderWidth: 2
+          }]
+        },
+        options: obterOpcoesRadar()
+      });
+    }
+
+    function obterOpcoesRadar() {
+      return {
+        maintainAspectRatio: false,
+        layout: {
+          padding: {
+            top: 18,
+            right: 18,
+            bottom: 18,
+            left: 18
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label(contexto) {
+                return `${contexto.label}: ${formatterMoeda.format(contexto.parsed.r)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          r: {
+            beginAtZero: true,
+            angleLines: { color: "rgba(148, 163, 184, 0.16)" },
+            grid: { color: "rgba(148, 163, 184, 0.14)" },
+            pointLabels: {
+              color: getComputedStyle(document.body).getPropertyValue("--muted").trim() || "#93a9c5",
+              font: { size: 10, weight: "700" },
+              padding: 8
+            },
+            ticks: {
+              display: false,
+              backdropColor: "transparent"
+            }
+          }
+        }
+      };
     }
 
     function renderizarGrafico(projecaoMensal, dataNascimento = "") {
@@ -4108,6 +4398,7 @@
           inssMensal,
           irrfMensal,
           impostosTotaisMensais: impostoInvestimentosTotal + inssMensal + irrfMensal,
+          rendimentoLiquidoInvestimentosMensal: rendimentoLiquidoInvestimentos,
           rendimentoLiquidoTotal: rendimentoLiquidoInvestimentos + rendaPassivaBens,
           rendaPassivaBens,
           rendaMensal,
