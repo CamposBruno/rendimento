@@ -1002,6 +1002,14 @@
       gap: 14px;
     }
 
+    .topo-projecao-acoes {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
     .cabecalho-projecao h2 {
       margin: 0;
     }
@@ -1074,6 +1082,26 @@
       background: var(--azul);
       color: #fff;
       border-color: transparent;
+    }
+
+    .modo-valor-projecao {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .coluna-real {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .resumo-projecao-final {
+      display: block;
+      margin-top: 6px;
+      font-size: 0.84rem;
+      color: var(--muted);
+      font-weight: 600;
     }
 
     .tab {
@@ -1396,6 +1424,10 @@
             <label for="taxaCdiReferencia">Taxa CDI de referência (% a.a.)</label>
             <input id="taxaCdiReferencia" type="number" step="0.01" min="0" />
           </div>
+          <div class="campo-topo">
+            <label for="inflacaoIpca">Inflação (IPCA) % a.a.</label>
+            <input id="inflacaoIpca" type="number" step="0.01" min="0" />
+          </div>
         </div>
         <div class="familia-copy">
           Centralize aqui tema, perfil e CDI para manter o painel principal limpo e focado nos investimentos e projeções.
@@ -1459,7 +1491,10 @@
           <div class="cabecalho-projecao">
             <div class="topo-projecao">
               <h2 id="tituloProjecao">Projeção de 30 anos</h2>
-              <div id="periodosProjecao" class="periodos-projecao"></div>
+              <div class="topo-projecao-acoes">
+                <div id="modosValorProjecao" class="modo-valor-projecao"></div>
+                <div id="periodosProjecao" class="periodos-projecao"></div>
+              </div>
             </div>
             
           </div>
@@ -1610,10 +1645,18 @@
               <select id="custoCategoria"></select>
             </div>
             <div>
-              <label>Valor mensal (R$)</label>
+              <label>Valor do período (R$)</label>
               <input id="custoValorMensal" type="number" min="0" step="0.01" />
             </div>
             <div>
+              <label>Periodicidade</label>
+              <select id="custoPeriodicidade"></select>
+            </div>
+            <div id="blocoCustoMesVencimento" style="display: none;">
+              <label>Mês de vencimento</label>
+              <select id="custoMesVencimento"></select>
+            </div>
+            <div id="blocoCustoDiaVencimento">
               <label>Dia de vencimento</label>
               <input id="custoDiaVencimento" type="number" min="1" max="31" step="1" />
             </div>
@@ -1642,6 +1685,10 @@
     const TIPOS = ["Renda Fixa", "Fundo de Investimento", "Ações", "Crypto", "CDB", "CDI (%)"];
     const PERIODOS_PROJECAO = [5, 10, 20, 30, 50];
     const PERIODO_MAXIMO_PROJECAO_ANOS = 50;
+    const MODOS_VALOR_PROJECAO = {
+      nominal: "Nominal",
+      real: "Real"
+    };
     const SERIES_GRAFICO = [
       { id: "patrimonioTotal", label: "Patrimônio total" },
       { id: "patrimonioBens", label: "Patrimônio em bens" },
@@ -1664,6 +1711,15 @@
       pagamento: "Pagamentos Recorrentes",
       outro: "Outros"
     };
+    const PERIODICIDADES_CUSTO = {
+      mensal: "Mensal",
+      semestral: "Semestral",
+      anual: "Anual"
+    };
+    const MESES_ANO = [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
     const TIPOS_CUSTOS = {
       essencial: "Essencial",
       discricionario: "Discricionário"
@@ -1679,6 +1735,7 @@
     let modoVisao = "perfil";
     let abaConteudoPrincipalAtiva = "resumo";
     let periodoProjecaoAnos = 30;
+    let modoValorProjecao = "nominal";
     let seriesGraficoVisiveis = Object.fromEntries(SERIES_GRAFICO.map((serie) => [serie.id, true]));
     let menuSeriesGraficoExpandido = false;
     let tabelaProjecaoExpandida = false;
@@ -1695,6 +1752,7 @@
     const listaNotasEl = document.getElementById("listaNotas");
     const corpoTabelaEl = document.getElementById("corpoTabela");
     const taxaCdiReferenciaEl = document.getElementById("taxaCdiReferencia");
+    const inflacaoIpcaEl = document.getElementById("inflacaoIpca");
     const btnAdicionarEl = document.getElementById("btnAdicionar");
     const btnAdicionarImovelEl = document.getElementById("btnAdicionarImovel");
     const btnAdicionarEmpresaEl = document.getElementById("btnAdicionarEmpresa");
@@ -1709,6 +1767,7 @@
     const menuConfiguracoesEl = document.getElementById("menuConfiguracoes");
     const tabsProjecaoEl = document.getElementById("tabsProjecao");
     const tituloProjecaoEl = document.getElementById("tituloProjecao");
+    const modosValorProjecaoEl = document.getElementById("modosValorProjecao");
     const periodosProjecaoEl = document.getElementById("periodosProjecao");
     const menuSeriesProjecaoEl = document.getElementById("menuSeriesProjecao");
     const heatmapsProjecaoEl = document.getElementById("heatmapsProjecao");
@@ -1757,6 +1816,10 @@
     const custoDescricaoEl = document.getElementById("custoDescricao");
     const custoCategoriaEl = document.getElementById("custoCategoria");
     const custoValorMensalEl = document.getElementById("custoValorMensal");
+    const custoPeriodicidadeEl = document.getElementById("custoPeriodicidade");
+    const custoMesVencimentoEl = document.getElementById("custoMesVencimento");
+    const blocoCustoMesVencimentoEl = document.getElementById("blocoCustoMesVencimento");
+    const blocoCustoDiaVencimentoEl = document.getElementById("blocoCustoDiaVencimento");
     const custoDiaVencimentoEl = document.getElementById("custoDiaVencimento");
     const custoTipoEl = document.getElementById("custoTipo");
     const btnSalvarCustoFixoEl = document.getElementById("btnSalvarCustoFixo");
@@ -1769,6 +1832,12 @@
 
     taxaCdiReferenciaEl.addEventListener("input", () => {
       obterPerfilAtivo().taxaCdiReferencia = normalizarNumero(taxaCdiReferenciaEl.value, 13.25);
+      salvarEstado();
+      agendarAtualizacao(true);
+    });
+
+    inflacaoIpcaEl.addEventListener("input", () => {
+      obterPerfilAtivo().inflacaoIpca = normalizarNumero(inflacaoIpcaEl.value, 4.5);
       salvarEstado();
       agendarAtualizacao(true);
     });
@@ -1844,6 +1913,7 @@
     btnAdicionarRendaEl.addEventListener("click", abrirFormularioRenda);
     btnSalvarRendaEl.addEventListener("click", salvarNovaRenda);
     btnCancelarRendaEl.addEventListener("click", fecharFormularioRenda);
+    custoPeriodicidadeEl.addEventListener("change", () => aplicarVisibilidadeCamposPeriodicidadeCusto(custoPeriodicidadeEl.value));
     btnToggleTabelaProjecaoEl.addEventListener("click", () => {
       tabelaProjecaoExpandida = !tabelaProjecaoExpandida;
       aplicarEstadoTabelaProjecao();
@@ -1910,6 +1980,7 @@
       const perfilMigrado = criarPerfilPadrao("Meu Perfil");
       perfilMigrado.dataNascimento = "";
       perfilMigrado.taxaCdiReferencia = normalizarNumero(estadoAntigo.taxaCdiReferencia, 13.25);
+      perfilMigrado.inflacaoIpca = 4.5;
       perfilMigrado.rendas = normalizarRendas(undefined, normalizarNumero(estadoAntigo.rendaMensal, 0));
       perfilMigrado.investimentos = Array.isArray(estadoAntigo.investimentos) && estadoAntigo.investimentos.length
         ? estadoAntigo.investimentos.map(normalizarInvestimento)
@@ -1931,6 +2002,7 @@
         nome,
         dataNascimento: "",
         taxaCdiReferencia: 13.25,
+        inflacaoIpca: 4.5,
         rendaMensal: 0,
         rendas: [],
         investimentos: [criarInvestimentoPadrao()],
@@ -1954,6 +2026,7 @@
         nome: perfil.nome || "Novo Perfil",
         dataNascimento: perfil.dataNascimento || "",
         taxaCdiReferencia: normalizarNumero(perfil.taxaCdiReferencia, 13.25),
+        inflacaoIpca: normalizarNumero(perfil.inflacaoIpca, 4.5),
         rendaMensal: normalizarNumero(perfil.rendaMensal, 0),
         rendas: normalizarRendas(perfil.rendas, normalizarNumero(perfil.rendaMensal, 0)),
         investimentos: Array.isArray(perfil.investimentos) && perfil.investimentos.length
@@ -2132,6 +2205,8 @@
         descricao: "",
         categoria: "outro",
         valorMensal: 0,
+        periodicidade: "mensal",
+        mesVencimento: null,
         diaVencimento: null,
         tipo: "essencial"
       };
@@ -2199,12 +2274,16 @@
     function normalizarCustoFixo(custo) {
       const categoria = Object.hasOwn(CATEGORIAS_CUSTOS, custo?.categoria) ? custo.categoria : "outro";
       const tipo = Object.hasOwn(TIPOS_CUSTOS, custo?.tipo) ? custo.tipo : "essencial";
+      const periodicidade = Object.hasOwn(PERIODICIDADES_CUSTO, custo?.periodicidade) ? custo.periodicidade : "mensal";
+      const mes = normalizarNumero(custo?.mesVencimento, null);
       const dia = normalizarNumero(custo?.diaVencimento, null);
       return {
         id: custo?.id || crypto.randomUUID(),
         descricao: custo?.descricao || "",
         categoria,
         valorMensal: normalizarNumero(custo?.valorMensal, 0),
+        periodicidade,
+        mesVencimento: periodicidade === "mensal" ? null : (Number.isFinite(mes) && mes >= 1 && mes <= 12 ? mes : 1),
         diaVencimento: Number.isFinite(dia) && dia >= 1 && dia <= 31 ? dia : null,
         tipo
       };
@@ -2235,6 +2314,13 @@
       };
     }
 
+    function calcularValorMensalEquivalenteCusto(custo) {
+      const valor = normalizarNumero(custo?.valorMensal, 0);
+      if (custo?.periodicidade === "anual") return valor / 12;
+      if (custo?.periodicidade === "semestral") return valor / 6;
+      return valor;
+    }
+
     function anexarCustosFixosDerivados(perfil) {
       if (!Object.getOwnPropertyDescriptor(perfil, "custosMensais")?.get) {
         Object.defineProperty(perfil, "custosMensais", {
@@ -2242,7 +2328,7 @@
           configurable: true,
           get() {
             return (
-              (this.custosFixos || []).reduce((soma, custo) => soma + normalizarNumero(custo.valorMensal), 0) +
+              (this.custosFixos || []).reduce((soma, custo) => soma + calcularValorMensalEquivalenteCusto(custo), 0) +
               somarParcelasFinanciamentosImoveis(this.imoveis || [])
             );
           },
@@ -2278,6 +2364,7 @@
     function sincronizarCamposPerfil() {
       const perfil = obterPerfilAtivo();
       taxaCdiReferenciaEl.value = perfil.taxaCdiReferencia;
+      inflacaoIpcaEl.value = perfil.inflacaoIpca;
       rendaMensalInfoEl.innerHTML = `
         <span>${renderizarLabelComTooltip("Renda mensal", "Soma líquida das fontes de renda ativas cadastradas no perfil.")}</span>
         <strong>${formatterMoeda.format(perfil.rendaMensal)}</strong>
@@ -2562,9 +2649,20 @@
 
     function renderizarControlesPeriodoProjecao() {
       tituloProjecaoEl.textContent = `Projeção de ${periodoProjecaoAnos} anos`;
+      modosValorProjecaoEl.innerHTML = Object.entries(MODOS_VALOR_PROJECAO).map(([modo, label]) => `
+        <button class="periodo-btn ${modo === modoValorProjecao ? "ativo" : ""}" type="button" data-modo-valor-projecao="${modo}">${label}</button>
+      `).join("");
       periodosProjecaoEl.innerHTML = PERIODOS_PROJECAO.map((periodo) => `
         <button class="periodo-btn ${periodo === periodoProjecaoAnos ? "ativo" : ""}" type="button" data-periodo-projecao="${periodo}">${periodo} anos</button>
       `).join("");
+      modosValorProjecaoEl.querySelectorAll("[data-modo-valor-projecao]").forEach((botao) => {
+        botao.addEventListener("click", () => {
+          const proximoModo = botao.dataset.modoValorProjecao;
+          if (!MODOS_VALOR_PROJECAO[proximoModo] || proximoModo === modoValorProjecao) return;
+          modoValorProjecao = proximoModo;
+          renderizarTudo(false);
+        });
+      });
       periodosProjecaoEl.querySelectorAll("[data-periodo-projecao]").forEach((botao) => {
         botao.addEventListener("click", () => {
           const proximoPeriodo = Number(botao.dataset.periodoProjecao);
@@ -2623,7 +2721,7 @@
       cardRadarEl.classList.remove("oculto");
       tabsProjecaoEl.classList.remove("oculto");
       periodosProjecaoEl.classList.remove("oculto");
-      rodapeProjecaoEl.textContent = `O gráfico mostra patrimônio total, patrimônio em bens e renda passiva mensal líquida ao longo de ${periodoProjecaoAnos} anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.`;
+      rodapeProjecaoEl.textContent = `O gráfico mostra a projeção ${modoValorProjecao === "real" ? "real" : "nominal"} do patrimônio, da renda passiva e dos custos ao longo de ${periodoProjecaoAnos} anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.`;
     }
 
     function renderizarVisaoFamilia() {
@@ -2642,7 +2740,7 @@
       cardRadarEl.classList.add("oculto");
       tabsProjecaoEl.classList.add("oculto");
       periodosProjecaoEl.classList.remove("oculto");
-      rodapeProjecaoEl.textContent = `A projeção da Família agrega dinamicamente investimentos e bens de todos os perfis ao longo de ${periodoProjecaoAnos} anos.`;
+      rodapeProjecaoEl.textContent = `A projeção da Família agrega dinamicamente investimentos, rendas, bens e custos de todos os perfis ao longo de ${periodoProjecaoAnos} anos em valores ${modoValorProjecao === "real" ? "reais" : "nominais"}.`;
 
       if (!familia.quantidadePerfisAtivos) {
         painelFamiliaEl.style.display = "grid";
@@ -2650,6 +2748,7 @@
         renderizarGraficoFamilia(familia);
         renderizarRadarsProjecao(null, true);
         renderizarTabelaFamilia(familia);
+        atualizarRodapeProjecaoFamilia(familia);
         return;
       }
 
@@ -2694,6 +2793,25 @@
       renderizarGraficoFamilia(familia);
       renderizarRadarsProjecao(familia, true);
       renderizarTabelaFamilia(familia);
+      atualizarRodapeProjecaoFamilia(familia);
+    }
+
+    function atualizarRodapeProjecaoPerfil(perfil, projecaoMensal) {
+      const linhaFinal = projecaoMensal[Math.max(0, periodoProjecaoAnos * 12 - 1)];
+      if (!linhaFinal) return;
+      rodapeProjecaoEl.innerHTML = `
+        O gráfico mostra a projeção ${modoValorProjecao === "real" ? "real" : "nominal"} do patrimônio, da renda passiva e dos custos ao longo de ${periodoProjecaoAnos} anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.
+        <span class="resumo-projecao-final">Ao final do período: ${formatterMoeda.format(linhaFinal.patrimonioTotal)} nominais, equivalente a ${formatterMoeda.format(linhaFinal.patrimonioTotalReal)} em valores de hoje com IPCA de ${formatterPercentual.format(obterInflacaoPerfil(perfil))}% a.a.</span>
+      `;
+    }
+
+    function atualizarRodapeProjecaoFamilia(familia) {
+      const linhaFinal = familia.projecaoMensalTotal[Math.max(0, periodoProjecaoAnos * 12 - 1)];
+      if (!linhaFinal) return;
+      rodapeProjecaoEl.innerHTML = `
+        A projeção da Família agrega dinamicamente investimentos, rendas, bens e custos de todos os perfis ao longo de ${periodoProjecaoAnos} anos em valores ${modoValorProjecao === "real" ? "reais" : "nominais"}.
+        <span class="resumo-projecao-final">Ao final do período: ${formatterMoeda.format(linhaFinal.patrimonioTotal)} nominais, equivalente a ${formatterMoeda.format(linhaFinal.patrimonioTotalReal)} em valores de hoje.</span>
+      `;
     }
 
     function aplicarAbaConteudoPrincipal() {
@@ -2961,9 +3079,27 @@
       custoCategoriaEl.innerHTML = Object.entries(CATEGORIAS_CUSTOS)
         .map(([valor, label]) => `<option value="${valor}">${label}</option>`)
         .join("");
+      custoPeriodicidadeEl.innerHTML = Object.entries(PERIODICIDADES_CUSTO)
+        .map(([valor, label]) => `<option value="${valor}">${label}</option>`)
+        .join("");
+      custoMesVencimentoEl.innerHTML = MESES_ANO
+        .map((label, indice) => `<option value="${indice + 1}">${label}</option>`)
+        .join("");
       custoTipoEl.innerHTML = Object.entries(TIPOS_CUSTOS)
         .map(([valor, label]) => `<option value="${valor}">${label}</option>`)
         .join("");
+    }
+
+    function aplicarVisibilidadeCamposPeriodicidadeCusto(periodicidade, prefixo = "") {
+      if (!prefixo) {
+        blocoCustoMesVencimentoEl.style.display = periodicidade === "mensal" ? "none" : "block";
+        blocoCustoDiaVencimentoEl.querySelector("label").textContent = periodicidade === "mensal" ? "Dia de vencimento" : "Dia do vencimento";
+        return;
+      }
+      const blocoMes = document.getElementById(`blocoMesVencimento-${prefixo}`);
+      const labelDia = document.getElementById(`labelDiaVencimento-${prefixo}`);
+      if (blocoMes) blocoMes.style.display = periodicidade === "mensal" ? "none" : "block";
+      if (labelDia) labelDia.textContent = periodicidade === "mensal" ? "Dia de vencimento" : "Dia do vencimento";
     }
 
     function inicializarSeletoresRenda() {
@@ -3168,8 +3304,11 @@
       custoDescricaoEl.value = "";
       custoCategoriaEl.value = "outro";
       custoValorMensalEl.value = "";
+      custoPeriodicidadeEl.value = "mensal";
+      custoMesVencimentoEl.value = "1";
       custoDiaVencimentoEl.value = "";
       custoTipoEl.value = "essencial";
+      aplicarVisibilidadeCamposPeriodicidadeCusto("mensal");
       custoDescricaoEl.focus();
     }
 
@@ -3183,6 +3322,8 @@
         descricao: custoDescricaoEl.value,
         categoria: custoCategoriaEl.value,
         valorMensal: custoValorMensalEl.value,
+        periodicidade: custoPeriodicidadeEl.value,
+        mesVencimento: custoMesVencimentoEl.value,
         diaVencimento: custoDiaVencimentoEl.value,
         tipo: custoTipoEl.value
       });
@@ -3197,14 +3338,14 @@
       const grupos = agruparCustosPorCategoria(perfil.custosFixos);
       listaCustosFixosEl.innerHTML = Object.keys(CATEGORIAS_CUSTOS).map((categoria) => {
         const itens = grupos[categoria];
-        const subtotal = itens.reduce((soma, item) => soma + item.valorMensal, 0);
+        const subtotal = itens.reduce((soma, item) => soma + calcularValorMensalEquivalenteCusto(item), 0);
         const expandido = perfil.custosCategoriasExpandidas[categoria] !== false;
         return `
           <article class="investimento-card">
             <div class="investimento-topo">
               <div class="investimento-titulo">
                 <strong>${CATEGORIAS_CUSTOS[categoria]}</strong>
-                <span class="badge-tipo">${formatterMoeda.format(subtotal)}</span>
+                <span class="badge-tipo">${formatterMoeda.format(subtotal)}/mês</span>
               </div>
               <div class="acoes-card">
                 <button class="btn-toggle" type="button" data-categoria-custo="${categoria}" aria-expanded="${expandido ? "true" : "false"}"><span class="chevron">▶</span></button>
@@ -3216,8 +3357,10 @@
                   <div class="custo-item">
                     <div class="grid-campos">
                       <div class="campo-completo"><label>Descrição</label><input data-custo-id="${item.id}" data-campo-custo="descricao" type="text" value="${escapeHtml(item.descricao)}" /></div>
-                      <div><label>Valor mensal (R$)</label><input data-custo-id="${item.id}" data-campo-custo="valorMensal" type="number" min="0" step="0.01" value="${item.valorMensal}" /></div>
-                      <div><label>Dia de vencimento</label><input data-custo-id="${item.id}" data-campo-custo="diaVencimento" type="number" min="1" max="31" step="1" value="${item.diaVencimento ?? ""}" /></div>
+                      <div><label>Valor do período (R$)</label><input data-custo-id="${item.id}" data-campo-custo="valorMensal" type="number" min="0" step="0.01" value="${item.valorMensal}" /></div>
+                      <div><label>Periodicidade</label><select data-custo-id="${item.id}" data-campo-custo="periodicidade">${Object.entries(PERIODICIDADES_CUSTO).map(([valor, label]) => `<option value="${valor}" ${item.periodicidade === valor ? "selected" : ""}>${label}</option>`).join("")}</select></div>
+                      <div id="blocoMesVencimento-${item.id}" style="display: ${item.periodicidade === "mensal" ? "none" : "block"};"><label>Mês de vencimento</label><select data-custo-id="${item.id}" data-campo-custo="mesVencimento">${MESES_ANO.map((label, indice) => `<option value="${indice + 1}" ${item.mesVencimento === indice + 1 ? "selected" : ""}>${label}</option>`).join("")}</select></div>
+                      <div><label id="labelDiaVencimento-${item.id}">${item.periodicidade === "mensal" ? "Dia de vencimento" : "Dia do vencimento"}</label><input data-custo-id="${item.id}" data-campo-custo="diaVencimento" type="number" min="1" max="31" step="1" value="${item.diaVencimento ?? ""}" /></div>
                       <div><label>Tipo</label><select data-custo-id="${item.id}" data-campo-custo="tipo">${Object.entries(TIPOS_CUSTOS).map(([valor, label]) => `<option value="${valor}" ${item.tipo === valor ? "selected" : ""}>${label}</option>`).join("")}</select></div>
                       <div><label>Categoria</label><select data-custo-id="${item.id}" data-campo-custo="categoria">${Object.entries(CATEGORIAS_CUSTOS).map(([valor, label]) => `<option value="${valor}" ${item.categoria === valor ? "selected" : ""}>${label}</option>`).join("")}</select></div>
                       <div style="display:flex;align-items:end;"><button class="btn-remover" type="button" data-remover-custo="${item.id}">X</button></div>
@@ -3287,14 +3430,24 @@
       const perfil = obterPerfilAtivo();
       const custo = perfil.custosFixos.find((item) => item.id === id);
       if (!custo) return;
-      if (campo === "descricao" || campo === "categoria" || campo === "tipo") {
+      if (campo === "descricao" || campo === "categoria" || campo === "tipo" || campo === "periodicidade") {
         custo[campo] = valor;
+        if (campo === "periodicidade") {
+          if (valor === "mensal") {
+            custo.mesVencimento = null;
+          } else if (!custo.mesVencimento) {
+            custo.mesVencimento = 1;
+          }
+        }
+      } else if (campo === "mesVencimento") {
+        custo.mesVencimento = Math.min(12, Math.max(1, normalizarNumero(valor, 1)));
       } else if (campo === "diaVencimento") {
         custo[campo] = valor === "" ? null : Math.min(31, Math.max(1, normalizarNumero(valor, null)));
       } else {
         custo[campo] = normalizarNumero(valor);
       }
       salvarEstado();
+      aplicarVisibilidadeCamposPeriodicidadeCusto(custo.periodicidade, id);
       agendarAtualizacao(false);
     }
 
@@ -3308,10 +3461,10 @@
     function calcularResumoCustosFixos(custosFixos, rendaMensal, imoveis = []) {
       const essencial = custosFixos
         .filter((item) => item.tipo === "essencial")
-        .reduce((soma, item) => soma + item.valorMensal, 0);
+        .reduce((soma, item) => soma + calcularValorMensalEquivalenteCusto(item), 0);
       const discricionario = custosFixos
         .filter((item) => item.tipo === "discricionario")
-        .reduce((soma, item) => soma + item.valorMensal, 0);
+        .reduce((soma, item) => soma + calcularValorMensalEquivalenteCusto(item), 0);
       const parcelasFinanciamentosImoveis = somarParcelasFinanciamentosImoveis(imoveis);
       const total = essencial + discricionario + parcelasFinanciamentosImoveis;
       return {
@@ -3506,18 +3659,7 @@
           <span>${renderizarLabelComTooltip("Renda passiva total / mês", "Soma da renda passiva líquida dos investimentos com a renda passiva gerada pelos bens.")}</span>
           <strong>${formatterMoeda.format(resumo.rendaPassivaTotalAtual)}</strong>
         </div>
-        <div class="metric">
-          <span>${renderizarLabelComTooltip("IR investimentos / mês", "Soma do imposto estimado mensal dos investimentos, incluindo a lógica atual de IR e come-cotas.")}</span>
-          <strong>${formatterMoeda.format(resumo.impostoInvestimentosMensal)}</strong>
-        </div>
-        <div class="metric">
-          <span>${renderizarLabelComTooltip("INSS / mês", "Soma da contribuição previdenciária calculada automaticamente nas rendas da categoria Salário CLT.")}</span>
-          <strong>${formatterMoeda.format(resumo.inssMensal)}</strong>
-        </div>
-        <div class="metric">
-          <span>${renderizarLabelComTooltip("IRRF / mês", "Soma do imposto de renda retido na fonte calculado automaticamente nas rendas da categoria Salário CLT.")}</span>
-          <strong>${formatterMoeda.format(resumo.irrfMensal)}</strong>
-        </div>
+        
         <div class="metric destaque">
           <span>${renderizarLabelComTooltip("Carga tributária total / mês", "Soma do IR estimado dos investimentos com INSS e IRRF das rendas salariais.")}</span>
           <strong>${formatterMoeda.format(resumo.impostosTotaisMensal)}</strong>
@@ -3598,22 +3740,36 @@
       const projecaoMensalTotal = Array.from({ length: PERIODO_MAXIMO_PROJECAO_ANOS * 12 }, (_, indice) => ({
         mes: indice + 1,
         patrimonioTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioTotal || 0), 0),
+        patrimonioTotalReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioTotalReal || 0), 0),
         patrimonioBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioBens || 0), 0),
+        patrimonioBensReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioBensReal || 0), 0),
         rendaPassivaTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoTotal || 0), 0),
+        rendaPassivaTotalReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoTotalReal || 0), 0),
         rendaPassivaBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaBens || 0), 0),
+        rendaPassivaBensReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaBensReal || 0), 0),
         rendaMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaMensal || 0), 0),
+        rendaMensalReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaMensalReal || 0), 0),
         rendimentoLiquidoInvestimentosMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoInvestimentosMensal || 0), 0),
+        rendimentoLiquidoInvestimentosMensalReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoInvestimentosMensalReal || 0), 0),
         impostosTotais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.impostosTotaisMensais || 0), 0),
-        custosFixosMensais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.custosFixosMensais || 0), 0)
+        impostosTotaisReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.impostosTotaisMensaisReal || 0), 0),
+        custosFixosMensais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.custosFixosMensais || 0), 0),
+        custosFixosMensaisReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.custosFixosMensaisReal || 0), 0)
       }));
       const projecaoAnualTotal = Array.from({ length: PERIODO_MAXIMO_PROJECAO_ANOS }, (_, indice) => ({
         ano: indice + 1,
         patrimonioTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0), 0),
+        patrimonioTotalReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioFinalReal || 0), 0),
         patrimonioBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioBens || 0), 0),
+        patrimonioBensReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioBensReal || 0), 0),
         rendaPassivaBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.rendaPassivaBens || 0), 0),
+        rendaPassivaBensReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.rendaPassivaBensReal || 0), 0),
         rendaMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.rendaMensal || 0), 0),
+        rendaMensalReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.rendaMensalReal || 0), 0),
         impostosTotais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.impostosTotais || 0), 0),
-        custosFixos: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.custosFixos || 0), 0)
+        impostosTotaisReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.impostosTotaisReal || 0), 0),
+        custosFixos: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.custosFixos || 0), 0),
+        custosFixosReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.custosFixosReal || 0), 0)
       }));
       return {
         projecoesPorPerfil,
@@ -3634,12 +3790,19 @@
       const projecaoMensal = familia.projecaoMensalTotal.slice(0, periodoProjecaoAnos * 12);
       const labels = projecaoMensal.map((item) => item.mes % 60 === 0 ? `Ano ${item.mes / 12}` : "");
       const datasets = [];
+      const campoPatrimonioTotal = obterCampoMensalPorModo("patrimonioTotal");
+      const campoPatrimonioBens = obterCampoMensalPorModo("patrimonioBens");
+      const campoRendaPassiva = obterCampoMensalPorModo("rendaPassivaTotal");
+      const campoRendaMensal = obterCampoMensalPorModo("rendaMensal");
+      const campoImpostos = obterCampoMensalPorModo("impostosTotais");
+      const campoCustos = obterCampoMensalPorModo("custosFixosMensais");
+      const sufixoModo = obterSufixoModoProjecao();
       if (seriesGraficoVisiveis.patrimonioTotal !== false) {
         datasets.push(...familia.projecoesPorPerfil.map((item, indice) => {
           const cor = obterCorPerfil(indice);
           return {
-            label: item.perfil.nome,
-            data: item.resumo.projecaoMensal.slice(0, periodoProjecaoAnos * 12).map((linha) => linha.patrimonioTotal),
+            label: `${item.perfil.nome}${sufixoModo}`,
+            data: item.resumo.projecaoMensal.slice(0, periodoProjecaoAnos * 12).map((linha) => linha[campoPatrimonioTotal]),
             borderColor: cor.borda,
             backgroundColor: cor.fundo,
             yAxisID: "y",
@@ -3651,8 +3814,8 @@
       }
       if (seriesGraficoVisiveis.patrimonioBens !== false) {
         datasets.push({
-          label: "Patrimônio em Bens",
-          data: projecaoMensal.map((linha) => linha.patrimonioBens),
+          label: `Patrimônio em Bens${sufixoModo}`,
+          data: projecaoMensal.map((linha) => linha[campoPatrimonioBens]),
           borderColor: "#ea580c",
           backgroundColor: "rgba(234, 88, 12, 0.15)",
           yAxisID: "y",
@@ -3663,8 +3826,8 @@
       }
       if (seriesGraficoVisiveis.rendaMensal !== false) {
         datasets.push({
-          label: "Renda Mensal da Família",
-          data: projecaoMensal.map((linha) => linha.rendaMensal),
+          label: `Renda Mensal da Família${sufixoModo}`,
+          data: projecaoMensal.map((linha) => linha[campoRendaMensal]),
           borderColor: "#7c3aed",
           backgroundColor: "rgba(124, 58, 237, 0.12)",
           yAxisID: "y1",
@@ -3675,8 +3838,8 @@
       }
       if (seriesGraficoVisiveis.rendaPassivaTotal !== false) {
         datasets.push({
-          label: "Renda passiva da Família / mês",
-          data: projecaoMensal.map((linha) => linha.rendaPassivaTotal),
+          label: `Renda passiva da Família / mês${sufixoModo}`,
+          data: projecaoMensal.map((linha) => linha[campoRendaPassiva]),
           borderColor: "#059669",
           backgroundColor: "rgba(5, 150, 105, 0.12)",
           yAxisID: "y1",
@@ -3687,8 +3850,8 @@
       }
       if (seriesGraficoVisiveis.impostosTotais !== false) {
         datasets.push({
-          label: "Impostos da Família / mês",
-          data: projecaoMensal.map((linha) => linha.impostosTotais),
+          label: `Impostos da Família / mês${sufixoModo}`,
+          data: projecaoMensal.map((linha) => linha[campoImpostos]),
           borderColor: "#f59e0b",
           backgroundColor: "rgba(245, 158, 11, 0.1)",
           yAxisID: "y1",
@@ -3699,8 +3862,8 @@
       }
       if (seriesGraficoVisiveis.custosFixos !== false) {
         datasets.push({
-          label: "Custos Fixos da Família",
-          data: projecaoMensal.map((linha) => linha.custosFixosMensais),
+          label: `Custos Fixos da Família${sufixoModo}`,
+          data: projecaoMensal.map((linha) => linha[campoCustos]),
           borderColor: "#dc2626",
           backgroundColor: "rgba(220, 38, 38, 0.1)",
           yAxisID: "y1",
@@ -3711,8 +3874,8 @@
       }
       if (familia.quantidadePerfisAtivos > 1 && seriesGraficoVisiveis.patrimonioTotal !== false) {
         datasets.push({
-          label: "Total Família",
-          data: projecaoMensal.map((linha) => linha.patrimonioTotal),
+          label: `Total Família${sufixoModo}`,
+          data: projecaoMensal.map((linha) => linha[campoPatrimonioTotal]),
           borderColor: "#eab308",
           backgroundColor: "rgba(234, 179, 8, 0.16)",
           yAxisID: "y",
@@ -3731,15 +3894,22 @@
           <th>Ano</th>
           ${familia.projecoesPorPerfil.map((item) => `<th>${escapeHtml(item.perfil.nome)}</th>`).join("")}
           <th>Patrimônio em Bens</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Renda Mensal</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Impostos Totais</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Custos Fixos</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Renda Passiva de Bens</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th class="coluna-total">Total Família</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
         `;
       }
       if (!familia.quantidadePerfisAtivos) {
-        corpoTabelaEl.innerHTML = `<tr><td colspan="7">Nenhum patrimônio encontrado nos perfis. Adicione investimentos, bens, rendas ou custos fixos em um perfil individual.</td></tr>`;
+        const totalColunas = 1 + familia.projecoesPorPerfil.length + 12;
+        corpoTabelaEl.innerHTML = `<tr><td colspan="${totalColunas}">Nenhum patrimônio encontrado nos perfis. Adicione investimentos, bens, rendas ou custos fixos em um perfil individual.</td></tr>`;
         return;
       }
       corpoTabelaEl.innerHTML = Array.from({ length: periodoProjecaoAnos }, (_, indice) => `
@@ -3747,11 +3917,17 @@
           <td>${indice + 1}</td>
           ${familia.projecoesPorPerfil.map((item) => `<td>${formatterMoeda.format(item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0)}</td>`).join("")}
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioBens || 0)}</td>
+          <td class="coluna-real">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioBensReal || 0)}</td>
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.rendaMensal || 0)}</td>
+          <td class="coluna-real">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.rendaMensalReal || 0)}</td>
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.impostosTotais || 0)}</td>
+          <td class="coluna-real">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.impostosTotaisReal || 0)}</td>
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.custosFixos || 0)}</td>
+          <td class="coluna-real">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.custosFixosReal || 0)}</td>
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.rendaPassivaBens || 0)}</td>
+          <td class="coluna-real">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.rendaPassivaBensReal || 0)}</td>
           <td class="coluna-total">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioTotal || 0)}</td>
+          <td class="coluna-real">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioTotalReal || 0)}</td>
         </tr>
       `).join("");
     }
@@ -3802,6 +3978,7 @@
       renderizarGrafico(projecaoMensal, perfil.dataNascimento);
       renderizarRadarsProjecao(perfil, false);
       renderizarTabela(projecaoAnual, perfil.dataNascimento);
+      atualizarRodapeProjecaoPerfil(perfil, projecaoMensal);
     }
 
     function renderizarRadarsProjecao(contexto, visaoFamilia = false) {
@@ -3879,7 +4056,7 @@
         return acc;
       }, {});
       (perfil?.custosFixos || []).forEach((custo) => {
-        totais[custo.categoria] += normalizarNumero(custo.valorMensal);
+        totais[custo.categoria] += calcularValorMensalEquivalenteCusto(custo);
       });
       const financiamentoImobiliario = somarParcelasFinanciamentosImoveis(perfil?.imoveis || []);
       const labelsBase = Object.values(CATEGORIAS_CUSTOS);
@@ -3901,7 +4078,7 @@
       let financiamentoImobiliario = 0;
       ESTADO.perfis.forEach((perfil) => {
         (perfil.custosFixos || []).forEach((custo) => {
-          totais[custo.categoria] += normalizarNumero(custo.valorMensal);
+          totais[custo.categoria] += calcularValorMensalEquivalenteCusto(custo);
         });
         financiamentoImobiliario += somarParcelasFinanciamentosImoveis(perfil.imoveis || []);
       });
@@ -4011,10 +4188,17 @@
         return idade !== null ? `Ano ${ano} (${idade} anos)` : `Ano ${ano}`;
       });
       const datasets = [];
+      const campoPatrimonioTotal = obterCampoMensalPorModo("patrimonioTotal");
+      const campoPatrimonioBens = obterCampoMensalPorModo("patrimonioBens");
+      const campoRendaPassiva = obterCampoMensalPorModo("rendimentoLiquidoTotal");
+      const campoRendaMensal = obterCampoMensalPorModo("rendaMensal");
+      const campoImpostos = obterCampoMensalPorModo("impostosTotaisMensais");
+      const campoCustos = obterCampoMensalPorModo("custosFixosMensais");
+      const sufixoModo = obterSufixoModoProjecao();
       if (seriesGraficoVisiveis.patrimonioTotal !== false) {
         datasets.push({
-          label: "Patrimônio total",
-          data: projecaoFiltrada.map((item) => item.patrimonioTotal),
+          label: `Patrimônio total${sufixoModo}`,
+          data: projecaoFiltrada.map((item) => item[campoPatrimonioTotal]),
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.16)",
           yAxisID: "y",
@@ -4025,8 +4209,8 @@
       }
       if (seriesGraficoVisiveis.patrimonioBens !== false) {
         datasets.push({
-          label: "Patrimônio em Bens",
-          data: projecaoFiltrada.map((item) => item.patrimonioBens),
+          label: `Patrimônio em Bens${sufixoModo}`,
+          data: projecaoFiltrada.map((item) => item[campoPatrimonioBens]),
           borderColor: "#ea580c",
           backgroundColor: "rgba(234, 88, 12, 0.12)",
           yAxisID: "y",
@@ -4036,8 +4220,8 @@
       }
       if (seriesGraficoVisiveis.rendaPassivaTotal !== false) {
         datasets.push({
-          label: "Renda passiva total / mês",
-          data: projecaoFiltrada.map((item) => item.rendimentoLiquidoTotal),
+          label: `Renda passiva total / mês${sufixoModo}`,
+          data: projecaoFiltrada.map((item) => item[campoRendaPassiva]),
           borderColor: "#059669",
           backgroundColor: "rgba(5, 150, 105, 0.12)",
           yAxisID: "y1",
@@ -4047,8 +4231,8 @@
       }
       if (seriesGraficoVisiveis.rendaMensal !== false) {
         datasets.push({
-          label: "Renda mensal / mês",
-          data: projecaoFiltrada.map((item) => item.rendaMensal),
+          label: `Renda mensal / mês${sufixoModo}`,
+          data: projecaoFiltrada.map((item) => item[campoRendaMensal]),
           borderColor: "#7c3aed",
           backgroundColor: "rgba(124, 58, 237, 0.12)",
           yAxisID: "y1",
@@ -4058,8 +4242,8 @@
       }
       if (seriesGraficoVisiveis.impostosTotais !== false) {
         datasets.push({
-          label: "Impostos totais / mês",
-          data: projecaoFiltrada.map((item) => item.impostosTotaisMensais),
+          label: `Impostos totais / mês${sufixoModo}`,
+          data: projecaoFiltrada.map((item) => item[campoImpostos]),
           borderColor: "#f59e0b",
           backgroundColor: "rgba(245, 158, 11, 0.1)",
           yAxisID: "y1",
@@ -4069,8 +4253,8 @@
       }
       if (seriesGraficoVisiveis.custosFixos !== false) {
         datasets.push({
-          label: "Custos fixos / mês",
-          data: projecaoFiltrada.map((item) => item.custosFixosMensais),
+          label: `Custos fixos / mês${sufixoModo}`,
+          data: projecaoFiltrada.map((item) => item[campoCustos]),
           borderColor: "#dc2626",
           backgroundColor: "rgba(220, 38, 38, 0.1)",
           yAxisID: "y1",
@@ -4131,15 +4315,25 @@
           <th>Ano</th>
           ${mostrarIdade ? "<th>Idade</th>" : ""}
           <th>Patrimônio Final</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Patrimônio em Bens</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Renda Mensal</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Impostos Totais</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Custos Fixos</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Renda Passiva de Bens</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Aportes</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Rendimento Bruto</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>IR Invest. / Come-Cotas</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
           <th>Rendimento Líquido</th>
+          <th class="coluna-real">Valor Real (IPCA)</th>
         `;
       }
       corpoTabelaEl.innerHTML = projecaoAnual.slice(0, periodoProjecaoAnos).map((linha) => `
@@ -4147,27 +4341,37 @@
           <td>${linha.ano}</td>
           ${mostrarIdade ? `<td>${linha.idade ?? "-"}</td>` : ""}
           <td>${formatterMoeda.format(linha.patrimonioFinal)}</td>
+          <td class="coluna-real">${formatterMoeda.format(linha.patrimonioFinalReal)}</td>
           <td>${formatterMoeda.format(linha.patrimonioBens)}</td>
+          <td class="coluna-real">${formatterMoeda.format(linha.patrimonioBensReal)}</td>
           <td>${formatterMoeda.format(linha.rendaMensal)}</td>
+          <td class="coluna-real">${formatterMoeda.format(linha.rendaMensalReal)}</td>
           <td>${formatterMoeda.format(linha.impostosTotais)}</td>
+          <td class="coluna-real">${formatterMoeda.format(linha.impostosTotaisReal)}</td>
           <td>${formatterMoeda.format(linha.custosFixos)}</td>
+          <td class="coluna-real">${formatterMoeda.format(linha.custosFixosReal)}</td>
           <td>${formatterMoeda.format(linha.rendaPassivaBens)}</td>
+          <td class="coluna-real">${formatterMoeda.format(linha.rendaPassivaBensReal)}</td>
           <td>${formatterMoeda.format(linha.aportes)}</td>
+          <td class="coluna-real">${formatterMoeda.format(linha.aportesReal)}</td>
           <td>${formatterMoeda.format(linha.rendimentoBruto)}</td>
+          <td class="coluna-real">${formatterMoeda.format(linha.rendimentoBrutoReal)}</td>
           <td>${formatterMoeda.format(linha.imposto)}</td>
+          <td class="coluna-real">${formatterMoeda.format(linha.impostoReal)}</td>
           <td>${formatterMoeda.format(linha.rendimentoLiquido)}</td>
+          <td class="coluna-real">${formatterMoeda.format(linha.rendimentoLiquidoReal)}</td>
         </tr>
       `).join("");
     }
 
     function calcularRadarFinanceiro(projecaoMensal, perfil) {
       const rendaMensal = normalizarNumero(perfil.rendaMensal);
-      const custosMensais = normalizarNumero(perfil.custosMensais);
+      const custosMensais = projecaoMensal[0]?.custosFixosMensais || normalizarNumero(perfil.custosMensais);
       const rendaPassivaAtual = projecaoMensal[0]?.rendimentoLiquidoTotal || 0;
       const idadeAtual = obterIdadeNaProjecao(perfil.dataNascimento, 0);
       const coberturaCustos = custosMensais > 0 ? (rendaPassivaAtual / custosMensais) * 100 : 0;
       const saldoMensalComSalario = rendaMensal + rendaPassivaAtual - custosMensais;
-      const mesCobreCustos = custosMensais > 0 ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= custosMensais)?.mes || null : null;
+      const mesCobreCustos = custosMensais > 0 ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= linha.custosFixosMensais)?.mes || null : null;
       const mesReplicaSalario = rendaMensal > 0 ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= rendaMensal)?.mes || null : null;
       const cobreCustosHoje = custosMensais > 0 && rendaPassivaAtual >= custosMensais;
       const replicaSalarioHoje = rendaMensal > 0 && rendaPassivaAtual >= rendaMensal;
@@ -4241,6 +4445,23 @@
       return Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
     }
 
+    function obterInflacaoPerfil(perfil) {
+      return normalizarNumero(perfil?.inflacaoIpca, 4.5);
+    }
+
+    function ajustarValorReal(valorNominal, fatorInflacaoAcumulado) {
+      if (!fatorInflacaoAcumulado || fatorInflacaoAcumulado === 1) return valorNominal;
+      return valorNominal / fatorInflacaoAcumulado;
+    }
+
+    function obterCampoMensalPorModo(campoBase) {
+      return modoValorProjecao === "real" ? `${campoBase}Real` : campoBase;
+    }
+
+    function obterSufixoModoProjecao() {
+      return modoValorProjecao === "real" ? " (valores de hoje)" : "";
+    }
+
     function aplicarImpostoRenda({ tipo, rendimentoBruto, valorBase, dataInicio, dataReferencia, rendimentoSemestreAcumulado = 0, considerarComeCotas = true }) {
       let imposto = 0;
       let nota = "";
@@ -4285,14 +4506,17 @@
       const estadoRendas = investimentoId ? [] : (perfil.rendas || []).map((renda) => criarEstadoRenda(renda));
       const estadoImoveis = investimentoId ? [] : perfil.imoveis.map(criarEstadoImovel);
       const estadoEmpresas = investimentoId ? [] : perfil.empresas.map(criarEstadoEmpresa);
-      const custosFixosBaseMensais = investimentoId ? 0 : normalizarNumero((perfil.custosFixos || []).reduce((soma, custo) => soma + normalizarNumero(custo.valorMensal), 0));
+      const custosFixosBaseMensais = investimentoId ? 0 : normalizarNumero((perfil.custosFixos || []).reduce((soma, custo) => soma + calcularValorMensalEquivalenteCusto(custo), 0));
       const linhas = [];
       const hoje = new Date();
-      const taxaValorizacaoImovelMensal = calcularTaxaMensal(3);
-      const taxaReajusteAluguelMensal = calcularTaxaMensal(4);
+      const taxaInflacaoMensal = calcularTaxaMensal(obterInflacaoPerfil(perfil));
+      const taxaReajusteAluguelMensal = taxaInflacaoMensal;
+      // Proxy conservadora: imóvel cresce próximo da inflação, mas com 1 p.p. abaixo em termos nominais.
+      const taxaValorizacaoImovelMensal = calcularTaxaMensal(Math.max(0, obterInflacaoPerfil(perfil) - 1));
 
       for (let mes = 1; mes <= PERIODO_MAXIMO_PROJECAO_ANOS * 12; mes += 1) {
         const dataMes = new Date(hoje.getFullYear(), hoje.getMonth() + mes, 1);
+        const fatorInflacaoAcumulado = Math.pow(1 + taxaInflacaoMensal, mes);
         let patrimonioInvestimentos = 0;
         let patrimonioBens = 0;
         let rendimentoBrutoTotal = 0;
@@ -4303,7 +4527,7 @@
         let rendaPassivaBens = 0;
         let rendaMensal = 0;
         let aportesTotal = 0;
-        let custosFixosMensais = custosFixosBaseMensais;
+        let custosFixosMensais = custosFixosBaseMensais * fatorInflacaoAcumulado;
 
         estadoRendas.forEach((renda) => {
           if (!renda.ativo) return;
@@ -4388,21 +4612,37 @@
 
         linhas.push({
           mes,
+          fatorInflacaoAcumulado,
           patrimonioInvestimentos,
           patrimonioBens,
           patrimonioTotal: patrimonioInvestimentos + patrimonioBens,
+          patrimonioInvestimentosReal: ajustarValorReal(patrimonioInvestimentos, fatorInflacaoAcumulado),
+          patrimonioBensReal: ajustarValorReal(patrimonioBens, fatorInflacaoAcumulado),
+          patrimonioTotalReal: ajustarValorReal(patrimonioInvestimentos + patrimonioBens, fatorInflacaoAcumulado),
           aportesTotal,
+          aportesTotalReal: ajustarValorReal(aportesTotal, fatorInflacaoAcumulado),
           rendimentoBrutoTotal: rendimentoBrutoTotal + rendaPassivaBens,
+          rendimentoBrutoTotalReal: ajustarValorReal(rendimentoBrutoTotal + rendaPassivaBens, fatorInflacaoAcumulado),
           impostoTotal: impostoInvestimentosTotal,
+          impostoTotalReal: ajustarValorReal(impostoInvestimentosTotal, fatorInflacaoAcumulado),
           impostoInvestimentosMensal: impostoInvestimentosTotal,
+          impostoInvestimentosMensalReal: ajustarValorReal(impostoInvestimentosTotal, fatorInflacaoAcumulado),
           inssMensal,
+          inssMensalReal: ajustarValorReal(inssMensal, fatorInflacaoAcumulado),
           irrfMensal,
+          irrfMensalReal: ajustarValorReal(irrfMensal, fatorInflacaoAcumulado),
           impostosTotaisMensais: impostoInvestimentosTotal + inssMensal + irrfMensal,
+          impostosTotaisMensaisReal: ajustarValorReal(impostoInvestimentosTotal + inssMensal + irrfMensal, fatorInflacaoAcumulado),
           rendimentoLiquidoInvestimentosMensal: rendimentoLiquidoInvestimentos,
+          rendimentoLiquidoInvestimentosMensalReal: ajustarValorReal(rendimentoLiquidoInvestimentos, fatorInflacaoAcumulado),
           rendimentoLiquidoTotal: rendimentoLiquidoInvestimentos + rendaPassivaBens,
+          rendimentoLiquidoTotalReal: ajustarValorReal(rendimentoLiquidoInvestimentos + rendaPassivaBens, fatorInflacaoAcumulado),
           rendaPassivaBens,
+          rendaPassivaBensReal: ajustarValorReal(rendaPassivaBens, fatorInflacaoAcumulado),
           rendaMensal,
-          custosFixosMensais
+          rendaMensalReal: ajustarValorReal(rendaMensal, fatorInflacaoAcumulado),
+          custosFixosMensais,
+          custosFixosMensaisReal: ajustarValorReal(custosFixosMensais, fatorInflacaoAcumulado)
         });
       }
       return linhas;
@@ -4416,18 +4656,31 @@
           ano,
           idade: obterIdadeNaProjecao(dataNascimento, ano),
           patrimonioFinal: fatia[fatia.length - 1]?.patrimonioTotal || 0,
+          patrimonioFinalReal: fatia[fatia.length - 1]?.patrimonioTotalReal || 0,
           patrimonioBens: fatia[fatia.length - 1]?.patrimonioBens || 0,
+          patrimonioBensReal: fatia[fatia.length - 1]?.patrimonioBensReal || 0,
           rendaMensal: fatia.reduce((acc, item) => acc + item.rendaMensal, 0),
+          rendaMensalReal: fatia.reduce((acc, item) => acc + item.rendaMensalReal, 0),
           impostoInvestimentos: fatia.reduce((acc, item) => acc + item.impostoInvestimentosMensal, 0),
+          impostoInvestimentosReal: fatia.reduce((acc, item) => acc + item.impostoInvestimentosMensalReal, 0),
           inss: fatia.reduce((acc, item) => acc + item.inssMensal, 0),
+          inssReal: fatia.reduce((acc, item) => acc + item.inssMensalReal, 0),
           irrf: fatia.reduce((acc, item) => acc + item.irrfMensal, 0),
+          irrfReal: fatia.reduce((acc, item) => acc + item.irrfMensalReal, 0),
           impostosTotais: fatia.reduce((acc, item) => acc + item.impostosTotaisMensais, 0),
+          impostosTotaisReal: fatia.reduce((acc, item) => acc + item.impostosTotaisMensaisReal, 0),
           custosFixos: fatia.reduce((acc, item) => acc + item.custosFixosMensais, 0),
+          custosFixosReal: fatia.reduce((acc, item) => acc + item.custosFixosMensaisReal, 0),
           rendaPassivaBens: fatia.reduce((acc, item) => acc + item.rendaPassivaBens, 0),
+          rendaPassivaBensReal: fatia.reduce((acc, item) => acc + item.rendaPassivaBensReal, 0),
           aportes: fatia.reduce((acc, item) => acc + item.aportesTotal, 0),
+          aportesReal: fatia.reduce((acc, item) => acc + item.aportesTotalReal, 0),
           rendimentoBruto: fatia.reduce((acc, item) => acc + item.rendimentoBrutoTotal, 0),
+          rendimentoBrutoReal: fatia.reduce((acc, item) => acc + item.rendimentoBrutoTotalReal, 0),
           imposto: fatia.reduce((acc, item) => acc + item.impostoTotal, 0),
-          rendimentoLiquido: fatia.reduce((acc, item) => acc + item.rendimentoLiquidoTotal, 0)
+          impostoReal: fatia.reduce((acc, item) => acc + item.impostoTotalReal, 0),
+          rendimentoLiquido: fatia.reduce((acc, item) => acc + item.rendimentoLiquidoTotal, 0),
+          rendimentoLiquidoReal: fatia.reduce((acc, item) => acc + item.rendimentoLiquidoTotalReal, 0)
         });
       }
       return linhas;
