@@ -1279,6 +1279,7 @@
 
     <section id="abasConteudoPrincipal" class="abas-conteudo-principal">
       <button id="abaResumoProjecao" class="aba-conteudo ativa" type="button">Resumo e Projeção</button>
+      <button id="abaRendaMensal" class="aba-conteudo" type="button">Renda Mensal</button>
       <button id="abaInvestimentos" class="aba-conteudo" type="button">Investimentos</button>
       <button id="abaBens" class="aba-conteudo" type="button">Bens</button>
       <button id="abaCustosFixos" class="aba-conteudo" type="button">Custos Fixos</button>
@@ -1354,6 +1355,49 @@
           <button id="btnAdicionar" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Investimento</button>
         </div>
         <div id="listaInvestimentos" class="lista-investimentos"></div>
+      </section>
+    </section>
+
+    <section id="conteudoRendaMensalPrincipal" class="conteudo-aba-principal oculto">
+      <section class="card secao secao-principal">
+        <div class="cabecalho-secao">
+          <h2>Renda Mensal</h2>
+          <button id="btnAdicionarRenda" class="btn-adicionar btn-adicionar-inline" type="button">+ Adicionar Renda</button>
+        </div>
+        <div id="resumoRendaMensal" class="resumo-grid"></div>
+        <div id="formRendaMensal" class="investimento-card" style="display: none; margin-top: 18px;">
+          <div class="grid-campos">
+            <div class="campo-completo">
+              <label>Descrição</label>
+              <input id="rendaDescricao" type="text" placeholder="Ex: Salário empresa X" />
+            </div>
+            <div>
+              <label>Categoria</label>
+              <select id="rendaCategoria"></select>
+            </div>
+            <div>
+              <label>Valor bruto mensal (R$)</label>
+              <input id="rendaValorBruto" type="number" min="0" step="0.01" />
+            </div>
+            <div>
+              <label>Outras deduções (R$)</label>
+              <input id="rendaOutrasDeducoes" type="number" min="0" step="0.01" />
+            </div>
+            <div>
+              <label>Crescimento anual (%)</label>
+              <input id="rendaCrescimentoAnual" type="number" step="0.01" />
+            </div>
+            <div>
+              <label>Idade de encerramento</label>
+              <input id="rendaIdadeEncerramento" type="number" min="0" step="1" />
+            </div>
+          </div>
+          <div class="sublista-topo" style="margin-top: 14px;">
+            <button id="btnSalvarRenda" class="btn-adicionar btn-adicionar-inline" type="button">Salvar renda</button>
+            <button id="btnCancelarRenda" class="btn-menu" type="button">Cancelar</button>
+          </div>
+        </div>
+        <div id="listaRendas" class="categorias-custos" style="margin-top: 18px;"></div>
       </section>
     </section>
 
@@ -1434,6 +1478,14 @@
     const formatterMoeda = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
     const formatterPercentual = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const TIPOS = ["Renda Fixa", "Fundo de Investimento", "Ações", "Crypto", "CDB", "CDI (%)"];
+    const CATEGORIAS_RENDA = {
+      salario: "Salário CLT",
+      freelance: "Freelance / Autônomo",
+      aluguel: "Aluguel recebido",
+      pensao: "Pensão / Benefício",
+      dividendos: "Dividendos / Distribuições",
+      outros: "Outros"
+    };
     const CATEGORIAS_CUSTOS = {
       cartao: "Cartão de Crédito",
       conta: "Contas",
@@ -1491,13 +1543,27 @@
     const painelSuperiorEl = document.getElementById("painelSuperior");
     const abasConteudoPrincipalEl = document.getElementById("abasConteudoPrincipal");
     const abaResumoProjecaoEl = document.getElementById("abaResumoProjecao");
+    const abaRendaMensalEl = document.getElementById("abaRendaMensal");
     const abaInvestimentosEl = document.getElementById("abaInvestimentos");
     const abaBensEl = document.getElementById("abaBens");
     const abaCustosFixosEl = document.getElementById("abaCustosFixos");
     const conteudoResumoPrincipalEl = document.getElementById("conteudoResumoPrincipal");
+    const conteudoRendaMensalPrincipalEl = document.getElementById("conteudoRendaMensalPrincipal");
     const conteudoInvestimentosPrincipalEl = document.getElementById("conteudoInvestimentosPrincipal");
     const conteudoBensPrincipalEl = document.getElementById("conteudoBensPrincipal");
     const conteudoCustosFixosPrincipalEl = document.getElementById("conteudoCustosFixosPrincipal");
+    const resumoRendaMensalEl = document.getElementById("resumoRendaMensal");
+    const listaRendasEl = document.getElementById("listaRendas");
+    const formRendaMensalEl = document.getElementById("formRendaMensal");
+    const btnAdicionarRendaEl = document.getElementById("btnAdicionarRenda");
+    const rendaDescricaoEl = document.getElementById("rendaDescricao");
+    const rendaCategoriaEl = document.getElementById("rendaCategoria");
+    const rendaValorBrutoEl = document.getElementById("rendaValorBruto");
+    const rendaOutrasDeducoesEl = document.getElementById("rendaOutrasDeducoes");
+    const rendaCrescimentoAnualEl = document.getElementById("rendaCrescimentoAnual");
+    const rendaIdadeEncerramentoEl = document.getElementById("rendaIdadeEncerramento");
+    const btnSalvarRendaEl = document.getElementById("btnSalvarRenda");
+    const btnCancelarRendaEl = document.getElementById("btnCancelarRenda");
     const listaCustosFixosEl = document.getElementById("listaCustosFixos");
     const rodapeCustosFixosEl = document.getElementById("rodapeCustosFixos");
     const formCustoFixoEl = document.getElementById("formCustoFixo");
@@ -1510,6 +1576,7 @@
     const btnCancelarCustoFixoEl = document.getElementById("btnCancelarCustoFixo");
 
     aplicarTema();
+    inicializarSeletoresRenda();
     inicializarSeletoresCustosFixos();
     sincronizarCamposPerfil();
 
@@ -1582,10 +1649,14 @@
     });
 
     abaResumoProjecaoEl.addEventListener("click", () => ativarAbaConteudoPrincipal("resumo"));
+    abaRendaMensalEl.addEventListener("click", () => ativarAbaConteudoPrincipal("renda-mensal"));
     abaInvestimentosEl.addEventListener("click", () => ativarAbaConteudoPrincipal("investimentos"));
     abaBensEl.addEventListener("click", () => ativarAbaConteudoPrincipal("bens"));
     abaCustosFixosEl.addEventListener("click", () => ativarAbaConteudoPrincipal("custos-fixos"));
 
+    btnAdicionarRendaEl.addEventListener("click", abrirFormularioRenda);
+    btnSalvarRendaEl.addEventListener("click", salvarNovaRenda);
+    btnCancelarRendaEl.addEventListener("click", fecharFormularioRenda);
     btnAdicionarCustoFixoEl.addEventListener("click", () => abrirFormularioCustoFixo());
     btnSalvarCustoFixoEl.addEventListener("click", salvarNovoCustoFixo);
     btnCancelarCustoFixoEl.addEventListener("click", fecharFormularioCustoFixo);
@@ -1648,7 +1719,7 @@
       const perfilMigrado = criarPerfilPadrao("Meu Perfil");
       perfilMigrado.dataNascimento = "";
       perfilMigrado.taxaCdiReferencia = normalizarNumero(estadoAntigo.taxaCdiReferencia, 13.25);
-      perfilMigrado.rendaMensal = normalizarNumero(estadoAntigo.rendaMensal, 0);
+      perfilMigrado.rendas = normalizarRendas(undefined, normalizarNumero(estadoAntigo.rendaMensal, 0));
       perfilMigrado.investimentos = Array.isArray(estadoAntigo.investimentos) && estadoAntigo.investimentos.length
         ? estadoAntigo.investimentos.map(normalizarInvestimento)
         : [criarInvestimentoPadrao()];
@@ -1670,6 +1741,7 @@
         dataNascimento: "",
         taxaCdiReferencia: 13.25,
         rendaMensal: 0,
+        rendas: [],
         investimentos: [criarInvestimentoPadrao()],
         imoveis: [],
         empresas: [],
@@ -1692,6 +1764,7 @@
         dataNascimento: perfil.dataNascimento || "",
         taxaCdiReferencia: normalizarNumero(perfil.taxaCdiReferencia, 13.25),
         rendaMensal: normalizarNumero(perfil.rendaMensal, 0),
+        rendas: normalizarRendas(perfil.rendas, normalizarNumero(perfil.rendaMensal, 0)),
         investimentos: Array.isArray(perfil.investimentos) && perfil.investimentos.length
           ? perfil.investimentos.map(normalizarInvestimento)
           : [criarInvestimentoPadrao()],
@@ -1873,6 +1946,65 @@
       };
     }
 
+    function criarRendaPadrao() {
+      return {
+        id: crypto.randomUUID(),
+        descricao: "",
+        categoria: "outros",
+        valorBrutoMensal: 0,
+        deducoes: {
+          inss: 0,
+          irrf: 0,
+          outrasDeducoes: 0
+        },
+        valorLiquidoMensal: 0,
+        ativo: true,
+        crescimentoAnual: 0,
+        idadeEncerramento: null,
+        expandido: false
+      };
+    }
+
+    function normalizarRenda(renda) {
+      const categoria = Object.hasOwn(CATEGORIAS_RENDA, renda?.categoria) ? renda.categoria : "outros";
+      const idadeEncerramento = normalizarNumero(renda?.idadeEncerramento, null);
+      const normalizada = {
+        id: renda?.id || crypto.randomUUID(),
+        descricao: renda?.descricao || "",
+        categoria,
+        valorBrutoMensal: normalizarNumero(renda?.valorBrutoMensal, 0),
+        deducoes: {
+          inss: normalizarNumero(renda?.deducoes?.inss, 0),
+          irrf: normalizarNumero(renda?.deducoes?.irrf, 0),
+          outrasDeducoes: normalizarNumero(renda?.deducoes?.outrasDeducoes, 0)
+        },
+        valorLiquidoMensal: normalizarNumero(renda?.valorLiquidoMensal, 0),
+        ativo: renda?.ativo !== false,
+        crescimentoAnual: normalizarNumero(renda?.crescimentoAnual, 0),
+        idadeEncerramento: Number.isFinite(idadeEncerramento) && idadeEncerramento > 0 ? idadeEncerramento : null,
+        expandido: renda?.expandido === true
+      };
+      return recalcularDeducoesRenda(normalizada);
+    }
+
+    function normalizarRendas(rendas, rendaMensalLegada = 0) {
+      if (!Array.isArray(rendas)) {
+        return rendaMensalLegada > 0
+          ? [normalizarRenda({
+              descricao: "Renda mensal (migrado)",
+              categoria: "outros",
+              valorBrutoMensal: rendaMensalLegada,
+              deducoes: { inss: 0, irrf: 0, outrasDeducoes: 0 },
+              valorLiquidoMensal: rendaMensalLegada,
+              ativo: true,
+              crescimentoAnual: 0,
+              idadeEncerramento: null
+            })]
+          : [];
+      }
+      return rendas.map(normalizarRenda);
+    }
+
     function normalizarCustoFixo(custo) {
       const categoria = Object.hasOwn(CATEGORIAS_CUSTOS, custo?.categoria) ? custo.categoria : "outro";
       const tipo = Object.hasOwn(TIPOS_CUSTOS, custo?.tipo) ? custo.tipo : "essencial";
@@ -1928,6 +2060,18 @@
           }
         });
       }
+      if (!Object.getOwnPropertyDescriptor(perfil, "rendaMensal")?.get) {
+        Object.defineProperty(perfil, "rendaMensal", {
+          enumerable: true,
+          configurable: true,
+          get() {
+            return (this.rendas || []).reduce((soma, renda) => soma + (renda.ativo ? normalizarNumero(renda.valorLiquidoMensal) : 0), 0);
+          },
+          set(valor) {
+            this.rendas = normalizarRendas(undefined, normalizarNumero(valor, 0));
+          }
+        });
+      }
       return perfil;
     }
 
@@ -1944,8 +2088,8 @@
       const perfil = obterPerfilAtivo();
       taxaCdiReferenciaEl.value = perfil.taxaCdiReferencia;
       rendaMensalInfoEl.innerHTML = `
-        <span>${renderizarLabelComTooltip("Renda mensal", "Soma do resultado mensal das empresas com receita ativa, descontando custos fixos e parcelas das dívidas dessas empresas.")}</span>
-        <strong>${formatterMoeda.format(calcularRendaMensalAtivaPerfil(perfil))}</strong>
+        <span>${renderizarLabelComTooltip("Renda mensal", "Soma líquida das fontes de renda ativas cadastradas no perfil.")}</span>
+        <strong>${formatterMoeda.format(perfil.rendaMensal)}</strong>
       `;
       custosMensaisInfoEl.innerHTML = `
         <span>${renderizarLabelComTooltip("Custos fixos mensais", "Soma dos custos fixos recorrentes do perfil, incluindo parcelas de financiamentos imobiliários ativos.")}</span>
@@ -1992,7 +2136,7 @@
         (Array.isArray(perfil.imoveis) && perfil.imoveis.length > 0) ||
         (Array.isArray(perfil.empresas) && perfil.empresas.length > 0) ||
         (Array.isArray(perfil.custosFixos) && perfil.custosFixos.length > 0) ||
-        calcularRendaMensalAtivaPerfil(perfil) > 0
+        perfil.rendaMensal > 0
       ));
     }
 
@@ -2165,10 +2309,12 @@
       }
 
       if (recriarCards) {
+        renderizarRendas();
         renderizarInvestimentos();
         renderizarBens();
         renderizarCustosFixos();
       }
+      renderizarResumoRendaMensal();
       renderizarRodapeCustosFixos();
 
       const perfil = obterPerfilAtivo();
@@ -2233,6 +2379,7 @@
       layoutPrincipalEl.classList.add("modo-familia");
       abasConteudoPrincipalEl.classList.add("oculto");
       conteudoResumoPrincipalEl.classList.remove("oculto");
+      conteudoRendaMensalPrincipalEl.classList.add("oculto");
       conteudoInvestimentosPrincipalEl.classList.add("oculto");
       conteudoBensPrincipalEl.classList.add("oculto");
       conteudoCustosFixosPrincipalEl.classList.add("oculto");
@@ -2245,7 +2392,7 @@
 
       if (!familia.quantidadePerfisAtivos) {
         painelFamiliaEl.style.display = "grid";
-        painelFamiliaEl.innerHTML = `<div class="familia-vazio">Nenhum patrimônio encontrado nos perfis. Adicione investimentos ou bens em um perfil individual.</div>`;
+        painelFamiliaEl.innerHTML = `<div class="familia-vazio">Nenhum patrimônio encontrado nos perfis. Adicione investimentos, bens, rendas ou custos fixos em um perfil individual.</div>`;
         renderizarGraficoFamilia(familia);
         renderizarTabelaFamilia(familia);
         return;
@@ -2271,6 +2418,10 @@
               <span>${renderizarLabelComTooltip("Custos fixos da família", "Soma dos custos fixos recorrentes de todos os perfis, incluindo parcelas de financiamentos imobiliários ativos.")}</span>
               <strong>${formatterMoeda.format(familia.custosFixosMensais)}</strong>
             </div>
+            <div class="metric">
+              <span>${renderizarLabelComTooltip("Renda mensal da família", "Soma líquida das fontes de renda ativas de todos os perfis.")}</span>
+              <strong>${formatterMoeda.format(familia.rendaMensalAtiva)}</strong>
+            </div>
           </div>
           <div class="familia-copy">
             A visão Família soma automaticamente investimentos, imóveis e empresas de todos os perfis, mantendo a lógica de merge e filtragem do painel individual.
@@ -2287,14 +2438,17 @@
 
     function aplicarAbaConteudoPrincipal() {
       const resumoAtivo = abaConteudoPrincipalAtiva === "resumo";
+      const rendaMensalAtivo = abaConteudoPrincipalAtiva === "renda-mensal";
       const investimentosAtivo = abaConteudoPrincipalAtiva === "investimentos";
       const bensAtivo = abaConteudoPrincipalAtiva === "bens";
       const custosFixosAtivo = abaConteudoPrincipalAtiva === "custos-fixos";
       conteudoResumoPrincipalEl.classList.toggle("oculto", !resumoAtivo);
+      conteudoRendaMensalPrincipalEl.classList.toggle("oculto", !rendaMensalAtivo);
       conteudoInvestimentosPrincipalEl.classList.toggle("oculto", !investimentosAtivo);
       conteudoBensPrincipalEl.classList.toggle("oculto", !bensAtivo);
       conteudoCustosFixosPrincipalEl.classList.toggle("oculto", !custosFixosAtivo);
       abaResumoProjecaoEl.classList.toggle("ativa", resumoAtivo);
+      abaRendaMensalEl.classList.toggle("ativa", rendaMensalAtivo);
       abaInvestimentosEl.classList.toggle("ativa", investimentosAtivo);
       abaBensEl.classList.toggle("ativa", bensAtivo);
       abaCustosFixosEl.classList.toggle("ativa", custosFixosAtivo);
@@ -2552,6 +2706,203 @@
         .join("");
     }
 
+    function inicializarSeletoresRenda() {
+      rendaCategoriaEl.innerHTML = Object.entries(CATEGORIAS_RENDA)
+        .map(([valor, label]) => `<option value="${valor}">${label}</option>`)
+        .join("");
+    }
+
+    function abrirFormularioRenda() {
+      formRendaMensalEl.style.display = "block";
+      rendaDescricaoEl.value = "";
+      rendaCategoriaEl.value = "outros";
+      rendaValorBrutoEl.value = "";
+      rendaOutrasDeducoesEl.value = "";
+      rendaCrescimentoAnualEl.value = "";
+      rendaIdadeEncerramentoEl.value = "";
+      rendaDescricaoEl.focus();
+    }
+
+    function fecharFormularioRenda() {
+      formRendaMensalEl.style.display = "none";
+    }
+
+    function salvarNovaRenda() {
+      const perfil = obterPerfilAtivo();
+      const renda = normalizarRenda({
+        descricao: rendaDescricaoEl.value,
+        categoria: rendaCategoriaEl.value,
+        valorBrutoMensal: rendaValorBrutoEl.value,
+        deducoes: {
+          outrasDeducoes: rendaOutrasDeducoesEl.value
+        },
+        ativo: true,
+        crescimentoAnual: rendaCrescimentoAnualEl.value,
+        idadeEncerramento: rendaIdadeEncerramentoEl.value
+      });
+      renda.expandido = true;
+      perfil.rendas.unshift(renda);
+      salvarEstado();
+      fecharFormularioRenda();
+      renderizarTudo(true);
+    }
+
+    function renderizarRendas() {
+      const perfil = obterPerfilAtivo();
+      sincronizarExpansaoLista(perfil.rendas);
+      const grupos = agruparRendasPorCategoria(perfil.rendas);
+      listaRendasEl.innerHTML = Object.keys(CATEGORIAS_RENDA).map((categoria) => {
+        const itens = grupos[categoria];
+        const subtotal = itens.reduce((soma, item) => soma + (item.ativo ? item.valorLiquidoMensal : 0), 0);
+        return `
+          <article class="investimento-card">
+            <div class="investimento-topo">
+              <div class="investimento-titulo">
+                <strong>${CATEGORIAS_RENDA[categoria]}</strong>
+                <span class="badge-tipo">${formatterMoeda.format(subtotal)}</span>
+              </div>
+            </div>
+            <div class="investimento-corpo" style="display: block;">
+              <div class="sublista-itens">
+                ${itens.length ? itens.map((item) => renderizarCardRenda(item)).join("") : '<div class="vazio">Nenhuma renda nessa categoria.</div>'}
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      listaRendasEl.querySelectorAll("[data-acao-renda='toggle']").forEach((botao) => {
+        botao.addEventListener("click", () => alternarExpandido(obterPerfilAtivo().rendas, botao.dataset.rendaId, botao.closest(".subitem-card")));
+      });
+      listaRendasEl.querySelectorAll("[data-campo-renda]").forEach((campo) => {
+        campo.addEventListener("input", (evento) => atualizarCampoRenda(evento.target.dataset.rendaId, evento.target.dataset.campoRenda, evento.target.type === "checkbox" ? evento.target.checked : evento.target.value));
+        campo.addEventListener("blur", () => renderizarTudo(true));
+      });
+      listaRendasEl.querySelectorAll("[data-remover-renda]").forEach((botao) => {
+        botao.addEventListener("click", () => removerRenda(botao.dataset.removerRenda));
+      });
+    }
+
+    function renderizarCardRenda(renda) {
+      const deducoes = obterTotalDeducoesRenda(renda);
+      const notaDuplicidade = obterNotaDuplicidadeRenda(renda.categoria);
+      return `
+        <div class="subitem-card">
+          <div class="subitem-topo">
+            <div class="subitem-titulo">${escapeHtml(renda.descricao || "Nova renda")}</div>
+            <div class="acoes-card">
+              <button class="btn-toggle" type="button" data-acao-renda="toggle" data-renda-id="${renda.id}" aria-expanded="${renda.expandido ? "true" : "false"}"><span class="chevron">▶</span></button>
+              <button class="btn-remover" type="button" data-remover-renda="${renda.id}" aria-label="Remover renda">X</button>
+            </div>
+          </div>
+          <div class="investimento-corpo" style="display: ${renda.expandido ? "block" : "none"};">
+            <div class="grid-campos">
+              <div class="campo-completo"><label>Descrição</label><input data-renda-id="${renda.id}" data-campo-renda="descricao" type="text" value="${escapeHtml(renda.descricao)}" /></div>
+              <div><label>Categoria</label><select data-renda-id="${renda.id}" data-campo-renda="categoria">${Object.entries(CATEGORIAS_RENDA).map(([valor, label]) => `<option value="${valor}" ${renda.categoria === valor ? "selected" : ""}>${label}</option>`).join("")}</select></div>
+              <div><label>Valor bruto mensal (R$)</label><input data-renda-id="${renda.id}" data-campo-renda="valorBrutoMensal" type="number" min="0" step="0.01" value="${renda.valorBrutoMensal}" /></div>
+              <div><label>${renda.categoria === "salario" ? "INSS (R$)" : "Outras deduções (R$)"}</label><input data-renda-id="${renda.id}" data-campo-renda="${renda.categoria === "salario" ? "inssSomenteLeitura" : "outrasDeducoes"}" type="number" min="0" step="0.01" value="${renda.categoria === "salario" ? renda.deducoes.inss : renda.deducoes.outrasDeducoes}" ${renda.categoria === "salario" ? "readonly" : ""} /></div>
+              ${renda.categoria === "salario" ? `<div><label>IRRF (R$)</label><input data-renda-id="${renda.id}" data-campo-renda="irrfSomenteLeitura" type="number" min="0" step="0.01" value="${renda.deducoes.irrf}" readonly /></div>` : ""}
+              ${renda.categoria === "salario" ? `<div><label>Outras deduções (R$)</label><input data-renda-id="${renda.id}" data-campo-renda="outrasDeducoes" type="number" min="0" step="0.01" value="${renda.deducoes.outrasDeducoes}" /></div>` : ""}
+              <div><label>Crescimento anual (%)</label><input data-renda-id="${renda.id}" data-campo-renda="crescimentoAnual" type="number" step="0.01" value="${renda.crescimentoAnual}" /></div>
+              <div><label>Idade de encerramento</label><input data-renda-id="${renda.id}" data-campo-renda="idadeEncerramento" type="number" min="0" step="1" value="${renda.idadeEncerramento ?? ""}" /></div>
+              <div class="campo-completo">
+                <label class="flag-check"><input data-renda-id="${renda.id}" data-campo-renda="ativo" type="checkbox" ${renda.ativo ? "checked" : ""} />Ativa</label>
+              </div>
+            </div>
+            <div class="resultado-inline">
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Valor bruto", "Valor mensal bruto da fonte de renda antes de deduções.")}</span><strong>${formatterMoeda.format(renda.valorBrutoMensal)}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Deduções", "Soma das deduções incidentes sobre essa renda, incluindo INSS e IRRF para salário CLT.")}</span><strong>${formatterMoeda.format(deducoes)}</strong></div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("Valor líquido", "Valor bruto menos as deduções totais da fonte de renda.")}</span><strong>${formatterMoeda.format(renda.valorLiquidoMensal)}</strong></div>
+            </div>
+            ${notaDuplicidade ? `<div class="nota-card">${escapeHtml(notaDuplicidade)}</div>` : ""}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderizarResumoRendaMensal() {
+      const perfil = obterPerfilAtivo();
+      const resumo = calcularResumoRendas(perfil.rendas, perfil.custosMensais);
+      resumoRendaMensalEl.innerHTML = `
+        <div class="metric">
+          <span>${renderizarLabelComTooltip("Total bruto", "Soma dos valores brutos mensais de todas as rendas ativas.")}</span>
+          <strong>${formatterMoeda.format(resumo.totalBruto)}</strong>
+        </div>
+        <div class="metric">
+          <span>${renderizarLabelComTooltip("Total de deduções", "Soma das deduções de todas as rendas ativas, incluindo INSS, IRRF e outras deduções.")}</span>
+          <strong>${formatterMoeda.format(resumo.totalDeducoes)}</strong>
+        </div>
+        <div class="metric">
+          <span>${renderizarLabelComTooltip("Total líquido", "Soma líquida das rendas ativas após todas as deduções.")}</span>
+          <strong>${formatterMoeda.format(resumo.totalLiquido)}</strong>
+        </div>
+        <div class="metric destaque">
+          <span>${renderizarLabelComTooltip("Capacidade de poupança", "Renda líquida mensal menos os custos fixos mensais do perfil.")}</span>
+          <strong>${formatterMoeda.format(resumo.capacidadePoupanca)}</strong>
+        </div>
+      `;
+    }
+
+    function agruparRendasPorCategoria(rendas) {
+      return Object.keys(CATEGORIAS_RENDA).reduce((acc, categoria) => {
+        acc[categoria] = rendas.filter((item) => item.categoria === categoria);
+        return acc;
+      }, {});
+    }
+
+    function atualizarCampoRenda(id, campo, valor) {
+      const renda = obterPerfilAtivo().rendas.find((item) => item.id === id);
+      if (!renda) return;
+      if (campo === "descricao" || campo === "categoria") {
+        renda[campo] = valor;
+      } else if (campo === "ativo") {
+        renda.ativo = valueToBoolean(valor);
+      } else if (campo === "idadeEncerramento") {
+        renda.idadeEncerramento = valor === "" ? null : Math.max(0, normalizarNumero(valor, null));
+      } else if (campo === "outrasDeducoes") {
+        renda.deducoes.outrasDeducoes = normalizarNumero(valor, 0);
+      } else if (!campo.endsWith("SomenteLeitura")) {
+        renda[campo] = normalizarNumero(valor);
+      }
+      recalcularDeducoesRenda(renda);
+      salvarEstado();
+      agendarAtualizacao(false);
+    }
+
+    function removerRenda(id) {
+      const perfil = obterPerfilAtivo();
+      perfil.rendas = perfil.rendas.filter((item) => item.id !== id);
+      salvarEstado();
+      renderizarTudo(true);
+    }
+
+    function calcularResumoRendas(rendas, custosMensais) {
+      const rendasAtivas = rendas.filter((item) => item.ativo);
+      const totalBruto = rendasAtivas.reduce((soma, item) => soma + normalizarNumero(item.valorBrutoMensal), 0);
+      const totalDeducoes = rendasAtivas.reduce((soma, item) => soma + obterTotalDeducoesRenda(item), 0);
+      const totalLiquido = rendasAtivas.reduce((soma, item) => soma + normalizarNumero(item.valorLiquidoMensal), 0);
+      return {
+        totalBruto,
+        totalDeducoes,
+        totalLiquido,
+        capacidadePoupanca: totalLiquido - normalizarNumero(custosMensais)
+      };
+    }
+
+    function obterTotalDeducoesRenda(renda) {
+      return normalizarNumero(renda.deducoes?.inss) + normalizarNumero(renda.deducoes?.irrf) + normalizarNumero(renda.deducoes?.outrasDeducoes);
+    }
+
+    function obterNotaDuplicidadeRenda(categoria) {
+      if (categoria === "aluguel") return "Aviso: aluguel recebido pode duplicar renda já cadastrada em Bens. O cadastro é permitido.";
+      if (categoria === "dividendos") return "Aviso: dividendos podem duplicar rendimentos já refletidos em investimentos. O cadastro é permitido.";
+      return "";
+    }
+
+    function valueToBoolean(valor) {
+      return valor === true || valor === "true" || valor === "on";
+    }
+
     function abrirFormularioCustoFixo() {
       formCustoFixoEl.style.display = "block";
       custoDescricaoEl.value = "";
@@ -2635,7 +2986,7 @@
 
     function renderizarRodapeCustosFixos() {
       const perfil = obterPerfilAtivo();
-      const totais = calcularResumoCustosFixos(perfil.custosFixos, calcularRendaMensalAtivaPerfil(perfil), perfil.imoveis);
+      const totais = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis);
       rodapeCustosFixosEl.innerHTML = `
         <div class="resumo-grid">
           <div class="metric destaque">
@@ -2801,7 +3152,7 @@
     function calcularResumoGeral(perfil) {
       const resumoInvestimentos = calcularResumoInvestimentos(perfil.investimentos, perfil.taxaCdiReferencia);
       const resumoBens = calcularResumoBens(perfil.imoveis, perfil.empresas);
-      const resumoCustosFixos = calcularResumoCustosFixos(perfil.custosFixos, calcularRendaMensalAtivaPerfil(perfil), perfil.imoveis);
+      const resumoCustosFixos = calcularResumoCustosFixos(perfil.custosFixos, perfil.rendaMensal, perfil.imoveis);
       const projecaoMensal = calcularProjecaoMensalPerfil(perfil);
       const projecaoAnual = agruparProjecaoAnualPerfil(projecaoMensal, perfil.dataNascimento);
       return {
@@ -2870,9 +3221,9 @@
       radarFinanceiroEl.innerHTML = `
         <div class="radar-grid">
           <div class="metric destaque"><span>${renderizarLabelComTooltip("Cobertura dos custos", "Percentual dos custos fixos mensais que já é coberto pela renda passiva atual.")}</span><strong>${formatterPercentual.format(radar.coberturaCustos)}%</strong></div>
-          <div class="metric"><span>${renderizarLabelComTooltip("Saldo mensal total", "Salário mais renda passiva atual menos os custos fixos mensais.")}</span><strong>${formatterMoeda.format(radar.saldoMensalComSalario)}</strong></div>
+          <div class="metric"><span>${renderizarLabelComTooltip("Saldo mensal total", "Renda mensal líquida mais renda passiva atual menos os custos fixos mensais.")}</span><strong>${formatterMoeda.format(radar.saldoMensalComSalario)}</strong></div>
           <div class="metric ${radar.independenciaAntes65 ? "destaque" : ""}"><span>${renderizarLabelComTooltip("Custos cobertos pela renda passiva", "Marco estimado em que a renda passiva mensal atinge ou supera os custos fixos do perfil.")}</span><strong>${radar.marcoCustos}</strong></div>
-          <div class="metric"><span>${renderizarLabelComTooltip("Renda ativa replicada pela renda passiva", "Marco estimado em que a renda passiva mensal atinge ou supera a renda ativa mensal gerada pelas empresas com receita ativa.")}</span><strong>${radar.marcoSalario}</strong></div>
+          <div class="metric"><span>${renderizarLabelComTooltip("Renda mensal replicada pela renda passiva", "Marco estimado em que a renda passiva mensal atinge ou supera a renda mensal líquida do perfil.")}</span><strong>${radar.marcoSalario}</strong></div>
         </div>
         <div class="radar-copy" style="margin-top: 14px;">
           <strong>Termômetro da independência</strong>
@@ -2895,6 +3246,7 @@
         patrimonioBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioBens || 0), 0),
         rendaPassivaTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoTotal || 0), 0),
         rendaPassivaBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaBens || 0), 0),
+        rendaMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaMensal || 0), 0),
         custosFixosMensais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.custosFixosMensais || 0), 0)
       }));
       const projecaoAnualTotal = Array.from({ length: 30 }, (_, indice) => ({
@@ -2902,6 +3254,7 @@
         patrimonioTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0), 0),
         patrimonioBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.patrimonioBens || 0), 0),
         rendaPassivaBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.rendaPassivaBens || 0), 0),
+        rendaMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.rendaMensal || 0), 0),
         custosFixos: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoAnual[indice]?.custosFixos || 0), 0)
       }));
       return {
@@ -2911,6 +3264,7 @@
         rendaPassivaMensal: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.rendaPassivaTotalAtual, 0),
         dividaTotalBens: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.dividaTotalBens, 0),
         custosFixosMensais: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.total, 0),
+        rendaMensalAtiva: projecoesPorPerfil.reduce((acc, item) => acc + item.perfil.rendaMensal, 0),
         projecaoMensalTotal,
         projecaoAnualTotal
       };
@@ -2939,6 +3293,16 @@
         backgroundColor: "rgba(234, 88, 12, 0.15)",
         yAxisID: "y",
         tension: 0.28,
+        pointRadius: 0,
+        borderWidth: 2
+      });
+      datasets.push({
+        label: "Renda Mensal da Família",
+        data: familia.projecaoMensalTotal.map((linha) => linha.rendaMensal),
+        borderColor: "#7c3aed",
+        backgroundColor: "rgba(124, 58, 237, 0.12)",
+        yAxisID: "y1",
+        tension: 0.18,
         pointRadius: 0,
         borderWidth: 2
       });
@@ -2974,13 +3338,14 @@
           <th>Ano</th>
           ${familia.projecoesPorPerfil.map((item) => `<th>${escapeHtml(item.perfil.nome)}</th>`).join("")}
           <th>Patrimônio em Bens</th>
+          <th>Renda Mensal</th>
           <th>Custos Fixos</th>
           <th>Renda Passiva de Bens</th>
           <th class="coluna-total">Total Família</th>
         `;
       }
       if (!familia.quantidadePerfisAtivos) {
-        corpoTabelaEl.innerHTML = `<tr><td colspan="6">Nenhum patrimônio encontrado nos perfis. Adicione investimentos, bens ou custos fixos em um perfil individual.</td></tr>`;
+        corpoTabelaEl.innerHTML = `<tr><td colspan="7">Nenhum patrimônio encontrado nos perfis. Adicione investimentos, bens, rendas ou custos fixos em um perfil individual.</td></tr>`;
         return;
       }
       corpoTabelaEl.innerHTML = Array.from({ length: 30 }, (_, indice) => `
@@ -2988,6 +3353,7 @@
           <td>${indice + 1}</td>
           ${familia.projecoesPorPerfil.map((item) => `<td>${formatterMoeda.format(item.resumo.projecaoAnual[indice]?.patrimonioFinal || 0)}</td>`).join("")}
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioBens || 0)}</td>
+          <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.rendaMensal || 0)}</td>
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.custosFixos || 0)}</td>
           <td>${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.rendaPassivaBens || 0)}</td>
           <td class="coluna-total">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioTotal || 0)}</td>
@@ -3079,6 +3445,15 @@
           pointRadius: 0
         },
         {
+          label: "Renda mensal / mês",
+          data: projecaoMensal.map((item) => item.rendaMensal),
+          borderColor: "#7c3aed",
+          backgroundColor: "rgba(124, 58, 237, 0.12)",
+          yAxisID: "y1",
+          tension: 0.18,
+          pointRadius: 0
+        },
+        {
           label: "Custos fixos / mês",
           data: projecaoMensal.map((item) => item.custosFixosMensais),
           borderColor: "#dc2626",
@@ -3142,6 +3517,7 @@
           ${mostrarIdade ? "<th>Idade</th>" : ""}
           <th>Patrimônio Final</th>
           <th>Patrimônio em Bens</th>
+          <th>Renda Mensal</th>
           <th>Custos Fixos</th>
           <th>Renda Passiva de Bens</th>
           <th>Aportes</th>
@@ -3156,6 +3532,7 @@
           ${mostrarIdade ? `<td>${linha.idade ?? "-"}</td>` : ""}
           <td>${formatterMoeda.format(linha.patrimonioFinal)}</td>
           <td>${formatterMoeda.format(linha.patrimonioBens)}</td>
+          <td>${formatterMoeda.format(linha.rendaMensal)}</td>
           <td>${formatterMoeda.format(linha.custosFixos)}</td>
           <td>${formatterMoeda.format(linha.rendaPassivaBens)}</td>
           <td>${formatterMoeda.format(linha.aportes)}</td>
@@ -3167,7 +3544,7 @@
     }
 
     function calcularRadarFinanceiro(projecaoMensal, perfil) {
-      const rendaMensal = calcularRendaMensalAtivaPerfil(perfil);
+      const rendaMensal = normalizarNumero(perfil.rendaMensal);
       const custosMensais = normalizarNumero(perfil.custosMensais);
       const rendaPassivaAtual = projecaoMensal[0]?.rendimentoLiquidoTotal || 0;
       const idadeAtual = obterIdadeNaProjecao(perfil.dataNascimento, 0);
@@ -3191,7 +3568,7 @@
     }
 
     function gerarMensagemRadar({ rendaMensal, custosMensais, rendaPassivaAtual, saldoMensalComSalario, mesCobreCustos, mesReplicaSalario, idadeNosCustos }) {
-      if (!rendaMensal && !custosMensais) return "Preencha salário e custos para transformar a projeção em um mapa de independência financeira.";
+      if (!rendaMensal && !custosMensais) return "Preencha renda mensal e custos para transformar a projeção em um mapa de independência financeira.";
       if (custosMensais > 0 && rendaPassivaAtual >= custosMensais) {
         return `Sua renda passiva já cobre seus custos estimados. Com ${formatterMoeda.format(saldoMensalComSalario)} de folga mensal total, o patrimônio projetado passa a trabalhar como sua principal rede de segurança.`;
       }
@@ -3288,6 +3665,7 @@
         patrimonio: normalizarNumero(investimento.valorInvestido),
         rendimentoSemestreAcumulado: 0
       }));
+      const estadoRendas = investimentoId ? [] : (perfil.rendas || []).map((renda) => criarEstadoRenda(renda));
       const estadoImoveis = investimentoId ? [] : perfil.imoveis.map(criarEstadoImovel);
       const estadoEmpresas = investimentoId ? [] : perfil.empresas.map(criarEstadoEmpresa);
       const custosFixosBaseMensais = investimentoId ? 0 : normalizarNumero((perfil.custosFixos || []).reduce((soma, custo) => soma + normalizarNumero(custo.valorMensal), 0));
@@ -3304,8 +3682,21 @@
         let impostoTotal = 0;
         let rendimentoLiquidoInvestimentos = 0;
         let rendaPassivaBens = 0;
+        let rendaMensal = 0;
         let aportesTotal = 0;
         let custosFixosMensais = custosFixosBaseMensais;
+
+        estadoRendas.forEach((renda) => {
+          if (!renda.ativo) return;
+          const idadeAtual = obterIdadeNaData(perfil.dataNascimento, dataMes);
+          if (renda.idadeEncerramento !== null && idadeAtual !== null && idadeAtual >= renda.idadeEncerramento) {
+            return;
+          }
+          if (mes > 1 && renda.taxaMensalCrescimento !== 0) {
+            renda.valorLiquido *= 1 + renda.taxaMensalCrescimento;
+          }
+          rendaMensal += renda.valorLiquido;
+        });
 
         estadoInvestimentos.forEach((item) => {
           const taxaMensal = calcularTaxaMensal(obterTaxaAnualEfetiva(item, perfil.taxaCdiReferencia));
@@ -3382,6 +3773,7 @@
           impostoTotal,
           rendimentoLiquidoTotal: rendimentoLiquidoInvestimentos + rendaPassivaBens,
           rendaPassivaBens,
+          rendaMensal,
           custosFixosMensais
         });
       }
@@ -3397,6 +3789,7 @@
           idade: obterIdadeNaProjecao(dataNascimento, ano),
           patrimonioFinal: fatia[fatia.length - 1]?.patrimonioTotal || 0,
           patrimonioBens: fatia[fatia.length - 1]?.patrimonioBens || 0,
+          rendaMensal: fatia.reduce((acc, item) => acc + item.rendaMensal, 0),
           custosFixos: fatia.reduce((acc, item) => acc + item.custosFixosMensais, 0),
           rendaPassivaBens: fatia.reduce((acc, item) => acc + item.rendaPassivaBens, 0),
           aportes: fatia.reduce((acc, item) => acc + item.aportesTotal, 0),
@@ -3422,6 +3815,15 @@
         iptuAnual: normalizarNumero(imovel.iptuAnual),
         condominio: normalizarNumero(imovel.condominioMensal),
         manutencao: normalizarNumero(imovel.custosManutencaoMensal)
+      };
+    }
+
+    function criarEstadoRenda(renda) {
+      return {
+        ativo: renda.ativo !== false,
+        valorLiquido: normalizarNumero(renda.valorLiquidoMensal),
+        taxaMensalCrescimento: calcularTaxaMensal(normalizarNumero(renda.crescimentoAnual)),
+        idadeEncerramento: renda.idadeEncerramento ?? null
       };
     }
 
@@ -3470,12 +3872,7 @@
     }
 
     function calcularRendaMensalAtivaPerfil(perfil) {
-      return (perfil.empresas || []).reduce((acc, empresa) => {
-        if (empresa.receitaPassiva) {
-          return acc;
-        }
-        return acc + calcularLucroLiquidoEmpresaAtual(empresa);
-      }, 0);
+      return normalizarNumero(perfil.rendaMensal);
     }
 
     function calcularLucroLiquidoEmpresaAtual(empresa) {
@@ -3583,9 +3980,64 @@
       return idade;
     }
 
+    function obterIdadeNaData(dataNascimento, dataReferencia) {
+      if (!dataNascimento) return null;
+      const nascimento = criarDataLocal(dataNascimento);
+      if (Number.isNaN(nascimento.getTime())) return null;
+      const referencia = dataReferencia instanceof Date ? dataReferencia : criarDataLocal(dataReferencia);
+      let idade = referencia.getFullYear() - nascimento.getFullYear();
+      const mesDiff = referencia.getMonth() - nascimento.getMonth();
+      const diaDiff = referencia.getDate() - nascimento.getDate();
+      if (mesDiff < 0 || (mesDiff === 0 && diaDiff < 0)) idade -= 1;
+      return idade;
+    }
+
+    function recalcularDeducoesRenda(renda) {
+      renda.valorBrutoMensal = normalizarNumero(renda.valorBrutoMensal, 0);
+      renda.deducoes.outrasDeducoes = normalizarNumero(renda.deducoes?.outrasDeducoes, 0);
+      if (renda.categoria === "salario") {
+        renda.deducoes.inss = calcularInss2025(renda.valorBrutoMensal);
+        renda.deducoes.irrf = calcularIrrf2025(Math.max(0, renda.valorBrutoMensal - renda.deducoes.inss));
+      } else {
+        renda.deducoes.inss = 0;
+        renda.deducoes.irrf = 0;
+      }
+      renda.valorLiquidoMensal = Math.max(0, renda.valorBrutoMensal - obterTotalDeducoesRenda(renda));
+      return renda;
+    }
+
+    function calcularInss2025(bruto) {
+      const salario = Math.min(normalizarNumero(bruto, 0), 8157.41);
+      const faixas = [
+        { limite: 1518.00, aliquota: 0.075 },
+        { limite: 2793.88, aliquota: 0.09 },
+        { limite: 4190.83, aliquota: 0.12 },
+        { limite: 8157.41, aliquota: 0.14 }
+      ];
+      let total = 0;
+      let inicio = 0;
+      faixas.forEach((faixa) => {
+        if (salario <= inicio) return;
+        const baseFaixa = Math.min(salario, faixa.limite) - inicio;
+        if (baseFaixa > 0) total += baseFaixa * faixa.aliquota;
+        inicio = faixa.limite;
+      });
+      return total;
+    }
+
+    function calcularIrrf2025(baseCalculo) {
+      const base = normalizarNumero(baseCalculo, 0);
+      if (base <= 2259.20) return 0;
+      if (base <= 2826.65) return Math.max(0, base * 0.075 - 169.44);
+      if (base <= 3751.05) return Math.max(0, base * 0.15 - 381.44);
+      if (base <= 4664.68) return Math.max(0, base * 0.225 - 662.77);
+      return Math.max(0, base * 0.275 - 896.00);
+    }
+
     function gerarNotasResumo(perfil, resumoBens) {
       const notas = [
         `CDI de referência atual: ${formatterPercentual.format(perfil.taxaCdiReferencia)}% a.a.`,
+        `Renda mensal líquida atual: ${formatterMoeda.format(perfil.rendaMensal)}.`,
         `Patrimônio em bens atual: ${formatterMoeda.format(resumoBens.patrimonioBensAtual)}.`,
         `Renda passiva de bens atual: ${formatterMoeda.format(resumoBens.rendaPassivaBensAtual)} por mês.`,
         `Dívida total de bens atual: ${formatterMoeda.format(resumoBens.dividaTotalBens)}.`
