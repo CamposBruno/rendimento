@@ -1170,15 +1170,46 @@
       width: 100%;
     }
 
-    .menu-series-projecao {
+    .graficos-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
       width: 100%;
-      border: 1px solid rgba(148, 163, 184, 0.18);
-      border-radius: 16px;
-      background: var(--superficie-suave);
-      padding: 12px 14px;
     }
 
-    .menu-series-projecao .investimento-topo {
+    .grafico-card {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .grafico-card-topo {
+      display: grid;
+      gap: 4px;
+    }
+
+    .grafico-card-topo strong {
+      font-size: 1rem;
+    }
+
+    .grafico-card-topo span {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .grafico-card .chart-wrap {
+      height: 340px;
+    }
+
+    .legenda-grafico-card {
+      display: grid;
+      gap: 10px;
+      padding-top: 4px;
+    }
+
+    .legenda-grafico-card .investimento-topo {
       margin-bottom: 0;
     }
 
@@ -1187,7 +1218,6 @@
       gap: 8px;
       flex-wrap: wrap;
       justify-content: flex-start;
-      margin-top: 12px;
     }
 
     .serie-chip {
@@ -1483,6 +1513,12 @@
 
     }
 
+    @media (max-width: 768px) {
+      .graficos-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 720px) {
       .container {
         width: calc(100vw - 16px);
@@ -1503,6 +1539,10 @@
 
       .chart-wrap {
         height: 320px;
+      }
+
+      .grafico-card {
+        padding: 16px;
       }
 
       .grid-campos,
@@ -1661,12 +1701,29 @@
             
           </div>
           <div id="tabsProjecao" class="tabs-container"></div>
-          <div class="chart-wrap">
-            <canvas id="graficoProjecao"></canvas>
-          </div>
-          
           <div class="controles-projecao">
-            <div id="menuSeriesProjecao" class="menu-series-projecao"></div>
+            <div class="graficos-container">
+              <article class="card grafico-card">
+                <div class="grafico-card-topo">
+                  <strong>Patrimônio ao Longo do Tempo</strong>
+                  <span>Soma consolidada dos investimentos e dos bens ao longo dos anos.</span>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="graficoProjecaoPatrimonio"></canvas>
+                </div>
+                <div id="legendaGraficoPatrimonio" class="legenda-grafico-card"></div>
+              </article>
+              <article class="card grafico-card">
+                <div class="grafico-card-topo">
+                  <strong>Fluxo Mensal ao Longo do Tempo</strong>
+                  <span>Receitas e despesas mensais projetadas com eixo próprio.</span>
+                </div>
+                <div class="chart-wrap">
+                  <canvas id="graficoProjecaoFluxo"></canvas>
+                </div>
+                <div id="legendaGraficoFluxo" class="legenda-grafico-card"></div>
+              </article>
+            </div>
           </div>
           
           <div id="rodapeProjecao" class="rodape">
@@ -1869,13 +1926,14 @@
       nominal: "Nominal",
       real: "Real"
     };
+    const ALIQUOTA_IR_APLICACAO_EXTERIOR = 0.15;
     const SERIES_GRAFICO = [
-      { id: "patrimonioTotal", label: "Patrimônio total" },
-      { id: "patrimonioBens", label: "Patrimônio em bens" },
-      { id: "rendaPassivaTotal", label: "Renda passiva / mês" },
-      { id: "rendaMensal", label: "Renda mensal / mês" },
-      { id: "impostosTotais", label: "Impostos / mês" },
-      { id: "custosFixos", label: "Custos fixos / mês" }
+      { id: "patrimonioTotal", label: "Patrimônio total", grupo: "patrimonio" },
+      { id: "patrimonioBens", label: "Patrimônio em bens", grupo: "patrimonio" },
+      { id: "rendaPassivaTotal", label: "Renda passiva / mês", grupo: "fluxo" },
+      { id: "rendaMensal", label: "Renda mensal / mês", grupo: "fluxo" },
+      { id: "impostosTotais", label: "Impostos / mês", grupo: "fluxo" },
+      { id: "custosFixos", label: "Custos fixos / mês", grupo: "fluxo" }
     ];
     const CATEGORIAS_RENDA = {
       salario: "Salário CLT",
@@ -1907,7 +1965,8 @@
     const ESTADO = carregarEstadoInicial();
     window.addEventListener("beforeunload", salvarEstado);
 
-    let graficoProjecao = null;
+    let graficoProjecaoPatrimonio = null;
+    let graficoProjecaoFluxo = null;
     let graficoRadarInvestimentos = null;
     let graficoRadarInvestimentosSidebar = null;
     let graficoRadarCustos = null;
@@ -1918,7 +1977,6 @@
     let periodoProjecaoAnos = 30;
     let modoValorProjecao = "nominal";
     let seriesGraficoVisiveis = Object.fromEntries(SERIES_GRAFICO.map((serie) => [serie.id, true]));
-    let menuSeriesGraficoExpandido = false;
     let tabelaProjecaoExpandida = false;
     let impostosResumoExpandido = false;
     let notasResumoExpandidas = false;
@@ -1953,7 +2011,8 @@
     const tituloProjecaoEl = document.getElementById("tituloProjecao");
     const modosValorProjecaoEl = document.getElementById("modosValorProjecao");
     const periodosProjecaoEl = document.getElementById("periodosProjecao");
-    const menuSeriesProjecaoEl = document.getElementById("menuSeriesProjecao");
+    const legendaGraficoPatrimonioEl = document.getElementById("legendaGraficoPatrimonio");
+    const legendaGraficoFluxoEl = document.getElementById("legendaGraficoFluxo");
     const heatmapsProjecaoEl = document.getElementById("heatmapsProjecao");
     const rendaMensalInfoEl = document.getElementById("rendaMensalInfo");
     const custosMensaisInfoEl = document.getElementById("custosMensaisInfo");
@@ -2876,32 +2935,23 @@
         });
       });
 
-      menuSeriesProjecaoEl.innerHTML = `
-        <div class="investimento-topo">
-          <div class="investimento-titulo">
-            <strong>Indicadores do gráfico</strong>
-            <span>Selecione quais séries deseja visualizar.</span>
-          </div>
-          <div class="acoes-card">
-            <button id="btnToggleSeriesProjecao" class="btn-toggle" type="button" aria-expanded="${menuSeriesGraficoExpandido ? "true" : "false"}"><span class="chevron">▶</span></button>
-          </div>
-        </div>
-        <div class="investimento-corpo" style="display: ${menuSeriesGraficoExpandido ? "block" : "none"};">
-          <div class="series-projecao">
-            ${SERIES_GRAFICO.map((serie) => `
-              <label class="serie-chip">
-                <input type="checkbox" data-serie-grafico="${serie.id}" ${seriesGraficoVisiveis[serie.id] !== false ? "checked" : ""} />
-                ${serie.label}
-              </label>
-            `).join("")}
-          </div>
+      renderizarLegendasGraficosProjecao();
+    }
+
+    function renderizarLegendaGraficoProjecao(container, grupo, titulo, descricao) {
+      if (!container) return;
+      const series = SERIES_GRAFICO.filter((serie) => serie.grupo === grupo);
+      container.innerHTML = `        
+        <div class="series-projecao">
+          ${series.map((serie) => `
+            <label class="serie-chip">
+              <input type="checkbox" data-serie-grafico="${serie.id}" ${seriesGraficoVisiveis[serie.id] !== false ? "checked" : ""} />
+              ${serie.label}
+            </label>
+          `).join("")}
         </div>
       `;
-      menuSeriesProjecaoEl.querySelector("#btnToggleSeriesProjecao")?.addEventListener("click", () => {
-        menuSeriesGraficoExpandido = !menuSeriesGraficoExpandido;
-        renderizarControlesPeriodoProjecao();
-      });
-      menuSeriesProjecaoEl.querySelectorAll("[data-serie-grafico]").forEach((campo) => {
+      container.querySelectorAll("[data-serie-grafico]").forEach((campo) => {
         campo.addEventListener("change", (evento) => {
           const chave = evento.target.dataset.serieGrafico;
           seriesGraficoVisiveis[chave] = evento.target.checked;
@@ -2912,6 +2962,21 @@
           renderizarProjecaoAtiva();
         });
       });
+    }
+
+    function renderizarLegendasGraficosProjecao() {
+      renderizarLegendaGraficoProjecao(
+        legendaGraficoPatrimonioEl,
+        "patrimonio",
+        "Legenda",
+        "Séries de acumulação do patrimônio."
+      );
+      renderizarLegendaGraficoProjecao(
+        legendaGraficoFluxoEl,
+        "fluxo",
+        "Legenda",
+        "Séries mensais de receitas e despesas."
+      );
     }
 
     function renderizarVisaoPerfil() {
@@ -2925,7 +2990,7 @@
       cardRadarEl.classList.remove("oculto");
       tabsProjecaoEl.classList.remove("oculto");
       periodosProjecaoEl.classList.remove("oculto");
-      rodapeProjecaoEl.textContent = `O gráfico mostra a projeção ${modoValorProjecao === "real" ? "real" : "nominal"} do patrimônio, da renda passiva e dos custos ao longo de ${periodoProjecaoAnos} anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.`;
+      rodapeProjecaoEl.textContent = `Os gráficos mostram a projeção ${modoValorProjecao === "real" ? "real" : "nominal"} do patrimônio e do fluxo mensal ao longo de ${periodoProjecaoAnos} anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.`;
     }
 
     function renderizarVisaoFamilia() {
@@ -2944,7 +3009,7 @@
       cardRadarEl.classList.add("oculto");
       tabsProjecaoEl.classList.add("oculto");
       periodosProjecaoEl.classList.remove("oculto");
-      rodapeProjecaoEl.textContent = `A projeção da Família agrega dinamicamente investimentos, rendas, bens e custos de todos os perfis ao longo de ${periodoProjecaoAnos} anos em valores ${modoValorProjecao === "real" ? "reais" : "nominais"}.`;
+      rodapeProjecaoEl.textContent = `Os gráficos da Família agregam dinamicamente investimentos, rendas, bens e custos de todos os perfis ao longo de ${periodoProjecaoAnos} anos em valores ${modoValorProjecao === "real" ? "reais" : "nominais"}.`;
 
       if (!familia.quantidadePerfisAtivos) {
         painelFamiliaEl.style.display = "grid";
@@ -3004,7 +3069,7 @@
       const linhaFinal = projecaoMensal[Math.max(0, periodoProjecaoAnos * 12 - 1)];
       if (!linhaFinal) return;
       rodapeProjecaoEl.innerHTML = `
-        O gráfico mostra a projeção ${modoValorProjecao === "real" ? "real" : "nominal"} do patrimônio, da renda passiva e dos custos ao longo de ${periodoProjecaoAnos} anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.
+        Os gráficos mostram a projeção ${modoValorProjecao === "real" ? "real" : "nominal"} do patrimônio e do fluxo mensal ao longo de ${periodoProjecaoAnos} anos. Fundos aplicam come-cotas de 15% em maio e novembro sobre o rendimento acumulado do semestre.
         <span class="resumo-projecao-final">Ao final do período: ${formatterMoeda.format(linhaFinal.patrimonioTotal)} nominais, equivalente a ${formatterMoeda.format(linhaFinal.patrimonioTotalReal)} em valores de hoje com IPCA de ${formatterPercentual.format(obterInflacaoPerfil(perfil))}% a.a.</span>
       `;
     }
@@ -3013,7 +3078,7 @@
       const linhaFinal = familia.projecaoMensalTotal[Math.max(0, periodoProjecaoAnos * 12 - 1)];
       if (!linhaFinal) return;
       rodapeProjecaoEl.innerHTML = `
-        A projeção da Família agrega dinamicamente investimentos, rendas, bens e custos de todos os perfis ao longo de ${periodoProjecaoAnos} anos em valores ${modoValorProjecao === "real" ? "reais" : "nominais"}.
+        Os gráficos da Família agregam dinamicamente investimentos, rendas, bens e custos de todos os perfis ao longo de ${periodoProjecaoAnos} anos em valores ${modoValorProjecao === "real" ? "reais" : "nominais"}.
         <span class="resumo-projecao-final">Ao final do período: ${formatterMoeda.format(linhaFinal.patrimonioTotal)} nominais, equivalente a ${formatterMoeda.format(linhaFinal.patrimonioTotalReal)} em valores de hoje.</span>
       `;
     }
@@ -3034,7 +3099,12 @@
       abaInvestimentosEl.classList.toggle("ativa", investimentosAtivo);
       abaBensEl.classList.toggle("ativa", bensAtivo);
       abaCustosFixosEl.classList.toggle("ativa", custosFixosAtivo);
-      if (resumoAtivo && graficoProjecao) requestAnimationFrame(() => graficoProjecao.resize());
+      if (resumoAtivo) {
+        requestAnimationFrame(() => {
+          graficoProjecaoPatrimonio?.resize();
+          graficoProjecaoFluxo?.resize();
+        });
+      }
     }
 
     function sincronizarExpansaoLista(lista) {
@@ -3081,7 +3151,7 @@
               <div class="resultado-box"><span>${renderizarLabelComTooltip("Valor investido", "Valor principal do investimento na moeda nativa, com consolidado em BRL logo abaixo.")}</span><strong>${formatarValorMoeda(investimento.valorInvestido, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(valorInvestidoBrl)})</small>` : ""}</div>
               <div class="resultado-box"><span>${renderizarLabelComTooltip("Aporte mensal", "Aporte configurado na moeda nativa do investimento, convertido para BRL na consolidação.")}</span><strong>${formatarValorMoeda(investimento.aporteMensal, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(aporteMensalBrl)})</small>` : ""}</div>
               <div class="resultado-box"><span>${renderizarLabelComTooltip("Rendimento bruto / mês", "Rentabilidade mensal estimada antes de impostos, calculada sobre o valor investido e a taxa do investimento.")}</span><strong>${formatarValorMoeda(calculoAtual.rendimentoBruto, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.rendimentoBrutoBrl)})</small>` : ""}</div>
-              <div class="resultado-box"><span>${renderizarLabelComTooltip("IR estimado / mês", "Estimativa de imposto incidente sobre o rendimento mensal. Em USD/EUR, a projeção não aplica tributação brasileira por simplificação.")}</span><strong>${formatarValorMoeda(calculoAtual.imposto, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.impostoBrl)})</small>` : ""}</div>
+              <div class="resultado-box"><span>${renderizarLabelComTooltip("IR estimado / mês", "Estimativa de imposto incidente sobre o rendimento mensal. Em USD/EUR, o app usa aproximação de 15% para aplicações financeiras no exterior; na projeção, o IR é acumulado ao longo do ano e lançado em dezembro.")}</span><strong>${formatarValorMoeda(calculoAtual.imposto, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.impostoBrl)})</small>` : ""}</div>
               <div class="resultado-box"><span>${renderizarLabelComTooltip("Rendimento líquido / mês", "Rendimento bruto menos o imposto estimado do período.")}</span><strong>${formatarValorMoeda(calculoAtual.rendimentoLiquido, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.rendimentoLiquidoBrl)})</small>` : ""}</div>
             </div>
             ${calculoAtual.nota ? `<div class="nota-card">${escapeHtml(calculoAtual.nota)}</div>` : ""}
@@ -3902,9 +3972,7 @@
         <div class="metric destaque poder-aporte-${resumo.poderAporte.status}">
           <span>${renderizarLabelComTooltip("Poder de Aporte", "Renda líquida mensal menos custos fixos totais e menos a soma dos aportes mensais já configurados.")}</span>
           <strong>${formatterMoeda.format(resumo.poderAporte.poderAporte)}</strong>
-          <div class="poder-aporte-resumo">
-            ${formatterMoeda.format(resumo.poderAporte.rendaLiquidaMensal)} → - ${formatterMoeda.format(resumo.poderAporte.custosFixosTotais)} → - ${formatterMoeda.format(resumo.poderAporte.aportesConfigurados)} → ${formatterMoeda.format(resumo.poderAporte.poderAporte)}
-          </div>
+          
         </div>
         <div class="campo-completo">
           <article class="investimento-card">
@@ -4028,7 +4096,6 @@
     }
 
     function renderizarGraficoFamilia(familia) {
-      const ctx = document.getElementById("graficoProjecao");
       const projecaoMensal = familia.projecaoMensalTotal.slice(0, periodoProjecaoAnos * 12);
       const labels = projecaoMensal.map((item) => item.mes % 60 === 0 ? `Ano ${item.mes / 12}` : "");
       const datasets = [];
@@ -4039,20 +4106,20 @@
       const campoImpostos = obterCampoMensalPorModo("impostosTotais");
       const campoCustos = obterCampoMensalPorModo("custosFixosMensais");
       const sufixoModo = obterSufixoModoProjecao();
+      const bordaModo = obterTracadoModoProjecao();
       if (seriesGraficoVisiveis.patrimonioTotal !== false) {
-        datasets.push(...familia.projecoesPorPerfil.map((item, indice) => {
-          const cor = obterCorPerfil(indice);
-          return {
-            label: `${item.perfil.nome}${sufixoModo}`,
-            data: item.resumo.projecaoMensal.slice(0, periodoProjecaoAnos * 12).map((linha) => linha[campoPatrimonioTotal]),
-            borderColor: cor.borda,
-            backgroundColor: cor.fundo,
-            yAxisID: "y",
-            tension: 0.28,
-            pointRadius: 0,
-            borderWidth: 2
-          };
-        }));
+        datasets.push({
+          label: `Patrimônio total da Família${sufixoModo}`,
+          data: projecaoMensal.map((linha) => linha[campoPatrimonioTotal]),
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, 0.16)",
+          grupo: "patrimonio",
+          tension: 0.28,
+          pointRadius: 0,
+          borderWidth: 4,
+          fill: true,
+          borderDash: bordaModo
+        });
       }
       if (seriesGraficoVisiveis.patrimonioBens !== false) {
         datasets.push({
@@ -4060,22 +4127,24 @@
           data: projecaoMensal.map((linha) => linha[campoPatrimonioBens]),
           borderColor: "#ea580c",
           backgroundColor: "rgba(234, 88, 12, 0.15)",
-          yAxisID: "y",
+          grupo: "patrimonio",
           tension: 0.28,
           pointRadius: 0,
-          borderWidth: 2
+          borderWidth: 2,
+          borderDash: bordaModo
         });
       }
       if (seriesGraficoVisiveis.rendaMensal !== false) {
         datasets.push({
           label: `Renda Mensal da Família${sufixoModo}`,
           data: projecaoMensal.map((linha) => linha[campoRendaMensal]),
-          borderColor: "#7c3aed",
-          backgroundColor: "rgba(124, 58, 237, 0.12)",
-          yAxisID: "y1",
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, 0.12)",
+          grupo: "fluxo",
           tension: 0.18,
           pointRadius: 0,
-          borderWidth: 2
+          borderWidth: 2,
+          borderDash: bordaModo
         });
       }
       if (seriesGraficoVisiveis.rendaPassivaTotal !== false) {
@@ -4084,10 +4153,11 @@
           data: projecaoMensal.map((linha) => linha[campoRendaPassiva]),
           borderColor: "#059669",
           backgroundColor: "rgba(5, 150, 105, 0.12)",
-          yAxisID: "y1",
+          grupo: "fluxo",
           tension: 0.28,
           pointRadius: 0,
-          borderWidth: 2
+          borderWidth: 2,
+          borderDash: bordaModo
         });
       }
       if (seriesGraficoVisiveis.impostosTotais !== false) {
@@ -4096,10 +4166,11 @@
           data: projecaoMensal.map((linha) => linha[campoImpostos]),
           borderColor: "#f59e0b",
           backgroundColor: "rgba(245, 158, 11, 0.1)",
-          yAxisID: "y1",
+          grupo: "fluxo",
           tension: 0.12,
           pointRadius: 0,
-          borderWidth: 2
+          borderWidth: 2,
+          borderDash: bordaModo
         });
       }
       if (seriesGraficoVisiveis.custosFixos !== false) {
@@ -4108,25 +4179,14 @@
           data: projecaoMensal.map((linha) => linha[campoCustos]),
           borderColor: "#dc2626",
           backgroundColor: "rgba(220, 38, 38, 0.1)",
-          yAxisID: "y1",
+          grupo: "fluxo",
           tension: 0,
           pointRadius: 0,
-          borderWidth: 2
+          borderWidth: 2,
+          borderDash: bordaModo
         });
       }
-      if (familia.quantidadePerfisAtivos > 1 && seriesGraficoVisiveis.patrimonioTotal !== false) {
-        datasets.push({
-          label: `Total Família${sufixoModo}`,
-          data: projecaoMensal.map((linha) => linha[campoPatrimonioTotal]),
-          borderColor: "#eab308",
-          backgroundColor: "rgba(234, 179, 8, 0.16)",
-          yAxisID: "y",
-          tension: 0.28,
-          pointRadius: 0,
-          borderWidth: 4
-        });
-      }
-      desenharGrafico(labels, datasets, projecaoMensal, null);
+      desenharGraficosProjecao(labels, datasets, projecaoMensal, null);
     }
 
     function renderizarTabelaFamilia(familia) {
@@ -4172,18 +4232,6 @@
           <td class="coluna-real">${formatterMoeda.format(familia.projecaoAnualTotal[indice]?.patrimonioTotalReal || 0)}</td>
         </tr>
       `).join("");
-    }
-
-    function obterCorPerfil(indice) {
-      const paleta = [
-        { borda: "#2563eb", fundo: "rgba(37, 99, 235, 0.14)" },
-        { borda: "#059669", fundo: "rgba(5, 150, 105, 0.14)" },
-        { borda: "#dc2626", fundo: "rgba(220, 38, 38, 0.14)" },
-        { borda: "#7c3aed", fundo: "rgba(124, 58, 237, 0.14)" },
-        { borda: "#ea580c", fundo: "rgba(234, 88, 12, 0.14)" },
-        { borda: "#0891b2", fundo: "rgba(8, 145, 178, 0.14)" }
-      ];
-      return paleta[indice % paleta.length];
     }
 
     function renderizarAbas() {
@@ -4509,16 +4557,18 @@
       const campoImpostos = obterCampoMensalPorModo("impostosTotaisMensais");
       const campoCustos = obterCampoMensalPorModo("custosFixosMensais");
       const sufixoModo = obterSufixoModoProjecao();
+      const bordaModo = obterTracadoModoProjecao();
       if (seriesGraficoVisiveis.patrimonioTotal !== false) {
         datasets.push({
           label: `Patrimônio total${sufixoModo}`,
           data: projecaoFiltrada.map((item) => item[campoPatrimonioTotal]),
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.16)",
-          yAxisID: "y",
+          grupo: "patrimonio",
           tension: 0.28,
           fill: true,
-          pointRadius: 0
+          pointRadius: 0,
+          borderDash: bordaModo
         });
       }
       if (seriesGraficoVisiveis.patrimonioBens !== false) {
@@ -4527,9 +4577,10 @@
           data: projecaoFiltrada.map((item) => item[campoPatrimonioBens]),
           borderColor: "#ea580c",
           backgroundColor: "rgba(234, 88, 12, 0.12)",
-          yAxisID: "y",
+          grupo: "patrimonio",
           tension: 0.28,
-          pointRadius: 0
+          pointRadius: 0,
+          borderDash: bordaModo
         });
       }
       if (seriesGraficoVisiveis.rendaPassivaTotal !== false) {
@@ -4538,20 +4589,22 @@
           data: projecaoFiltrada.map((item) => item[campoRendaPassiva]),
           borderColor: "#059669",
           backgroundColor: "rgba(5, 150, 105, 0.12)",
-          yAxisID: "y1",
+          grupo: "fluxo",
           tension: 0.28,
-          pointRadius: 0
+          pointRadius: 0,
+          borderDash: bordaModo
         });
       }
       if (seriesGraficoVisiveis.rendaMensal !== false) {
         datasets.push({
           label: `Renda mensal / mês${sufixoModo}`,
           data: projecaoFiltrada.map((item) => item[campoRendaMensal]),
-          borderColor: "#7c3aed",
-          backgroundColor: "rgba(124, 58, 237, 0.12)",
-          yAxisID: "y1",
+          borderColor: "#2563eb",
+          backgroundColor: "rgba(37, 99, 235, 0.12)",
+          grupo: "fluxo",
           tension: 0.18,
-          pointRadius: 0
+          pointRadius: 0,
+          borderDash: bordaModo
         });
       }
       if (seriesGraficoVisiveis.impostosTotais !== false) {
@@ -4560,9 +4613,10 @@
           data: projecaoFiltrada.map((item) => item[campoImpostos]),
           borderColor: "#f59e0b",
           backgroundColor: "rgba(245, 158, 11, 0.1)",
-          yAxisID: "y1",
+          grupo: "fluxo",
           tension: 0.12,
-          pointRadius: 0
+          pointRadius: 0,
+          borderDash: bordaModo
         });
       }
       if (seriesGraficoVisiveis.custosFixos !== false) {
@@ -4571,18 +4625,57 @@
           data: projecaoFiltrada.map((item) => item[campoCustos]),
           borderColor: "#dc2626",
           backgroundColor: "rgba(220, 38, 38, 0.1)",
-          yAxisID: "y1",
+          grupo: "fluxo",
           tension: 0,
-          pointRadius: 0
+          pointRadius: 0,
+          borderDash: bordaModo
         });
       }
-      desenharGrafico(labels, datasets, projecaoFiltrada, dataNascimento);
+      desenharGraficosProjecao(labels, datasets, projecaoFiltrada, dataNascimento);
     }
 
-    function desenharGrafico(labels, datasets, linhas, dataNascimento = null) {
-      const ctx = document.getElementById("graficoProjecao");
-      if (graficoProjecao) graficoProjecao.destroy();
-      graficoProjecao = new Chart(ctx, {
+    function obterTracadoModoProjecao() {
+      return modoValorProjecao === "real" ? [8, 4] : [];
+    }
+
+    function formatarMoedaEixo(valor) {
+      const numero = Number(valor) || 0;
+      const absoluto = Math.abs(numero);
+      if (absoluto >= 1e9) return `R$ ${(numero / 1e9).toFixed(1)}B`;
+      if (absoluto >= 1e6) return `R$ ${(numero / 1e6).toFixed(1)}M`;
+      if (absoluto >= 1e3) return `R$ ${(numero / 1e3).toFixed(0)}k`;
+      return formatterMoeda.format(numero);
+    }
+
+    function destruirGraficosProjecao() {
+      if (graficoProjecaoPatrimonio) {
+        graficoProjecaoPatrimonio.destroy();
+        graficoProjecaoPatrimonio = null;
+      }
+      if (graficoProjecaoFluxo) {
+        graficoProjecaoFluxo.destroy();
+        graficoProjecaoFluxo = null;
+      }
+    }
+
+    function separarDatasetsPorGrupo(datasets) {
+      return {
+        patrimonio: datasets.filter((dataset) => dataset.grupo === "patrimonio"),
+        fluxo: datasets.filter((dataset) => dataset.grupo === "fluxo")
+      };
+    }
+
+    function obterTituloTooltipProjecao(linhas, indice, dataNascimento = null) {
+      const item = linhas[indice];
+      const ano = Math.ceil(item.mes / 12);
+      const idade = dataNascimento ? obterIdadeNaProjecao(dataNascimento, ano) : null;
+      return idade !== null ? `Ano ${ano} (${idade} anos)` : `Ano ${ano}`;
+    }
+
+    function criarGraficoProjecao(canvasId, datasets, labels, linhas, dataNascimento = null, tipoEixo = "patrimonio") {
+      const ctx = document.getElementById(canvasId);
+      if (!ctx) return null;
+      return new Chart(ctx, {
         type: "line",
         data: { labels, datasets },
         options: {
@@ -4593,10 +4686,7 @@
             tooltip: {
               callbacks: {
                 title(contextos) {
-                  const item = linhas[contextos[0].dataIndex];
-                  const ano = Math.ceil(item.mes / 12);
-                  const idade = dataNascimento ? obterIdadeNaProjecao(dataNascimento, ano) : null;
-                  return idade !== null ? `Ano ${ano} (${idade} anos)` : `Ano ${ano}`;
+                  return obterTituloTooltipProjecao(linhas, contextos[0].dataIndex, dataNascimento);
                 },
                 label(contexto) {
                   return `${contexto.dataset.label}: ${formatterMoeda.format(contexto.parsed.y)}`;
@@ -4608,17 +4698,37 @@
             x: { grid: { color: "rgba(148, 163, 184, 0.12)" } },
             y: {
               position: "left",
-              ticks: { callback(valor) { return formatterMoeda.format(valor); } },
+              ticks: {
+                callback(valor) {
+                  return tipoEixo === "patrimonio" ? formatarMoedaEixo(valor) : formatterMoeda.format(valor);
+                }
+              },
               grid: { color: "rgba(148, 163, 184, 0.16)" }
-            },
-            y1: {
-              position: "right",
-              ticks: { callback(valor) { return formatterMoeda.format(valor); } },
-              grid: { drawOnChartArea: false }
             }
           }
         }
       });
+    }
+
+    function desenharGraficosProjecao(labels, datasets, linhas, dataNascimento = null) {
+      const grupos = separarDatasetsPorGrupo(datasets);
+      destruirGraficosProjecao();
+      graficoProjecaoPatrimonio = criarGraficoProjecao(
+        "graficoProjecaoPatrimonio",
+        grupos.patrimonio,
+        labels,
+        linhas,
+        dataNascimento,
+        "patrimonio"
+      );
+      graficoProjecaoFluxo = criarGraficoProjecao(
+        "graficoProjecaoFluxo",
+        grupos.fluxo,
+        labels,
+        linhas,
+        dataNascimento,
+        "fluxo"
+      );
     }
 
     function renderizarTabela(projecaoAnual, dataNascimento = "", investimentoContexto = null) {
@@ -4765,9 +4875,12 @@
       const taxaAnualEfetiva = obterTaxaAnualEfetiva(investimento, taxaCdiReferencia);
       const taxaMensal = calcularTaxaMensal(taxaAnualEfetiva);
       const rendimentoBruto = investimento.valorInvestido * taxaMensal;
-      // Simplificação intencional: investimentos em USD/EUR não aplicam tributação brasileira na projeção.
-      const dadosImposto = investimento.moeda === "BRL"
-        ? aplicarImpostoRenda({
+      const dadosImposto = ehInvestimentoMoedaEstrangeira(investimento)
+        ? aplicarImpostoExterior({
+            rendimentoTributavel: rendimentoBruto,
+            aproximacaoMensal: true
+          })
+        : aplicarImpostoRenda({
             tipo: investimento.tipo,
             rendimentoBruto,
             valorBase: investimento.valorInvestido,
@@ -4775,8 +4888,7 @@
             dataReferencia: new Date(),
             rendimentoSemestreAcumulado: rendimentoBruto,
             considerarComeCotas: false
-          })
-        : { imposto: 0, nota: "Investimento em moeda estrangeira: tributação brasileira não aplicada nesta versão." };
+          });
       const rendimentoBrutoBrl = converterParaBrl(rendimentoBruto, investimento.moeda, cotacoes);
       const impostoBrl = converterParaBrl(dadosImposto.imposto, investimento.moeda, cotacoes);
       return {
@@ -4798,6 +4910,10 @@
         : normalizarNumero(investimento.taxaAnual);
     }
 
+    function ehInvestimentoMoedaEstrangeira(investimento) {
+      return ["USD", "EUR"].includes(investimento?.moeda);
+    }
+
     function calcularTaxaMensal(taxaAnual) {
       return Math.pow(1 + taxaAnual / 100, 1 / 12) - 1;
     }
@@ -4817,6 +4933,16 @@
 
     function obterSufixoModoProjecao() {
       return modoValorProjecao === "real" ? " (valores de hoje)" : "";
+    }
+
+    function aplicarImpostoExterior({ rendimentoTributavel, aproximacaoMensal = false }) {
+      const imposto = rendimentoTributavel * ALIQUOTA_IR_APLICACAO_EXTERIOR;
+      return {
+        imposto,
+        nota: aproximacaoMensal
+          ? "Estimativa mensal com alíquota de 15% para aplicações financeiras no exterior."
+          : "IR de 15% sobre rendimento tributável anual de aplicações financeiras no exterior."
+      };
     }
 
     function aplicarImpostoRenda({ tipo, rendimentoBruto, valorBase, dataInicio, dataReferencia, rendimentoSemestreAcumulado = 0, considerarComeCotas = true }) {
@@ -4858,7 +4984,8 @@
       const estadoInvestimentos = investimentos.map((investimento) => ({
         ...investimento,
         patrimonio: normalizarNumero(investimento.valorInvestido),
-        rendimentoSemestreAcumulado: 0
+        rendimentoSemestreAcumulado: 0,
+        rendimentoTributavelAnoExterior: 0
       }));
       const estadoRendas = investimentoId ? [] : (perfil.rendas || []).map((renda) => criarEstadoRenda(renda));
       const estadoImoveis = investimentoId ? [] : perfil.imoveis.map(criarEstadoImovel);
@@ -4914,8 +5041,14 @@
           aportesTotal += converterParaBrl(item.aporteMensal, item.moeda, perfil.cotacoes);
           aportesTotalNativo += normalizarNumero(item.aporteMensal);
           let impostoMes = 0;
-          if (item.moeda !== "BRL") {
-            impostoMes = 0;
+          if (ehInvestimentoMoedaEstrangeira(item)) {
+            item.rendimentoTributavelAnoExterior += rendimentoBruto;
+            if (dataMes.getMonth() === 11) {
+              impostoMes = aplicarImpostoExterior({
+                rendimentoTributavel: item.rendimentoTributavelAnoExterior
+              }).imposto;
+              item.rendimentoTributavelAnoExterior = 0;
+            }
           } else if (item.tipo === "Fundo de Investimento") {
             item.rendimentoSemestreAcumulado += rendimentoBruto;
             const mesCalendario = dataMes.getMonth();
@@ -5348,7 +5481,7 @@
         notas.push("Fundos: come-cotas de 15% em maio e novembro reduz o patrimônio projetado semestralmente.");
       }
       if (perfil.investimentos.some((item) => item.moeda !== "BRL")) {
-        notas.push("Investimentos em USD/EUR usam câmbio constante informado manualmente e não aplicam tributação brasileira nesta versão.");
+        notas.push("Investimentos em USD/EUR usam câmbio constante informado manualmente e estimam IR brasileiro de 15% para aplicações financeiras no exterior, acumulado ao longo do ano e lançado em dezembro na projeção.");
       }
       return notas;
     }
