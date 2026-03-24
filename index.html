@@ -2026,6 +2026,10 @@
     const formatterPercentual = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formatterQuatroCasas = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
     const TIPOS = ["Renda Fixa", "Fundo de Investimento", "Ações", "Crypto", "CDB", "CDI (%)"];
+    const MODOS_RENDA_INVESTIMENTO = {
+      estimada: "Estimativa pela taxa",
+      real: "Renda mensal real"
+    };
     const MOEDAS = ["BRL", "USD", "EUR"];
     const PERIODOS_PROJECAO = [5, 10, 20, 30, 50];
     const PERIODO_MAXIMO_PROJECAO_ANOS = 50;
@@ -2500,6 +2504,8 @@
         taxaAnual: 12,
         valorInvestido: 0,
         aporteMensal: 0,
+        modoRenda: "estimada",
+        rendaMensalReal: 0,
         dataInicio: formatarDataInput(dataPadrao),
         expandido: false
       };
@@ -2594,6 +2600,8 @@
         taxaAnual: normalizarNumero(investimento.taxaAnual, 0),
         valorInvestido: normalizarNumero(investimento.valorInvestido, 0),
         aporteMensal: normalizarNumero(investimento.aporteMensal, 0),
+        modoRenda: investimento.modoRenda === "real" ? "real" : "estimada",
+        rendaMensalReal: normalizarNumero(investimento.rendaMensalReal, 0),
         dataInicio: investimento.dataInicio || formatarDataInput(new Date()),
         expandido: investimento.expandido === true
       };
@@ -3362,7 +3370,8 @@
               <div class="campo-completo"><label>Descrição</label><input data-campo="descricao" type="text" value="${escapeHtml(investimento.descricao)}" placeholder="Ex: Tesouro Selic" /></div>
               <div><label>Tipo</label><select data-campo="tipo">${TIPOS.map((tipo) => `<option value="${tipo}" ${investimento.tipo === tipo ? "selected" : ""}>${tipo}</option>`).join("")}</select></div>
               <div><label>Moeda</label><select data-campo="moeda">${MOEDAS.map((moeda) => `<option value="${moeda}" ${investimento.moeda === moeda ? "selected" : ""}>${moeda}</option>`).join("")}</select></div>
-              <div><label>${investimento.tipo === "CDI (%)" ? "Percentual do CDI (%)" : "Rentabilidade anual (% a.a.)"}</label><input data-campo="taxaAnual" type="number" min="0" step="0.01" value="${investimento.taxaAnual}" /></div>
+              <div><label>Modo da renda</label><select data-campo="modoRenda">${Object.entries(MODOS_RENDA_INVESTIMENTO).map(([valor, label]) => `<option value="${valor}" ${investimento.modoRenda === valor ? "selected" : ""}>${label}</option>`).join("")}</select></div>
+              <div><label>${investimento.modoRenda === "real" ? "Renda mensal real" : investimento.tipo === "CDI (%)" ? "Percentual do CDI (%)" : "Rentabilidade anual (% a.a.)"}</label><input data-campo="${investimento.modoRenda === "real" ? "rendaMensalReal" : "taxaAnual"}" type="number" min="0" step="0.01" value="${investimento.modoRenda === "real" ? investimento.rendaMensalReal : investimento.taxaAnual}" /></div>
               <div><label>Valor já investido (${investimento.moeda})</label><input data-campo="valorInvestido" type="number" min="0" step="0.01" value="${investimento.valorInvestido}" /></div>
               <div><label>Aporte mensal (${investimento.moeda})</label><input data-campo="aporteMensal" type="number" min="0" step="0.01" value="${investimento.aporteMensal}" /></div>
               <div><label>Data de início</label><input data-campo="dataInicio" type="date" value="${investimento.dataInicio}" /></div>
@@ -4255,9 +4264,9 @@
     function atualizarCampoInvestimento(id, campo, valor) {
       const investimento = obterPerfilAtivo().investimentos.find((item) => item.id === id);
       if (!investimento) return;
-      investimento[campo] = ["taxaAnual", "valorInvestido", "aporteMensal"].includes(campo) ? normalizarNumero(valor) : valor;
+      investimento[campo] = ["taxaAnual", "valorInvestido", "aporteMensal", "rendaMensalReal"].includes(campo) ? normalizarNumero(valor) : valor;
       salvarEstado();
-      if (["tipo", "moeda"].includes(campo)) return renderizarTudo(true);
+      if (["tipo", "moeda", "modoRenda"].includes(campo)) return renderizarTudo(true);
       if (campo === "descricao") renderizarAbas();
       agendarAtualizacao(false);
     }
@@ -5536,7 +5545,8 @@
     function calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia, cotacoes) {
       const taxaAnualEfetiva = obterTaxaAnualEfetiva(investimento, taxaCdiReferencia);
       const taxaMensal = calcularTaxaMensal(taxaAnualEfetiva);
-      const rendimentoBruto = investimento.valorInvestido * taxaMensal;
+      const usaRendaReal = investimento.modoRenda === "real";
+      const rendimentoBruto = usaRendaReal ? normalizarNumero(investimento.rendaMensalReal, 0) : investimento.valorInvestido * taxaMensal;
       const dadosImposto = ehInvestimentoMoedaEstrangeira(investimento)
         ? aplicarImpostoExterior({
             rendimentoTributavel: rendimentoBruto,
@@ -5556,13 +5566,16 @@
       return {
         taxaAnualEfetiva,
         taxaMensal,
+        usaRendaReal,
         rendimentoBruto,
         rendimentoBrutoBrl,
         imposto: dadosImposto.imposto,
         impostoBrl,
         rendimentoLiquido: rendimentoBruto - dadosImposto.imposto,
         rendimentoLiquidoBrl: rendimentoBrutoBrl - impostoBrl,
-        nota: dadosImposto.nota
+        nota: usaRendaReal
+          ? `Usando renda mensal real informada manualmente. ${dadosImposto.nota}`.trim()
+          : dadosImposto.nota
       };
     }
 
@@ -5700,7 +5713,8 @@
         estadoInvestimentos.forEach((item) => {
           const taxaMensal = calcularTaxaMensal(obterTaxaAnualEfetiva(item, perfil.taxaCdiReferencia));
           const patrimonioBase = item.patrimonio + normalizarNumero(item.aporteMensal);
-          const rendimentoBruto = patrimonioBase * taxaMensal;
+          const usaRendaReal = item.modoRenda === "real";
+          const rendimentoBruto = usaRendaReal ? normalizarNumero(item.rendaMensalReal, 0) : patrimonioBase * taxaMensal;
           aportesTotal += converterParaBrl(item.aporteMensal, item.moeda, perfil.cotacoes);
           aportesTotalNativo += normalizarNumero(item.aporteMensal);
           let impostoMes = 0;
