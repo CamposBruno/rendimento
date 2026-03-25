@@ -2030,6 +2030,14 @@
       estimada: "Estimativa pela taxa",
       real: "Renda mensal real"
     };
+    const TIPOS_RENDA_REAL_INVESTIMENTO = {
+      fixa: "Valor fixo mensal",
+      percentual_patrimonio: "Yield mensal sobre patrimônio (%)"
+    };
+    const TRIBUTACOES_INVESTIMENTO = {
+      sem_come_cotas: "Sem come-cotas",
+      come_cotas_15: "Come-cotas semestral (15%)"
+    };
     const MOEDAS = ["BRL", "USD", "EUR"];
     const PERIODOS_PROJECAO = [5, 10, 20, 30, 50];
     const PERIODO_MAXIMO_PROJECAO_ANOS = 50;
@@ -2041,7 +2049,7 @@
     const SERIES_GRAFICO = [
       { id: "patrimonioTotal", label: "Patrimônio total", grupo: "patrimonio" },
       { id: "patrimonioBens", label: "Patrimônio em bens", grupo: "patrimonio" },
-      { id: "rendaPassivaTotal", label: "Renda passiva / mês", grupo: "fluxo" },
+      { id: "rendimentoInvestimentos", label: "Rendimento líquido invest. / mês", grupo: "fluxo" },
       { id: "rendaMensal", label: "Renda mensal / mês", grupo: "fluxo" },
       { id: "impostosTotais", label: "Impostos / mês", grupo: "fluxo" },
       { id: "custosFixos", label: "Custos fixos / mês", grupo: "fluxo" }
@@ -2505,7 +2513,12 @@
         valorInvestido: 0,
         aporteMensal: 0,
         modoRenda: "estimada",
+        tipoRendaReal: "fixa",
         rendaMensalReal: 0,
+        yieldMensalReal: 0,
+        reaporteAutomatico: false,
+        percentualReaporte: 100,
+        tributacao: "sem_come_cotas",
         dataInicio: formatarDataInput(dataPadrao),
         expandido: false
       };
@@ -2601,7 +2614,16 @@
         valorInvestido: normalizarNumero(investimento.valorInvestido, 0),
         aporteMensal: normalizarNumero(investimento.aporteMensal, 0),
         modoRenda: investimento.modoRenda === "real" ? "real" : "estimada",
+        tipoRendaReal: investimento.tipoRendaReal === "percentual_patrimonio" ? "percentual_patrimonio" : "fixa",
         rendaMensalReal: normalizarNumero(investimento.rendaMensalReal, 0),
+        yieldMensalReal: normalizarNumero(investimento.yieldMensalReal, 0),
+        reaporteAutomatico: investimento.reaporteAutomatico === true,
+        percentualReaporte: Math.min(100, Math.max(0, normalizarNumero(investimento.percentualReaporte, 100))),
+        tributacao: investimento.tributacao === "come_cotas_15"
+          ? "come_cotas_15"
+          : investimento.tipo === "Fundo de Investimento"
+            ? "come_cotas_15"
+            : "sem_come_cotas",
         dataInicio: investimento.dataInicio || formatarDataInput(new Date()),
         expandido: investimento.expandido === true
       };
@@ -3258,7 +3280,7 @@
               <strong>${formatterMoeda.format(familia.patrimonioTotalAtual)}</strong>
             </div>
             <div class="metric">
-              <span>${renderizarLabelComTooltip("Renda passiva mensal total", "Soma da renda passiva dos investimentos com a renda passiva de bens de todos os perfis.")}</span>
+              <span>${renderizarLabelComTooltip("Renda passiva mensal total", "Soma da renda passiva realizada dos investimentos com a renda passiva de bens de todos os perfis.")}</span>
               <strong>${formatterMoeda.format(familia.rendaPassivaMensal)}</strong>
             </div>
             <div class="metric">
@@ -3282,7 +3304,7 @@
             A visão Família soma automaticamente investimentos, imóveis, bens móveis e empresas de todos os perfis, mantendo a lógica de merge e filtragem do painel individual.
           </div>
           <ul class="familia-notas lista-notas">
-            ${familia.projecoesPorPerfil.map((item) => `<li>${escapeHtml(item.perfil.nome)} contribui com ${formatterMoeda.format(item.resumo.rendaPassivaTotalAtual)} de renda passiva mensal e ${formatterMoeda.format(item.resumo.patrimonioTotalAtual)} de patrimônio total.</li>`).join("")}
+            ${familia.projecoesPorPerfil.map((item) => `<li>${escapeHtml(item.perfil.nome)} contribui com ${formatterMoeda.format(item.resumo.rendaPassivaTotalAtual)} de renda passiva realizada mensal e ${formatterMoeda.format(item.resumo.patrimonioTotalAtual)} de patrimônio total.</li>`).join("")}
           </ul>
         </div>
       `;
@@ -3371,7 +3393,17 @@
               <div><label>Tipo</label><select data-campo="tipo">${TIPOS.map((tipo) => `<option value="${tipo}" ${investimento.tipo === tipo ? "selected" : ""}>${tipo}</option>`).join("")}</select></div>
               <div><label>Moeda</label><select data-campo="moeda">${MOEDAS.map((moeda) => `<option value="${moeda}" ${investimento.moeda === moeda ? "selected" : ""}>${moeda}</option>`).join("")}</select></div>
               <div><label>Modo da renda</label><select data-campo="modoRenda">${Object.entries(MODOS_RENDA_INVESTIMENTO).map(([valor, label]) => `<option value="${valor}" ${investimento.modoRenda === valor ? "selected" : ""}>${label}</option>`).join("")}</select></div>
-              <div><label>${investimento.modoRenda === "real" ? "Renda mensal real" : investimento.tipo === "CDI (%)" ? "Percentual do CDI (%)" : "Rentabilidade anual (% a.a.)"}</label><input data-campo="${investimento.modoRenda === "real" ? "rendaMensalReal" : "taxaAnual"}" type="number" min="0" step="0.01" value="${investimento.modoRenda === "real" ? investimento.rendaMensalReal : investimento.taxaAnual}" /></div>
+              <div><label>Tributação</label><select data-campo="tributacao">${Object.entries(TRIBUTACOES_INVESTIMENTO).map(([valor, label]) => `<option value="${valor}" ${investimento.tributacao === valor ? "selected" : ""}>${label}</option>`).join("")}</select></div>
+              ${investimento.modoRenda === "real" ? `<div><label>Tipo da renda real</label><select data-campo="tipoRendaReal">${Object.entries(TIPOS_RENDA_REAL_INVESTIMENTO).map(([valor, label]) => `<option value="${valor}" ${investimento.tipoRendaReal === valor ? "selected" : ""}>${label}</option>`).join("")}</select></div>` : ""}
+              <div><label>${investimento.modoRenda === "real"
+                ? investimento.tipoRendaReal === "percentual_patrimonio"
+                  ? "Yield mensal sobre patrimônio (%)"
+                  : "Renda mensal real"
+                : investimento.tipo === "CDI (%)"
+                  ? "Percentual do CDI (%)"
+                  : "Rentabilidade anual (% a.a.)"}</label><input data-campo="${investimento.modoRenda === "real" ? (investimento.tipoRendaReal === "percentual_patrimonio" ? "yieldMensalReal" : "rendaMensalReal") : "taxaAnual"}" type="number" min="0" step="0.01" value="${investimento.modoRenda === "real" ? (investimento.tipoRendaReal === "percentual_patrimonio" ? investimento.yieldMensalReal : investimento.rendaMensalReal) : investimento.taxaAnual}" /></div>
+              ${investimento.modoRenda === "real" ? `<div><label>Reaporte automático</label><select data-campo="reaporteAutomatico"><option value="false" ${!investimento.reaporteAutomatico ? "selected" : ""}>Não</option><option value="true" ${investimento.reaporteAutomatico ? "selected" : ""}>Sim</option></select></div>` : ""}
+              ${investimento.modoRenda === "real" ? `<div><label>% do reaporte</label><input data-campo="percentualReaporte" type="number" min="0" max="100" step="0.01" value="${investimento.percentualReaporte}" ${investimento.reaporteAutomatico ? "" : "disabled"} /></div>` : ""}
               <div><label>Valor já investido (${investimento.moeda})</label><input data-campo="valorInvestido" type="number" min="0" step="0.01" value="${investimento.valorInvestido}" /></div>
               <div><label>Aporte mensal (${investimento.moeda})</label><input data-campo="aporteMensal" type="number" min="0" step="0.01" value="${investimento.aporteMensal}" /></div>
               <div><label>Data de início</label><input data-campo="dataInicio" type="date" value="${investimento.dataInicio}" /></div>
@@ -3382,6 +3414,8 @@
               <div class="resultado-box"><span>${renderizarLabelComTooltip("Rendimento bruto / mês", "Rentabilidade mensal estimada antes de impostos, calculada sobre o valor investido e a taxa do investimento.")}</span><strong>${formatarValorMoeda(calculoAtual.rendimentoBruto, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.rendimentoBrutoBrl)})</small>` : ""}</div>
               <div class="resultado-box"><span>${renderizarLabelComTooltip("IR estimado / mês", "Estimativa de imposto incidente sobre o rendimento mensal. Em USD/EUR, o app usa aproximação de 15% para aplicações financeiras no exterior; na projeção, o IR é acumulado ao longo do ano e lançado em dezembro.")}</span><strong>${formatarValorMoeda(calculoAtual.imposto, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.impostoBrl)})</small>` : ""}</div>
               <div class="resultado-box"><span>${renderizarLabelComTooltip("Rendimento líquido / mês", "Rendimento bruto menos o imposto estimado do período.")}</span><strong>${formatarValorMoeda(calculoAtual.rendimentoLiquido, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.rendimentoLiquidoBrl)})</small>` : ""}</div>
+              ${investimento.modoRenda === "real" ? `<div class="resultado-box"><span>${renderizarLabelComTooltip("Reaplicado / mês", "Parcela do rendimento líquido mensal real que retorna automaticamente para o patrimônio do investimento.")}</span><strong>${formatarValorMoeda(calculoAtual.valorReaplicado, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.valorReaplicadoBrl)})</small>` : ""}</div>` : ""}
+              ${investimento.modoRenda === "real" ? `<div class="resultado-box"><span>${renderizarLabelComTooltip("Renda passiva realizada / mês", "Parcela líquida mensal efetivamente tratada como renda passiva após considerar o reaporte automático.")}</span><strong>${formatarValorMoeda(calculoAtual.rendaPassivaRealizada, investimento.moeda)}</strong>${investimento.moeda !== "BRL" ? `<small class="poder-aporte-resumo">(${formatterMoeda.format(calculoAtual.rendaPassivaRealizadaBrl)})</small>` : ""}</div>` : ""}
             </div>
             ${calculoAtual.nota ? `<div class="nota-card">${escapeHtml(calculoAtual.nota)}</div>` : ""}
           </div>
@@ -4264,9 +4298,17 @@
     function atualizarCampoInvestimento(id, campo, valor) {
       const investimento = obterPerfilAtivo().investimentos.find((item) => item.id === id);
       if (!investimento) return;
-      investimento[campo] = ["taxaAnual", "valorInvestido", "aporteMensal", "rendaMensalReal"].includes(campo) ? normalizarNumero(valor) : valor;
+      if (["taxaAnual", "valorInvestido", "aporteMensal", "rendaMensalReal", "yieldMensalReal", "percentualReaporte"].includes(campo)) {
+        investimento[campo] = campo === "percentualReaporte"
+          ? Math.min(100, Math.max(0, normalizarNumero(valor, 100)))
+          : normalizarNumero(valor);
+      } else if (campo === "reaporteAutomatico") {
+        investimento[campo] = valor === true || valor === "true";
+      } else {
+        investimento[campo] = valor;
+      }
       salvarEstado();
-      if (["tipo", "moeda", "modoRenda"].includes(campo)) return renderizarTudo(true);
+      if (["tipo", "moeda", "modoRenda", "tipoRendaReal", "tributacao", "reaporteAutomatico"].includes(campo)) return renderizarTudo(true);
       if (campo === "descricao") renderizarAbas();
       agendarAtualizacao(false);
     }
@@ -4399,7 +4441,7 @@
         ...resumoImpostos,
         poderAporte,
         patrimonioTotalAtual: resumoInvestimentos.totalInvestido + resumoBens.patrimonioBensAtual,
-        rendaPassivaTotalAtual: resumoInvestimentos.rendimentoLiquidoAtual + resumoBens.rendaPassivaBensAtual,
+        rendaPassivaTotalAtual: resumoInvestimentos.rendaPassivaInvestimentosAtual + resumoBens.rendaPassivaBensAtual,
         projecaoMensal,
         projecaoAnual,
         notas: gerarNotasResumo(perfil, resumoBens),
@@ -4434,7 +4476,10 @@
         totalInvestido: investimentos.reduce((acc, item) => acc + converterParaBrl(item.valorInvestido, item.moeda, cotacoes), 0),
         rendimentoBrutoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoBrutoBrl, 0),
         impostoAtual: resumoAtual.reduce((acc, item) => acc + item.impostoBrl, 0),
-        rendimentoLiquidoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoLiquidoBrl, 0)
+        rendimentoLiquidoAtual: resumoAtual.reduce((acc, item) => acc + item.rendimentoLiquidoBrl, 0),
+        valorReaplicadoAtual: resumoAtual.reduce((acc, item) => acc + item.valorReaplicadoBrl, 0),
+        rendaPassivaInvestimentosAtual: resumoAtual
+          .reduce((acc, item) => acc + item.rendaPassivaRealizadaBrl, 0)
       };
     }
 
@@ -4500,8 +4545,16 @@
           <span>${renderizarLabelComTooltip("Rendimento líquido dos investimentos", "Soma do rendimento mensal dos investimentos após imposto estimado.")}</span>
           <strong>${formatterMoeda.format(resumo.rendimentoLiquidoAtual)}</strong>
         </div>
+        <div class="metric">
+          <span>${renderizarLabelComTooltip("Renda passiva realizada dos investimentos", "Soma apenas dos investimentos configurados com renda mensal real, após imposto estimado.")}</span>
+          <strong>${formatterMoeda.format(resumo.rendaPassivaInvestimentosAtual)}</strong>
+        </div>
+        <div class="metric">
+          <span>${renderizarLabelComTooltip("Reaporte automático / mês", "Parcela líquida dos investimentos com renda mensal real que está sendo reaplicada automaticamente no patrimônio.")}</span>
+          <strong>${formatterMoeda.format(resumo.valorReaplicadoAtual)}</strong>
+        </div>
         <div class="metric destaque">
-          <span>${renderizarLabelComTooltip("Renda passiva total / mês", "Soma da renda passiva líquida dos investimentos com a renda passiva gerada pelos bens.")}</span>
+          <span>${renderizarLabelComTooltip("Renda passiva realizada total / mês", "Soma da renda passiva realizada dos investimentos com a renda passiva gerada pelos bens.")}</span>
           <strong>${formatterMoeda.format(resumo.rendaPassivaTotalAtual)}</strong>
         </div>
         
@@ -4567,10 +4620,10 @@
       const radar = resumo.radarFinanceiro;
       radarFinanceiroEl.innerHTML = `
         <div class="radar-grid">
-          <div class="metric destaque"><span>${renderizarLabelComTooltip("Cobertura dos custos", "Percentual dos custos fixos mensais que já é coberto pela renda passiva atual.")}</span><strong>${formatterPercentual.format(radar.coberturaCustos)}%</strong></div>
-          <div class="metric"><span>${renderizarLabelComTooltip("Saldo mensal total", "Renda mensal líquida mais renda passiva atual menos os custos fixos mensais.")}</span><strong>${formatterMoeda.format(radar.saldoMensalComSalario)}</strong></div>
-          <div class="metric ${radar.independenciaAntes65 ? "destaque" : ""}"><span>${renderizarLabelComTooltip("Custos cobertos pela renda passiva", "Marco estimado em que a renda passiva mensal atinge ou supera os custos fixos do perfil.")}</span><strong>${radar.marcoCustos}</strong></div>
-          <div class="metric"><span>${renderizarLabelComTooltip("Renda mensal replicada pela renda passiva", "Marco estimado em que a renda passiva mensal atinge ou supera a renda mensal líquida do perfil.")}</span><strong>${radar.marcoSalario}</strong></div>
+          <div class="metric destaque"><span>${renderizarLabelComTooltip("Cobertura dos custos", "Percentual dos custos fixos mensais que já é coberto pela renda passiva potencial atual, antes da decisão de reaporte.")}</span><strong>${formatterPercentual.format(radar.coberturaCustos)}%</strong></div>
+          <div class="metric"><span>${renderizarLabelComTooltip("Saldo mensal total", "Renda mensal líquida mais renda passiva potencial atual menos os custos fixos mensais.")}</span><strong>${formatterMoeda.format(radar.saldoMensalComSalario)}</strong></div>
+          <div class="metric ${radar.independenciaAntes65 ? "destaque" : ""}"><span>${renderizarLabelComTooltip("Custos cobertos pela renda passiva", "Marco estimado em que a renda passiva potencial mensal atinge ou supera os custos fixos do perfil.")}</span><strong>${radar.marcoCustos}</strong></div>
+          <div class="metric"><span>${renderizarLabelComTooltip("Renda mensal replicada pela renda passiva", "Marco estimado em que a renda passiva potencial mensal atinge ou supera a renda mensal líquida do perfil.")}</span><strong>${radar.marcoSalario}</strong></div>
         </div>
         <div class="radar-copy" style="margin-top: 14px;">
           <strong>Termômetro da independência</strong>
@@ -4595,6 +4648,18 @@
         patrimonioBensReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.patrimonioBensReal || 0), 0),
         rendaPassivaTotal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoTotal || 0), 0),
         rendaPassivaTotalReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoTotalReal || 0), 0),
+        rendaPassivaTotalFluxo: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoTotalFluxo || 0), 0),
+        rendaPassivaTotalFluxoReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoTotalFluxoReal || 0), 0),
+        rendimentoInvestimentosFluxo: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoInvestimentosFluxoMensal || 0), 0),
+        rendimentoInvestimentosFluxoReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoInvestimentosFluxoMensalReal || 0), 0),
+        valorReaplicadoInvestimentosMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.valorReaplicadoInvestimentosMensal || 0), 0),
+        valorReaplicadoInvestimentosMensalReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.valorReaplicadoInvestimentosMensalReal || 0), 0),
+        rendaPassivaInvestimentosRealizadosMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaInvestimentosRealizadosMensal || 0), 0),
+        rendaPassivaInvestimentosRealizadosMensalReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaInvestimentosRealizadosMensalReal || 0), 0),
+        rendaPassivaPotencial: projecoesPorPerfil.reduce((acc, item) => acc + calcularRendaPassivaPotencialFluxo(item.resumo.projecaoMensal[indice]), 0),
+        rendaPassivaPotencialReal: projecoesPorPerfil.reduce((acc, item) => acc + normalizarNumero(item.resumo.projecaoMensal[indice]?.rendaPassivaInvestimentosRealizadosMensalReal, 0) + normalizarNumero(item.resumo.projecaoMensal[indice]?.valorReaplicadoInvestimentosMensalReal, 0) + normalizarNumero(item.resumo.projecaoMensal[indice]?.rendaPassivaBensReal, 0), 0),
+        rendaPassivaRealizada: projecoesPorPerfil.reduce((acc, item) => acc + ((item.resumo.projecaoMensal[indice]?.rendaPassivaInvestimentosRealizadosMensal || 0) + (item.resumo.projecaoMensal[indice]?.rendaPassivaBens || 0)), 0),
+        rendaPassivaRealizadaReal: projecoesPorPerfil.reduce((acc, item) => acc + ((item.resumo.projecaoMensal[indice]?.rendaPassivaInvestimentosRealizadosMensalReal || 0) + (item.resumo.projecaoMensal[indice]?.rendaPassivaBensReal || 0)), 0),
         rendaPassivaBens: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaBens || 0), 0),
         rendaPassivaBensReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaPassivaBensReal || 0), 0),
         rendaMensal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendaMensal || 0), 0),
@@ -4603,6 +4668,8 @@
         rendimentoLiquidoInvestimentosMensalReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.rendimentoLiquidoInvestimentosMensalReal || 0), 0),
         impostosTotais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.impostosTotaisMensais || 0), 0),
         impostosTotaisReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.impostosTotaisMensaisReal || 0), 0),
+        impostosTotaisFluxo: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.impostosTotaisFluxoMensais || 0), 0),
+        impostosTotaisFluxoReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.impostosTotaisFluxoMensaisReal || 0), 0),
         custosFixosMensais: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.custosFixosMensais || 0), 0),
         custosFixosMensaisReal: projecoesPorPerfil.reduce((acc, item) => acc + (item.resumo.projecaoMensal[indice]?.custosFixosMensaisReal || 0), 0)
       }));
@@ -4626,6 +4693,7 @@
         quantidadePerfisAtivos,
         patrimonioTotalAtual: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.patrimonioTotalAtual, 0),
         rendaPassivaMensal: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.rendaPassivaTotalAtual, 0),
+        rendimentoInvestimentosMensal: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.rendimentoLiquidoAtual, 0),
         dividaTotalBens: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.dividaTotalBens, 0),
         custosFixosMensais: projecoesPorPerfil.reduce((acc, item) => acc + item.resumo.total, 0),
         rendaMensalAtiva: projecoesPorPerfil.reduce((acc, item) => acc + item.perfil.rendaMensal, 0),
@@ -4641,9 +4709,9 @@
       const datasets = [];
       const campoPatrimonioTotal = obterCampoMensalPorModo("patrimonioTotal");
       const campoPatrimonioBens = obterCampoMensalPorModo("patrimonioBens");
-      const campoRendaPassiva = obterCampoMensalPorModo("rendaPassivaTotal");
+      const campoRendimentoInvestimentos = obterCampoMensalPorModo("rendimentoInvestimentosFluxo");
       const campoRendaMensal = obterCampoMensalPorModo("rendaMensal");
-      const campoImpostos = obterCampoMensalPorModo("impostosTotais");
+      const campoImpostos = obterCampoMensalPorModo("impostosTotaisFluxo");
       const campoCustos = obterCampoMensalPorModo("custosFixosMensais");
       const sufixoModo = obterSufixoModoProjecao();
       const bordaModo = obterTracadoModoProjecao();
@@ -4676,8 +4744,8 @@
       }
       if (seriesGraficoVisiveis.rendaMensal !== false) {
         datasets.push({
-          label: `Renda Mensal da Família${sufixoModo}`,
-          data: projecaoMensal.map((linha) => linha[campoRendaMensal]),
+          label: `Renda mensal + passiva potencial da Família / mês${sufixoModo}`,
+          data: projecaoMensal.map((linha) => normalizarNumero(linha[campoRendaMensal], 0) + calcularRendaPassivaPotencialFluxo(linha)),
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.12)",
           grupo: "fluxo",
@@ -4687,14 +4755,14 @@
           borderDash: bordaModo
         });
       }
-      if (seriesGraficoVisiveis.rendaPassivaTotal !== false) {
+      if (seriesGraficoVisiveis.rendimentoInvestimentos !== false) {
         datasets.push({
-          label: `Renda passiva da Família / mês${sufixoModo}`,
-          data: projecaoMensal.map((linha) => linha[campoRendaPassiva]),
-          borderColor: "#059669",
-          backgroundColor: "rgba(5, 150, 105, 0.12)",
+          label: `Rendimento líquido invest. da Família / mês${sufixoModo}`,
+          data: projecaoMensal.map((linha) => linha[campoRendimentoInvestimentos]),
+          borderColor: "#10b981",
+          backgroundColor: "rgba(16, 185, 129, 0.12)",
           grupo: "fluxo",
-          tension: 0.28,
+          tension: 0.22,
           pointRadius: 0,
           borderWidth: 2,
           borderDash: bordaModo
@@ -5220,9 +5288,9 @@
       const datasets = [];
       const campoPatrimonioTotal = obterCampoMensalPorModo("patrimonioTotal");
       const campoPatrimonioBens = obterCampoMensalPorModo("patrimonioBens");
-      const campoRendaPassiva = obterCampoMensalPorModo("rendimentoLiquidoTotal");
+      const campoRendimentoInvestimentos = obterCampoMensalPorModo("rendimentoLiquidoInvestimentosFluxoMensal");
       const campoRendaMensal = obterCampoMensalPorModo("rendaMensal");
-      const campoImpostos = obterCampoMensalPorModo("impostosTotaisMensais");
+      const campoImpostos = obterCampoMensalPorModo("impostosTotaisFluxoMensais");
       const campoCustos = obterCampoMensalPorModo("custosFixosMensais");
       const sufixoModo = obterSufixoModoProjecao();
       const bordaModo = obterTracadoModoProjecao();
@@ -5251,22 +5319,22 @@
           borderDash: bordaModo
         });
       }
-      if (seriesGraficoVisiveis.rendaPassivaTotal !== false) {
+      if (seriesGraficoVisiveis.rendimentoInvestimentos !== false) {
         datasets.push({
-          label: `Renda passiva total / mês${sufixoModo}`,
-          data: projecaoFiltrada.map((item) => item[campoRendaPassiva]),
-          borderColor: "#059669",
-          backgroundColor: "rgba(5, 150, 105, 0.12)",
+          label: `Rendimento líquido invest. / mês${sufixoModo}`,
+          data: projecaoFiltrada.map((item) => item[campoRendimentoInvestimentos]),
+          borderColor: "#10b981",
+          backgroundColor: "rgba(16, 185, 129, 0.12)",
           grupo: "fluxo",
-          tension: 0.28,
+          tension: 0.22,
           pointRadius: 0,
           borderDash: bordaModo
         });
       }
       if (seriesGraficoVisiveis.rendaMensal !== false) {
         datasets.push({
-          label: `Renda mensal / mês${sufixoModo}`,
-          data: projecaoFiltrada.map((item) => item[campoRendaMensal]),
+          label: `Renda mensal + passiva potencial / mês${sufixoModo}`,
+          data: projecaoFiltrada.map((item) => normalizarNumero(item[campoRendaMensal], 0) + calcularRendaPassivaPotencialFluxo(item)),
           borderColor: "#2563eb",
           backgroundColor: "rgba(37, 99, 235, 0.12)",
           grupo: "fluxo",
@@ -5497,12 +5565,12 @@
     function calcularRadarFinanceiro(projecaoMensal, perfil) {
       const rendaMensal = normalizarNumero(perfil.rendaMensal);
       const custosMensais = projecaoMensal[0]?.custosFixosMensais || normalizarNumero(perfil.custosMensais);
-      const rendaPassivaAtual = projecaoMensal[0]?.rendimentoLiquidoTotal || 0;
+      const rendaPassivaAtual = calcularRendaPassivaPotencialFluxo(projecaoMensal[0]);
       const idadeAtual = obterIdadeNaProjecao(perfil.dataNascimento, 0);
       const coberturaCustos = custosMensais > 0 ? (rendaPassivaAtual / custosMensais) * 100 : 0;
       const saldoMensalComSalario = rendaMensal + rendaPassivaAtual - custosMensais;
-      const mesCobreCustos = custosMensais > 0 ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= linha.custosFixosMensais)?.mes || null : null;
-      const mesReplicaSalario = rendaMensal > 0 ? projecaoMensal.find((linha) => linha.rendimentoLiquidoTotal >= rendaMensal)?.mes || null : null;
+      const mesCobreCustos = custosMensais > 0 ? projecaoMensal.find((linha) => calcularRendaPassivaPotencialFluxo(linha) >= linha.custosFixosMensais)?.mes || null : null;
+      const mesReplicaSalario = rendaMensal > 0 ? projecaoMensal.find((linha) => calcularRendaPassivaPotencialFluxo(linha) >= rendaMensal)?.mes || null : null;
       const cobreCustosHoje = custosMensais > 0 && rendaPassivaAtual >= custosMensais;
       const replicaSalarioHoje = rendaMensal > 0 && rendaPassivaAtual >= rendaMensal;
       const idadeNosCustos = cobreCustosHoje ? idadeAtual : (mesCobreCustos ? obterIdadeNaProjecao(perfil.dataNascimento, Math.ceil(mesCobreCustos / 12)) : null);
@@ -5521,15 +5589,15 @@
     function gerarMensagemRadar({ rendaMensal, custosMensais, rendaPassivaAtual, saldoMensalComSalario, mesCobreCustos, mesReplicaSalario, idadeNosCustos }) {
       if (!rendaMensal && !custosMensais) return "Preencha renda mensal e custos para transformar a projeção em um mapa de independência financeira.";
       if (custosMensais > 0 && rendaPassivaAtual >= custosMensais) {
-        return `Sua renda passiva já cobre seus custos estimados. Com ${formatterMoeda.format(saldoMensalComSalario)} de folga mensal total, o patrimônio projetado passa a trabalhar como sua principal rede de segurança.`;
+        return `Sua renda passiva potencial já cobre seus custos estimados. Com ${formatterMoeda.format(saldoMensalComSalario)} de folga mensal total, o patrimônio projetado passa a trabalhar como sua principal rede de segurança.`;
       }
       if (custosMensais > 0 && mesCobreCustos) {
-        return `Hoje sua renda passiva cobre ${formatterPercentual.format((rendaPassivaAtual / custosMensais) * 100)}% dos custos. Mantido o plano atual, ela deve pagar sua vida mensal por volta de ${formatarMarcoTemporal(mesCobreCustos, idadeNosCustos).toLowerCase()}.`;
+        return `Hoje sua renda passiva potencial cobre ${formatterPercentual.format((rendaPassivaAtual / custosMensais) * 100)}% dos custos. Mantido o plano atual, ela deve pagar sua vida mensal por volta de ${formatarMarcoTemporal(mesCobreCustos, idadeNosCustos).toLowerCase()}.`;
       }
       if (rendaMensal > 0 && mesReplicaSalario) {
-        return `Sua renda passiva ainda não sustenta o custo mensal completo, mas a projeção indica substituição da renda ativa em ${formatarMarcoTemporal(mesReplicaSalario).toLowerCase()}.`;
+        return `Sua renda passiva potencial ainda não sustenta o custo mensal completo, mas a projeção indica substituição da renda ativa em ${formatarMarcoTemporal(mesReplicaSalario).toLowerCase()}.`;
       }
-      return `Com ${formatterMoeda.format(rendaPassivaAtual)} de renda passiva líquida mensal hoje, ainda existe dependência relevante da renda ativa. O saldo combinado atual é de ${formatterMoeda.format(saldoMensalComSalario)} por mês.`;
+      return `Com ${formatterMoeda.format(rendaPassivaAtual)} de renda passiva potencial mensal hoje, ainda existe dependência relevante da renda ativa. O saldo combinado atual é de ${formatterMoeda.format(saldoMensalComSalario)} por mês.`;
     }
 
     function formatarMarcoTemporal(mes, idade = null) {
@@ -5542,11 +5610,23 @@
       return idade !== null ? `Hoje (${idade} anos)` : "Hoje";
     }
 
+    function calcularRendimentoBrutoInvestimento(investimento, patrimonioBase, taxaCdiReferencia) {
+      if (investimento?.modoRenda === "real") {
+        if (investimento?.tipoRendaReal === "percentual_patrimonio") {
+          return patrimonioBase * (normalizarNumero(investimento?.yieldMensalReal, 0) / 100);
+        }
+        return normalizarNumero(investimento?.rendaMensalReal, 0);
+      }
+      const taxaAnualEfetiva = obterTaxaAnualEfetiva(investimento, taxaCdiReferencia);
+      const taxaMensal = calcularTaxaMensal(taxaAnualEfetiva);
+      return patrimonioBase * taxaMensal;
+    }
+
     function calcularRendimentoMensalInvestimento(investimento, taxaCdiReferencia, cotacoes) {
       const taxaAnualEfetiva = obterTaxaAnualEfetiva(investimento, taxaCdiReferencia);
       const taxaMensal = calcularTaxaMensal(taxaAnualEfetiva);
       const usaRendaReal = investimento.modoRenda === "real";
-      const rendimentoBruto = usaRendaReal ? normalizarNumero(investimento.rendaMensalReal, 0) : investimento.valorInvestido * taxaMensal;
+      const rendimentoBruto = calcularRendimentoBrutoInvestimento(investimento, normalizarNumero(investimento.valorInvestido), taxaCdiReferencia);
       const dadosImposto = ehInvestimentoMoedaEstrangeira(investimento)
         ? aplicarImpostoExterior({
             rendimentoTributavel: rendimentoBruto,
@@ -5559,24 +5639,47 @@
             dataInicio: investimento.dataInicio,
             dataReferencia: new Date(),
             rendimentoSemestreAcumulado: rendimentoBruto,
-            considerarComeCotas: false
+            considerarComeCotas: investimentoUsaComeCotas(investimento)
           });
       const rendimentoBrutoBrl = converterParaBrl(rendimentoBruto, investimento.moeda, cotacoes);
       const impostoBrl = converterParaBrl(dadosImposto.imposto, investimento.moeda, cotacoes);
+      const percentualReaporte = calcularPercentualReaporte(investimento);
+      const valorReaplicado = usaRendaReal ? (rendimentoBruto - dadosImposto.imposto) * (percentualReaporte / 100) : 0;
+      const rendaPassivaRealizada = usaRendaReal ? (rendimentoBruto - dadosImposto.imposto) - valorReaplicado : 0;
       return {
         taxaAnualEfetiva,
         taxaMensal,
         usaRendaReal,
+        tipoRendaReal: investimento.tipoRendaReal,
+        percentualReaporte,
         rendimentoBruto,
         rendimentoBrutoBrl,
         imposto: dadosImposto.imposto,
         impostoBrl,
         rendimentoLiquido: rendimentoBruto - dadosImposto.imposto,
         rendimentoLiquidoBrl: rendimentoBrutoBrl - impostoBrl,
+        valorReaplicado,
+        valorReaplicadoBrl: converterParaBrl(valorReaplicado, investimento.moeda, cotacoes),
+        rendaPassivaRealizada,
+        rendaPassivaRealizadaBrl: converterParaBrl(rendaPassivaRealizada, investimento.moeda, cotacoes),
         nota: usaRendaReal
-          ? `Usando renda mensal real informada manualmente. ${dadosImposto.nota}`.trim()
+          ? `${investimento.tipoRendaReal === "percentual_patrimonio" ? "Usando yield mensal sobre o patrimônio atual." : "Usando renda mensal real informada manualmente."} ${dadosImposto.nota}`.trim()
           : dadosImposto.nota
       };
+    }
+
+    function calcularRendaPassivaInvestimentosFluxo(linha) {
+      return normalizarNumero(linha?.rendimentoLiquidoInvestimentosFluxoMensal, 0);
+    }
+
+    function calcularRendaPassivaPotencialFluxo(linha) {
+      return normalizarNumero(linha?.rendaPassivaInvestimentosRealizadosMensal, 0)
+        + normalizarNumero(linha?.valorReaplicadoInvestimentosMensal, 0)
+        + normalizarNumero(linha?.rendaPassivaBens, 0);
+    }
+
+    function calcularRendaPassivaRealizadaFluxo(linha) {
+      return normalizarNumero(linha?.rendaPassivaInvestimentosRealizadosMensal, 0) + normalizarNumero(linha?.rendaPassivaBens, 0);
     }
 
     function obterTaxaAnualEfetiva(investimento, taxaCdiReferencia) {
@@ -5587,6 +5690,15 @@
 
     function ehInvestimentoMoedaEstrangeira(investimento) {
       return ["USD", "EUR"].includes(investimento?.moeda);
+    }
+
+    function investimentoUsaComeCotas(investimento) {
+      return investimento?.tributacao === "come_cotas_15";
+    }
+
+    function calcularPercentualReaporte(investimento) {
+      if (investimento?.modoRenda !== "real" || investimento?.reaporteAutomatico !== true) return 0;
+      return Math.min(100, Math.max(0, normalizarNumero(investimento?.percentualReaporte, 100)));
     }
 
     function calcularTaxaMensal(taxaAnual) {
@@ -5626,7 +5738,7 @@
       if (["Renda Fixa", "CDB", "CDI (%)"].includes(tipo)) {
         imposto = rendimentoBruto * obterAliquotaRegressiva(dataInicio, dataReferencia);
       }
-      if (tipo === "Fundo de Investimento") {
+      if (tipo === "Fundo de Investimento" && considerarComeCotas) {
         imposto = considerarComeCotas ? rendimentoSemestreAcumulado * 0.15 : rendimentoBruto * 0.15;
         nota = "Estimativa com come-cotas de 15% em maio e novembro sobre o rendimento do semestre.";
       }
@@ -5684,10 +5796,14 @@
         let rendimentoBrutoInvestimentosNativo = 0;
         let impostoInvestimentosTotal = 0;
         let impostoInvestimentosTotalNativo = 0;
+        let impostoInvestimentosFluxo = 0;
         let inssMensal = 0;
         let irrfMensal = 0;
         let rendimentoLiquidoInvestimentos = 0;
         let rendimentoLiquidoInvestimentosNativo = 0;
+        let rendimentoLiquidoInvestimentosFluxo = 0;
+        let rendaPassivaInvestimentosRealizados = 0;
+        let valorReaplicadoInvestimentos = 0;
         let rendaPassivaBens = 0;
         let rendaMensal = 0;
         let aportesTotal = 0;
@@ -5711,23 +5827,25 @@
         });
 
         estadoInvestimentos.forEach((item) => {
-          const taxaMensal = calcularTaxaMensal(obterTaxaAnualEfetiva(item, perfil.taxaCdiReferencia));
           const patrimonioBase = item.patrimonio + normalizarNumero(item.aporteMensal);
           const usaRendaReal = item.modoRenda === "real";
-          const rendimentoBruto = usaRendaReal ? normalizarNumero(item.rendaMensalReal, 0) : patrimonioBase * taxaMensal;
+          const rendimentoBruto = calcularRendimentoBrutoInvestimento(item, patrimonioBase, perfil.taxaCdiReferencia);
           aportesTotal += converterParaBrl(item.aporteMensal, item.moeda, perfil.cotacoes);
           aportesTotalNativo += normalizarNumero(item.aporteMensal);
           let impostoMes = 0;
+          let impostoFluxoMes = 0;
           if (ehInvestimentoMoedaEstrangeira(item)) {
             item.rendimentoTributavelAnoExterior += rendimentoBruto;
+            impostoFluxoMes = rendimentoBruto * ALIQUOTA_IR_APLICACAO_EXTERIOR;
             if (dataMes.getMonth() === 11) {
               impostoMes = aplicarImpostoExterior({
                 rendimentoTributavel: item.rendimentoTributavelAnoExterior
               }).imposto;
               item.rendimentoTributavelAnoExterior = 0;
             }
-          } else if (item.tipo === "Fundo de Investimento") {
+          } else if (investimentoUsaComeCotas(item)) {
             item.rendimentoSemestreAcumulado += rendimentoBruto;
+            impostoFluxoMes = rendimentoBruto * 0.15;
             const mesCalendario = dataMes.getMonth();
             if (mesCalendario === 4 || mesCalendario === 10) {
               impostoMes = item.rendimentoSemestreAcumulado * 0.15;
@@ -5741,17 +5859,31 @@
               dataInicio: item.dataInicio,
               dataReferencia: dataMes
             }).imposto;
+            impostoFluxoMes = impostoMes;
           }
           const rendimentoLiquido = rendimentoBruto - impostoMes;
-          item.patrimonio = patrimonioBase + rendimentoLiquido;
+          const rendimentoLiquidoFluxoBase = rendimentoBruto - impostoFluxoMes;
+          const percentualReaporte = calcularPercentualReaporte(item);
+          const valorReaplicadoMes = usaRendaReal ? rendimentoLiquido * (percentualReaporte / 100) : rendimentoLiquido;
+          const rendaPassivaRealizadaMes = usaRendaReal ? Math.max(0, rendimentoLiquidoFluxoBase - valorReaplicadoMes) : 0;
+          const rendimentoLiquidoFluxo = rendimentoLiquidoFluxoBase;
+          item.patrimonio = patrimonioBase + valorReaplicadoMes;
           patrimonioInvestimentos += converterParaBrl(item.patrimonio, item.moeda, perfil.cotacoes);
           patrimonioInvestimentosNativo += item.patrimonio;
           rendimentoBrutoTotal += converterParaBrl(rendimentoBruto, item.moeda, perfil.cotacoes);
           rendimentoBrutoInvestimentosNativo += rendimentoBruto;
           impostoInvestimentosTotal += converterParaBrl(impostoMes, item.moeda, perfil.cotacoes);
           impostoInvestimentosTotalNativo += impostoMes;
+          impostoInvestimentosFluxo += converterParaBrl(impostoFluxoMes, item.moeda, perfil.cotacoes);
           rendimentoLiquidoInvestimentos += converterParaBrl(rendimentoLiquido, item.moeda, perfil.cotacoes);
           rendimentoLiquidoInvestimentosNativo += rendimentoLiquido;
+          rendimentoLiquidoInvestimentosFluxo += converterParaBrl(rendimentoLiquidoFluxo, item.moeda, perfil.cotacoes);
+          if (usaRendaReal) {
+            valorReaplicadoInvestimentos += converterParaBrl(valorReaplicadoMes, item.moeda, perfil.cotacoes);
+          }
+          if (usaRendaReal) {
+            rendaPassivaInvestimentosRealizados += converterParaBrl(rendaPassivaRealizadaMes, item.moeda, perfil.cotacoes);
+          }
         });
 
         estadoImoveis.forEach((item) => {
@@ -5823,17 +5955,29 @@
           impostoTotalReal: ajustarValorReal(impostoInvestimentosTotal, fatorInflacaoAcumulado),
           impostoInvestimentosMensal: impostoInvestimentosTotal,
           impostoInvestimentosMensalReal: ajustarValorReal(impostoInvestimentosTotal, fatorInflacaoAcumulado),
+          impostoInvestimentosFluxoMensal: impostoInvestimentosFluxo,
+          impostoInvestimentosFluxoMensalReal: ajustarValorReal(impostoInvestimentosFluxo, fatorInflacaoAcumulado),
           inssMensal,
           inssMensalReal: ajustarValorReal(inssMensal, fatorInflacaoAcumulado),
           irrfMensal,
           irrfMensalReal: ajustarValorReal(irrfMensal, fatorInflacaoAcumulado),
           impostosTotaisMensais: impostoInvestimentosTotal + inssMensal + irrfMensal,
           impostosTotaisMensaisReal: ajustarValorReal(impostoInvestimentosTotal + inssMensal + irrfMensal, fatorInflacaoAcumulado),
+          impostosTotaisFluxoMensais: impostoInvestimentosFluxo + inssMensal + irrfMensal,
+          impostosTotaisFluxoMensaisReal: ajustarValorReal(impostoInvestimentosFluxo + inssMensal + irrfMensal, fatorInflacaoAcumulado),
           rendimentoLiquidoInvestimentosMensal: rendimentoLiquidoInvestimentos,
           rendimentoLiquidoInvestimentosMensalNativo: rendimentoLiquidoInvestimentosNativo,
           rendimentoLiquidoInvestimentosMensalReal: ajustarValorReal(rendimentoLiquidoInvestimentos, fatorInflacaoAcumulado),
+          rendimentoLiquidoInvestimentosFluxoMensal: rendimentoLiquidoInvestimentosFluxo,
+          rendimentoLiquidoInvestimentosFluxoMensalReal: ajustarValorReal(rendimentoLiquidoInvestimentosFluxo, fatorInflacaoAcumulado),
+          valorReaplicadoInvestimentosMensal: valorReaplicadoInvestimentos,
+          valorReaplicadoInvestimentosMensalReal: ajustarValorReal(valorReaplicadoInvestimentos, fatorInflacaoAcumulado),
+          rendaPassivaInvestimentosRealizadosMensal: rendaPassivaInvestimentosRealizados,
+          rendaPassivaInvestimentosRealizadosMensalReal: ajustarValorReal(rendaPassivaInvestimentosRealizados, fatorInflacaoAcumulado),
           rendimentoLiquidoTotal: rendimentoLiquidoInvestimentos + rendaPassivaBens,
           rendimentoLiquidoTotalReal: ajustarValorReal(rendimentoLiquidoInvestimentos + rendaPassivaBens, fatorInflacaoAcumulado),
+          rendimentoLiquidoTotalFluxo: rendimentoLiquidoInvestimentosFluxo + rendaPassivaBens,
+          rendimentoLiquidoTotalFluxoReal: ajustarValorReal(rendimentoLiquidoInvestimentosFluxo + rendaPassivaBens, fatorInflacaoAcumulado),
           rendaPassivaBens,
           rendaPassivaBensReal: ajustarValorReal(rendaPassivaBens, fatorInflacaoAcumulado),
           rendaMensal,
@@ -6227,8 +6371,8 @@
       if ((perfil.bensMoveis || []).some((item) => normalizarNumero(item.valorEstimado) > 0)) {
         notas.push("Bens móveis entram no patrimônio em bens pelo valor estimado informado e podem ser modelados como quitados, financiados e com geração de receita.");
       }
-      if (perfil.investimentos.some((item) => item.tipo === "Fundo de Investimento")) {
-        notas.push("Fundos: come-cotas de 15% em maio e novembro reduz o patrimônio projetado semestralmente.");
+      if (perfil.investimentos.some((item) => investimentoUsaComeCotas(item))) {
+        notas.push("Investimentos marcados com come-cotas reduzem o patrimônio projetado semestralmente, enquanto o gráfico de fluxo distribui a provisão de imposto ao longo dos meses.");
       }
       if (perfil.investimentos.some((item) => item.moeda !== "BRL")) {
         notas.push("Investimentos em USD/EUR usam câmbio constante informado manualmente e estimam IR brasileiro de 15% para aplicações financeiras no exterior, acumulado ao longo do ano e lançado em dezembro na projeção.");
